@@ -3,7 +3,7 @@ import 'package:finance_app/ui/screens/add_item.dart';
 // import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/ui/widgets/compact_calendar.dart';
 // import 'package:finance_app/ui/widgets/dropdown_button_form_field_2_custom.dart';
-import 'package:finance_app/ui/widgets/popup_dropdown_custom.dart';
+import 'package:finance_app/ui/widgets/popup_dropdown_special.dart';
 import 'package:finance_app/ui/widgets/transaction_type_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -112,17 +112,11 @@ class _AddTransactionState extends State<AddTransaction>
 
     final result = await showModalBottomSheet(
       useRootNavigator: true,
+      useSafeArea: true,
+      isScrollControlled: true,
       context: context,
       builder: (context) {
         return AddItem(tableType: tableType);
-        // return Center(
-        //   child: OutlinedButton(
-        //     onPressed: () {
-        //       Navigator.pop<int>(context, 1);
-        //     },
-        //     child: const Text('send'),
-        //   ),
-        // );
       },
     );
     setState(() {
@@ -269,11 +263,11 @@ class _AddTransactionState extends State<AddTransaction>
                       Row(
                         children: [
                           //from
-                          PopupDropdownCustom(
+                          PopupDropdownSpecial(
                             onAddNew: addNewItem,
                             tableType: transactionType == 'income'
-                                ? Tables.categories
-                                : Tables.accounts,
+                                ? Tables.category
+                                : Tables.account,
                             currentValue: transactionType == 'income'
                                 ? categoryId!
                                 : accountId!,
@@ -297,11 +291,11 @@ class _AddTransactionState extends State<AddTransaction>
                           ),
 
                           //to
-                          PopupDropdownCustom(
+                          PopupDropdownSpecial(
                             onAddNew: addNewItem,
                             tableType: transactionType == 'expense'
-                                ? Tables.categories
-                                : Tables.accounts,
+                                ? Tables.category
+                                : Tables.account,
                             currentValue: transactionType == 'transfer'
                                 ? accountDestinationId!
                                 : transactionType == 'expense'
@@ -377,9 +371,9 @@ class _AddTransactionState extends State<AddTransaction>
                           const SizedBox(width: 20),
 
                           //currency setter
-                          PopupDropdownCustom(
+                          PopupDropdownSpecial(
                             onAddNew: addNewItem,
-                            tableType: Tables.currencies,
+                            tableType: Tables.currency,
                             currentValue: currencyId!,
                             //predict the case where currencyId and other must be null(noone in database)
                             onSelect: (int value) => setState(() {}),

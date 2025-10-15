@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 enum Tables {
-  currencies,
-  accounts,
-  categories,
+  currency,
+  account,
+  category,
 }
 
 Map<Tables, List<String>> tablesValues = {
-  Tables.currencies: ['symbol', 'code'],
-  Tables.accounts: ['icon_code_point', 'name'],
-  Tables.categories: ['icon_code_point', 'name'],
+  Tables.currency: ['symbol', 'code'],
+  Tables.account: ['icon_code_point', 'name'],
+  Tables.category: ['icon_code_point', 'name'],
 };
 
-class PopupDropdownCustom extends StatelessWidget {
-  const PopupDropdownCustom({
+class PopupDropdownSpecial extends StatelessWidget {
+  const PopupDropdownSpecial({
     super.key,
     required this.currentValue,
     required this.tableType,
@@ -64,7 +64,7 @@ class PopupDropdownCustom extends StatelessWidget {
               onTap: () => onSelect(value['id']),
               child: Row(
                 children: [
-                  if (tableType == Tables.currencies)
+                  if (tableType == Tables.currency)
                     Text(
                       value['symbol'],
                       style: GoogleFonts.lato(
@@ -166,7 +166,7 @@ class PopupDropdownCustom extends StatelessWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(left: 12),
-                        child: tableType == Tables.currencies
+                        child: tableType == Tables.currency
                             ? Text(
                                 values.firstWhere(
                                   (value) => value['id'] == currentValue,
