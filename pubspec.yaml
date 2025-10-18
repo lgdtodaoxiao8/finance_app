@@ -15,6 +15,7 @@ dependencies:
   intl: ^0.20.2
   dropdown_button2: ^2.3.9
   flutter_colorpicker: ^1.0.0
+  # currency_picker: ^2.0.21
 
 dev_dependencies:
   flutter_test:

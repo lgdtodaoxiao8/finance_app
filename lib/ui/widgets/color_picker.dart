@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:finance_app/main.dart';
 
 /// Кастомный цветовой пикер в стиле iOS
 class ColorPicker extends StatefulWidget {
@@ -121,7 +121,7 @@ class _ColorPickerState extends State<ColorPicker> {
                   children: [
                     Text(
                       'Color Picker',
-                      style: GoogleFonts.lato(
+                      style: kTextStyle.copyWith(
                         fontSize: 16,
                         color: const Color(0xFF242528),
                         fontWeight: FontWeight.w600,

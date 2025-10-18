@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:finance_app/main.dart';
 
 class NewTransaction extends StatefulWidget {
   const NewTransaction({super.key});
@@ -20,7 +20,7 @@ class _NewTransactionState extends State<NewTransaction> {
           child: Center(
             child: Text(
               'Button ${index + 1}',
-              style: GoogleFonts.lato(
+              style: kTextStyle.copyWith(
                 color: selected
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.onSecondary,

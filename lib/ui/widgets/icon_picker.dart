@@ -1,6 +1,7 @@
 import 'package:finance_app/ui/widgets/popup_dropdown_simple.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import 'package:finance_app/main.dart';
 
 class IconPicker extends StatefulWidget {
   const IconPicker({
@@ -501,7 +502,7 @@ class _IconPickerState extends State<IconPicker> {
               children: [
                 Text(
                   'Icon Picker',
-                  style: GoogleFonts.lato(
+                  style: kTextStyle.copyWith(
                     fontSize: 16,
                     color: const Color(0xFF242528),
                     fontWeight: FontWeight.w600,
@@ -633,7 +634,7 @@ class _IconPickerState extends State<IconPicker> {
   //               children: [
   //                 Text(
   //                   'Icon Picker',
-  //                   style: GoogleFonts.lato(
+  //                   style:  kTextStyle.copyWith(
   //                     fontSize: 16,
   //                     color: const Color(0xFF242528),
   //                     fontWeight: FontWeight.w600,

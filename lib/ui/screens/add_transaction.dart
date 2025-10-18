@@ -6,7 +6,8 @@ import 'package:finance_app/ui/widgets/compact_calendar.dart';
 import 'package:finance_app/ui/widgets/popup_dropdown_special.dart';
 import 'package:finance_app/ui/widgets/transaction_type_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import 'package:finance_app/main.dart';
 
 class AddTransaction extends StatefulWidget {
   const AddTransaction({
@@ -88,24 +89,6 @@ class _AddTransactionState extends State<AddTransaction>
     }
   }
 
-  // Future<void> addNewItem() async {
-  //   if (!mounted) return;
-  //   final result = await showModalBottomSheet(
-  //     useRootNavigator: true,
-  //     context: context,
-  //     builder: (context) {
-  //       print('aaaa');
-  //       return Center(
-  //         child: Text('hello!'),
-  //       );
-  //     },
-  //   );
-
-  //   if (result == 200) {
-  //     setState(() {});
-  //   }
-  // }
-
   Future<int> addNewItem(Tables tableType) async {
     if (!mounted) return -1;
     // await Future.microtask(() {});
@@ -169,7 +152,7 @@ class _AddTransactionState extends State<AddTransaction>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Transaction'),
+        title: Text('Add Transaction', style: kTextStyle.copyWith()),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -331,7 +314,7 @@ class _AddTransactionState extends State<AddTransaction>
                               autocorrect: false,
                               decoration: InputDecoration(
                                 labelText: 'Amount',
-                                labelStyle: GoogleFonts.lato(
+                                labelStyle: kTextStyle.copyWith(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -348,7 +331,7 @@ class _AddTransactionState extends State<AddTransaction>
                               controller: _amountController,
                               // autofocus: true,
                               textAlign: TextAlign.right,
-                              style: GoogleFonts.lato(
+                              style: kTextStyle.copyWith(
                                 // fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -428,7 +411,7 @@ class _AddTransactionState extends State<AddTransaction>
                               decoration: InputDecoration(
                                 prefixIcon: const Icon(Icons.note),
                                 labelText: 'Note',
-                                labelStyle: GoogleFonts.lato(
+                                labelStyle: kTextStyle.copyWith(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -474,7 +457,7 @@ class _AddTransactionState extends State<AddTransaction>
                                 : () {
                                     Navigator.of(context).pop();
                                   },
-                            child: const Text('Cancel'),
+                            child: Text('Cancel', style: kTextStyle.copyWith()),
                           ),
                           const SizedBox(
                             width: 10,
@@ -491,7 +474,7 @@ class _AddTransactionState extends State<AddTransaction>
                             onPressed: isSending ? null : addTransaction,
                             child: isSending
                                 ? const CircularProgressIndicator()
-                                : const Text('Add'),
+                                : Text('Add', style: kTextStyle.copyWith()),
                           ),
                         ],
                       ),

@@ -1,3 +1,4 @@
+import 'package:finance_app/main.dart';
 import 'package:flutter/material.dart';
 
 class TransactionTypePicker extends StatelessWidget {
@@ -57,7 +58,7 @@ class TransactionTypePicker extends StatelessWidget {
                   ),
                   Text(
                     tab['label'],
-                    style: TextStyle(
+                    style: kTextStyle.copyWith(
                       color: isSelected
                           ? colorTheme.onPrimary
                           : colorTheme.onSurface,

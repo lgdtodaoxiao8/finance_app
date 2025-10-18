@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/main.dart';
 import 'package:intl/intl.dart';
 
 class DatePickerField extends StatelessWidget {
@@ -73,7 +74,7 @@ class DatePickerField extends StatelessWidget {
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  child: const Text('Done'),
+                  child: Text('Done', style: kTextStyle.copyWith()),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -100,7 +101,7 @@ class DatePickerField extends StatelessWidget {
     return TextButton.icon(
       onPressed: Platform.isIOS ? _cupertinoPickDateTime : _pickDate,
       icon: const Icon(Icons.calendar_today, size: 18),
-      label: Text(_formatDate(value)),
+      label: Text(_formatDate(value), style: kTextStyle.copyWith()),
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

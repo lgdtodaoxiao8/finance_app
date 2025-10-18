@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:finance_app/main.dart';
 
 class PopupDropdownSimple extends StatelessWidget {
   const PopupDropdownSimple({
@@ -52,7 +52,7 @@ class PopupDropdownSimple extends StatelessWidget {
               onTap: () => onSelect(value),
               child: Text(
                 value,
-                style: GoogleFonts.lato(
+                style: kTextStyle.copyWith(
                   fontSize: 16,
                   color: isSelected
                       ? const Color(0xFFB3B3B8)
@@ -93,7 +93,7 @@ class PopupDropdownSimple extends StatelessWidget {
                     children: [
                       Text(
                         currentValue,
-                        style: GoogleFonts.lato(
+                        style: kTextStyle.copyWith(
                           fontSize: 16,
                           color: const Color(0xFF242528),
                           fontWeight: FontWeight.w600,
@@ -112,7 +112,7 @@ class PopupDropdownSimple extends StatelessWidget {
             left: 5,
             child: Text(
               label,
-              style: GoogleFonts.lato(
+              style: kTextStyle.copyWith(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF242528),

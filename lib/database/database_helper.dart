@@ -68,16 +68,43 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> deleteTable(String tableName) async {
+    try {
+      // Получаем соединение с базой данных
+      final db =
+          await database; // Убедитесь, что у вас есть доступ к базе данных
+
+      // Проверяем, существует ли таблица перед удалением
+      final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        [tableName],
+      );
+
+      if (tables.isNotEmpty) {
+        // Выполняем удаление таблицы
+        await db.execute('DROP TABLE IF EXISTS $tableName');
+        print('Table $tableName successfully deleted');
+      } else {
+        print('Table $tableName does not exist, no action taken');
+      }
+    } catch (e) {
+      print('Error deleting table $tableName: $e');
+      rethrow; // Пробрасываем ошибку дальше для обработки в вызывающем коде
+    }
+  }
+
   Future _createDB(Database db, int version) async {
     await db.execute('''
     CREATE TABLE currencies (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
       code TEXT,
       symbol TEXT,
       rate_to_base REAL
     )
     ''');
-
+    //name
+    //rate to base null
     await db.execute('''
     CREATE TABLE accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,6 +166,7 @@ class DatabaseHelper {
              c.name as category_name,
              c.color as category_color,
              c.icon_code_point as category_icon_code,
+             cur.name as currency_name,
              cur.code as currency_code
       FROM transactions t
       JOIN accounts a ON t.account_id = a.id
@@ -149,8 +177,8 @@ class DatabaseHelper {
     ''');
   }
 
-  Future<void> deleteTable() async {
-    final db = await instance.database;
-    await db.execute('DROP TABLE IF EXISTS accounts');
-  }
+  // Future<void> deleteTable() async {
+  //   final db = await instance.database;
+  //   await db.execute('DROP TABLE IF EXISTS accounts');
+  // }
 }

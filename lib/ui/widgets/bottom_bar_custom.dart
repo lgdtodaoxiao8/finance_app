@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finance_app/main.dart';
 
 class BottomBarCustom extends StatefulWidget {
   const BottomBarCustom({super.key, required this.onChanged});
@@ -41,7 +42,7 @@ class _BottomBarCustomState extends State<BottomBarCustom> {
             ),
             Text(
               label,
-              style: TextStyle(
+              style: kTextStyle.copyWith(
                 color: isActive ? colorScheme.surface : colorScheme.secondary,
               ),
             ),
@@ -57,7 +58,7 @@ class _BottomBarCustomState extends State<BottomBarCustom> {
 
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).padding.bottom - 5,
+        bottom: MediaQuery.of(context).padding.bottom,
         right: 15,
         left: 15,
       ),

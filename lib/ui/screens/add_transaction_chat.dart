@@ -1,6 +1,7 @@
 import 'package:finance_app/database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:finance_app/main.dart';
 
 class AddTransactionChat extends StatefulWidget {
   const AddTransactionChat({
@@ -178,7 +179,10 @@ class _AddTransactionChatState extends State<AddTransactionChat>
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: GoogleFonts.lato(fontSize: 13, fontWeight: FontWeight.w600),
+      labelStyle: kTextStyle.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+      ),
       prefixIcon: prefix,
       suffixIcon: suffix,
       filled: true,
@@ -197,7 +201,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
       appBar: AppBar(
         title: Text(
           _selectedIndex == 0 ? 'Add Transaction' : 'Add Transfer',
-          style: GoogleFonts.lato(fontWeight: FontWeight.w700),
+          style: kTextStyle.copyWith(fontWeight: FontWeight.w700),
         ),
         elevation: 0,
       ),
@@ -216,7 +220,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                     Expanded(
                       child: Text(
                         _error!,
-                        style: GoogleFonts.lato(color: Colors.red),
+                        style: kTextStyle.copyWith(color: Colors.red),
                       ),
                     ),
                   ],
@@ -257,7 +261,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                         Center(
                           child: Text(
                             'You have no accounts',
-                            style: GoogleFonts.lato(),
+                            style: kTextStyle.copyWith(),
                           ),
                         )
                       else ...[
@@ -275,7 +279,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                                 value: int.parse(a['id'].toString()),
                                 child: Text(
                                   a['name'],
-                                  style: GoogleFonts.lato(),
+                                  style: kTextStyle.copyWith(),
                                 ),
                               ),
                           ],
@@ -299,7 +303,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                                     value: int.parse(a['id'].toString()),
                                     child: Text(
                                       a['name'],
-                                      style: GoogleFonts.lato(),
+                                      style: kTextStyle.copyWith(),
                                     ),
                                   ),
                               ],
@@ -311,7 +315,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 'No second account available',
-                                style: GoogleFonts.lato(),
+                                style: kTextStyle.copyWith(),
                               ),
                             ),
                           const SizedBox(height: 12),
@@ -334,7 +338,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                                     Icons.attach_money_rounded,
                                   ),
                                 ),
-                                style: GoogleFonts.lato(
+                                style: kTextStyle.copyWith(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -364,7 +368,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                                       value: int.parse(c['id'].toString()),
                                       child: Text(
                                         c['symbol'],
-                                        style: GoogleFonts.lato(),
+                                        style: kTextStyle.copyWith(),
                                       ),
                                     ),
                                 ],
@@ -407,7 +411,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                                       const SizedBox(width: 8),
                                       Text(
                                         c['name'],
-                                        style: GoogleFonts.lato(),
+                                        style: kTextStyle.copyWith(),
                                       ),
                                     ],
                                   ),
@@ -426,7 +430,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                             prefix: const Icon(Icons.note),
                           ),
                           maxLength: 80,
-                          style: GoogleFonts.lato(),
+                          style: kTextStyle.copyWith(),
                         ),
                         const SizedBox(height: 12),
 
@@ -442,7 +446,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                             Expanded(
                               child: Text(
                                 'Selected: ${_fmtShort(transactionDate)}, ${transactionDate.year}',
-                                style: GoogleFonts.lato(
+                                style: kTextStyle.copyWith(
                                   color: cs.onSurface.withOpacity(0.7),
                                 ),
                               ),
@@ -467,7 +471,10 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                                           initialiseDropDown();
                                         });
                                       },
-                                child: Text('Reset', style: GoogleFonts.lato()),
+                                child: Text(
+                                  'Reset',
+                                  style: kTextStyle.copyWith(),
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -492,7 +499,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
                                       )
                                     : Text(
                                         'Add',
-                                        style: GoogleFonts.lato(
+                                        style: kTextStyle.copyWith(
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -511,7 +518,7 @@ class _AddTransactionChatState extends State<AddTransactionChat>
             // small helper / hint
             Text(
               'Tip: you can add categories and accounts in settings',
-              style: GoogleFonts.lato(
+              style: kTextStyle.copyWith(
                 fontSize: 12,
                 color: cs.onSurface.withOpacity(0.6),
               ),
@@ -572,7 +579,7 @@ class SegmentedControl extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       opt['label'] as String,
-                      style: GoogleFonts.lato(
+                      style: kTextStyle.copyWith(
                         fontSize: 13,
                         color: selected ? cs.onPrimary : cs.onSurface,
                         fontWeight: selected
@@ -625,7 +632,7 @@ class _DatePickerButton extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               fmt(date),
-              style: GoogleFonts.lato(fontWeight: FontWeight.w600),
+              style: kTextStyle.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(width: 8),
             Icon(

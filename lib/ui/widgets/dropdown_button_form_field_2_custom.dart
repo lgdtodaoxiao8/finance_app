@@ -1,6 +1,7 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import 'package:finance_app/main.dart';
 
 enum SecondaryIdentificator {
   accounts,
@@ -43,22 +44,26 @@ class DropdownButtonFormField2Custom extends StatelessWidget {
       child: DropdownButtonFormField2(
         selectedItemBuilder: (context) {
           if (values.isEmpty) {
-            return [const DropdownMenuItem(child: Text('No items'))];
+            return [
+              DropdownMenuItem(
+                child: Text('No items', style: kTextStyle.copyWith()),
+              ),
+            ];
           }
           return values.map((account) {
             return DropdownMenuItem<int>(
               alignment: AlignmentGeometry.centerLeft,
               value: int.parse(account['id'].toString()),
               child: secondaryId == SecondaryIdentificator.currencies
-                  ? Text(account['symbol'])
-                  : Text(account['name']),
+                  ? Text(account['symbol'], style: kTextStyle.copyWith())
+                  : Text(account['name'], style: kTextStyle.copyWith()),
             );
           }).toList();
         },
         value: value,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: GoogleFonts.lato(
+          labelStyle: kTextStyle.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -112,7 +117,7 @@ class DropdownButtonFormField2Custom extends StatelessWidget {
                   if (secondaryId == SecondaryIdentificator.currencies)
                     Text(
                       val[secondaryIdentificatorDictionary[secondaryId]],
-                      style: GoogleFonts.lato(
+                      style: kTextStyle.copyWith(
                         color: isSelected ? const Color(0xFFB3B3B8) : null,
                       ),
                     )
@@ -128,7 +133,7 @@ class DropdownButtonFormField2Custom extends StatelessWidget {
                     const SizedBox(width: 7),
                     Text(
                       val['name'],
-                      style: GoogleFonts.lato(
+                      style: kTextStyle.copyWith(
                         color: isSelected ? const Color(0xFFB3B3B8) : null,
                       ),
                     ),
@@ -152,7 +157,7 @@ class DropdownButtonFormField2Custom extends StatelessWidget {
           //       const SizedBox(width: 7),
           //       Text(
           //         'Add one',
-          //         style: GoogleFonts.lato(
+          //         style:  kTextStyle.copyWith(
           //           color: Theme.of(context).colorScheme.primary,
           //         ),
           //       ),

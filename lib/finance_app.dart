@@ -1,9 +1,11 @@
+import 'package:finance_app/assets/currencies/currencies_list.dart';
 import 'package:finance_app/database/database_helper.dart';
+import 'package:finance_app/main.dart';
 import 'package:finance_app/ui/screens/add_transaction.dart';
 import 'package:finance_app/ui/screens/add_transaction_chat.dart';
 import 'package:finance_app/ui/widgets/bottom_bar_custom.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:intl/intl.dart';
 
 enum PeriodPreset { day, week, month, year, custom }
@@ -36,19 +38,24 @@ class _FinanceAppState extends State<FinanceApp> {
   @override
   void initState() {
     super.initState();
+    // db.deleteTable('currencies');
     // db.deleteDatabaseFile();
 
     _seedData();
+    // throw 'Stopped';
   }
 
   Future<void> _seedData() async {
     final currencies = await db.getAll("currencies");
     if (currencies.isEmpty) {
-      await db.insert("currencies", {
-        "code": "KZT",
-        "symbol": "₸",
-        "rate_to_base": 1.0,
-      });
+      for (final currency in currenciesList) {
+        await db.insert("currencies", currency);
+      }
+      // await db.insert("currencies", {
+      //   "code": "KZT",
+      //   "symbol": "₸",
+      //   "rate_to_base": 1.0,
+      // });
     }
     final accounts = await db.getAll("accounts");
     if (accounts.isEmpty) {
@@ -156,19 +163,19 @@ class _FinanceAppState extends State<FinanceApp> {
 
   String formatShortDateAutoDetect(DateTimeRange range) {
     if (_preset == PeriodPreset.custom) {
-      final totalDays = range.end.difference(range.start).inDays + 1;
-      late PeriodPreset strategy;
-      if (totalDays <= 1) {
-        strategy = PeriodPreset.day;
-      } else if (totalDays <= 7) {
-        strategy = PeriodPreset.week;
-      } // group by day
-      else if (totalDays <= 30) {
-        strategy = PeriodPreset.month;
-      } // group by week
-      else {
-        strategy = PeriodPreset.year;
-      } // group by month
+      // final totalDays = range.end.difference(range.start).inDays + 1;
+      // late PeriodPreset strategy;
+      // if (totalDays <= 1) {
+      //   strategy = PeriodPreset.day;
+      // } else if (totalDays <= 7) {
+      //   strategy = PeriodPreset.week;
+      // } // group by day
+      // else if (totalDays <= 30) {
+      //   strategy = PeriodPreset.month;
+      // } // group by week
+      // else {
+      //   strategy = PeriodPreset.year;
+      // } // group by month
       return formatAuto(range, _preset);
     }
     return formatAuto(range, _preset);
@@ -350,7 +357,7 @@ class _FinanceAppState extends State<FinanceApp> {
       children: PeriodPreset.values.map((p) {
         final selected = p == _preset;
         return ChoiceChip(
-          label: Text(labels[p]!),
+          label: Text(labels[p]!, style: kTextStyle.copyWith()),
           selected: selected,
           onSelected: (v) async {
             if (!v) return;
@@ -470,8 +477,8 @@ class _FinanceAppState extends State<FinanceApp> {
     final groups = groupTransactions(filtered, range.start, range.end, _preset);
     final report = getReport(filtered);
 
-    Widget content = const Center(
-      child: Text('Home'),
+    Widget content = Center(
+      child: Text('Home', style: kTextStyle.copyWith()),
     );
 
     if (screenIndex == 1) {
@@ -488,7 +495,10 @@ class _FinanceAppState extends State<FinanceApp> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(formatShortDateAutoDetect(range)),
+                      Text(
+                        formatShortDateAutoDetect(range),
+                        style: kTextStyle.copyWith(),
+                      ),
 
                       const Spacer(),
 
@@ -497,7 +507,7 @@ class _FinanceAppState extends State<FinanceApp> {
                         children: [
                           Text(
                             '+${(report['income'] ?? 0).toStringAsFixed(2)}',
-                            style: GoogleFonts.lato(
+                            style: kTextStyle.copyWith(
                               color: Colors.green[400],
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -505,7 +515,7 @@ class _FinanceAppState extends State<FinanceApp> {
                           ),
                           Text(
                             '-${(report['expense'] ?? 0).toStringAsFixed(2)}',
-                            style: GoogleFonts.lato(
+                            style: kTextStyle.copyWith(
                               color: Theme.of(
                                 context,
                               ).colorScheme.onSecondaryContainer,
@@ -523,10 +533,13 @@ class _FinanceAppState extends State<FinanceApp> {
           ),
 
           if (groups.isEmpty)
-            const SliverFillRemaining(
+            SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: Text('Нет транзакций в выбранном диапазоне'),
+                child: Text(
+                  'Нет транзакций в выбранном диапазоне',
+                  style: kTextStyle.copyWith(),
+                ),
               ),
             )
           else
@@ -555,7 +568,7 @@ class _FinanceAppState extends State<FinanceApp> {
                             if (group['title'] != null) ...[
                               Text(
                                 group['title'] as String,
-                                style: GoogleFonts.lato(
+                                style: kTextStyle.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -585,7 +598,7 @@ class _FinanceAppState extends State<FinanceApp> {
                                 title: t['type'] == 'expense'
                                     ? Text(
                                         '- ${t['amount']} ${t['currency_code']}',
-                                        style: GoogleFonts.lato(
+                                        style: kTextStyle.copyWith(
                                           color: Theme.of(
                                             context,
                                           ).colorScheme.error,
@@ -595,14 +608,14 @@ class _FinanceAppState extends State<FinanceApp> {
                                     : t['type'] == 'income'
                                     ? Text(
                                         '+ ${t['amount']} ${t['currency_code']}',
-                                        style: GoogleFonts.lato(
+                                        style: kTextStyle.copyWith(
                                           color: Colors.green[500],
                                           fontWeight: FontWeight.w500,
                                         ),
                                       )
                                     : Text(
                                         '${t['amount']} ${t['currency_code']}',
-                                        style: GoogleFonts.lato(
+                                        style: kTextStyle.copyWith(
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -633,6 +646,7 @@ class _FinanceAppState extends State<FinanceApp> {
 
                                 trailing: Text(
                                   '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}',
+                                  style: kTextStyle.copyWith(),
                                 ),
                               );
                             }),
@@ -651,7 +665,7 @@ class _FinanceAppState extends State<FinanceApp> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: Text('Home', style: kTextStyle.copyWith()),
         backgroundColor: const Color(0xFFF7F7FA),
         centerTitle: true,
         scrolledUnderElevation: 0,

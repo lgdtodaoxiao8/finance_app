@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:finance_app/main.dart';
 
 enum Tables {
   currency,
@@ -67,7 +67,7 @@ class PopupDropdownSpecial extends StatelessWidget {
                   if (tableType == Tables.currency)
                     Text(
                       value['symbol'],
-                      style: GoogleFonts.lato(
+                      style: kTextStyle.copyWith(
                         fontSize: 16,
                         color: isSelected
                             ? const Color(0xFFB3B3B8)
@@ -89,7 +89,7 @@ class PopupDropdownSpecial extends StatelessWidget {
                   Text(
                     value[tablesValues[tableType]![1]],
                     // value['name'],
-                    style: GoogleFonts.lato(
+                    style: kTextStyle.copyWith(
                       fontSize: 16,
                       color: isSelected
                           ? const Color(0xFFB3B3B8)
@@ -123,7 +123,7 @@ class PopupDropdownSpecial extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'Add one',
-                style: GoogleFonts.lato(
+                style: kTextStyle.copyWith(
                   fontSize: 16,
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w500,
@@ -171,7 +171,7 @@ class PopupDropdownSpecial extends StatelessWidget {
                                 values.firstWhere(
                                   (value) => value['id'] == currentValue,
                                 )['symbol'],
-                                style: GoogleFonts.lato(
+                                style: kTextStyle.copyWith(
                                   fontSize: 20,
                                   color: const Color(0xFF242528),
                                   fontWeight: FontWeight.w500,
@@ -196,7 +196,7 @@ class PopupDropdownSpecial extends StatelessWidget {
                           values.firstWhere(
                             (value) => value['id'] == currentValue,
                           )[tablesValues[tableType]![1]], //was 'name' inside
-                          style: GoogleFonts.lato(
+                          style: kTextStyle.copyWith(
                             fontSize: 16,
                             color: const Color(0xFF242528),
                             fontWeight: FontWeight.w500,
@@ -217,7 +217,7 @@ class PopupDropdownSpecial extends StatelessWidget {
               left: 5,
               child: Text(
                 label,
-                style: GoogleFonts.lato(
+                style: kTextStyle.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF242528),
