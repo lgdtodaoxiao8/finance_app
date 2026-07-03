@@ -75,14 +75,11 @@ final ThemeData themeFromSeed = ThemeData(
   ),
   chipTheme: ChipThemeData(
     backgroundColor: AppColors.surface,
-    selectedColor: AppColors.primary,
+    selectedColor: const Color(0x1F3B82F6), // primary @ 12%
     disabledColor: AppColors.field,
     side: const BorderSide(color: AppColors.divider),
     showCheckmark: false,
     labelStyle: _textTheme.labelLarge,
-    secondaryLabelStyle: _textTheme.labelLarge?.copyWith(
-      color: AppColors.onPrimary,
-    ),
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(kRadiusSm),

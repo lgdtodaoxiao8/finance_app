@@ -272,7 +272,7 @@ class _IconPickerState extends State<IconPicker> {
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: const Color(0xFFEDEDF2),
+        color: AppColors.field,
       ),
       child: AnimatedPadding(
         duration: const Duration(milliseconds: 200),

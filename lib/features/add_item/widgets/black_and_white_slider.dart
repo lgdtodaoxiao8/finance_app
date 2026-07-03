@@ -1,3 +1,4 @@
+import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
 class BlackAndWhiteSlider extends StatefulWidget {
@@ -50,7 +51,7 @@ class _BlackAndWhiteSliderState extends State<BlackAndWhiteSlider> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFEDEDF2),
+        color: AppColors.field,
         borderRadius: BorderRadius.circular(20),
       ),
       width: double.infinity,

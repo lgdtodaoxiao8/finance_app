@@ -118,9 +118,16 @@ class _PeriodChips extends StatelessWidget {
     return Wrap(
       spacing: 8,
       children: PeriodPreset.values.map((p) {
+        final selected = p == preset;
         return ChoiceChip(
-          label: Text(periodChipLabels[p]!, style: kTextStyle.copyWith()),
-          selected: p == preset,
+          label: Text(
+            periodChipLabels[p]!,
+            style: kTextStyle.copyWith(
+              color: selected ? AppColors.primary : AppColors.textPrimary,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+          selected: selected,
           onSelected: (selected) {
             if (!selected) return;
             if (p == PeriodPreset.custom) {
