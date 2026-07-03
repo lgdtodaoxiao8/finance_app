@@ -1,4 +1,5 @@
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/format.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
@@ -46,10 +47,10 @@ class _TransactionsListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FA),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('List', style: kTextStyle.copyWith()),
-        backgroundColor: const Color(0xFFF7F7FA),
+        title: Text('Transactions', style: kTextStyle.copyWith()),
+        backgroundColor: AppColors.background,
         centerTitle: true,
         scrolledUnderElevation: 0,
         actions: [
@@ -177,29 +178,35 @@ class _PeriodSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final suffix = baseSymbol.isEmpty ? '' : ' $baseSymbol';
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: kTextStyle.copyWith()),
-        const Spacer(),
+        Expanded(
+          child: Text(
+            label,
+            style: kTextStyle.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '+${income.toStringAsFixed(2)}$suffix',
+              '+${formatMoney(income, baseSymbol)}',
               style: kTextStyle.copyWith(
-                color: Colors.green[400],
+                color: AppColors.positive,
                 fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w700,
               ),
             ),
             Text(
-              '-${expense.toStringAsFixed(2)}$suffix',
+              '-${formatMoney(expense, baseSymbol)}',
               style: kTextStyle.copyWith(
-                color: Theme.of(context).colorScheme.onSecondaryContainer,
+                color: AppColors.negative,
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -217,28 +224,31 @@ class _GroupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(kRadiusLg),
+          boxShadow: kCardShadow,
         ),
-        color: Colors.white,
-        elevation: 1,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (group.title != null) ...[
-                Text(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (group.title != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 2, left: 2),
+                child: Text(
                   group.title!,
-                  style: kTextStyle.copyWith(fontWeight: FontWeight.bold),
+                  style: kTextStyle.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                const SizedBox(height: 8),
-              ],
-              ...group.items.map((t) => _TransactionTile(transaction: t)),
-            ],
-          ),
+              ),
+            ...group.items.map((t) => _TransactionTile(transaction: t)),
+          ],
         ),
       ),
     );
@@ -255,71 +265,96 @@ class _TransactionTile extends StatelessWidget {
     final t = transaction;
     final code = t.currencyCode ?? '';
 
-    Widget amountText;
-    if (t.isExpense) {
-      amountText = Text(
-        '- ${t.amount} $code',
-        style: kTextStyle.copyWith(
-          color: Theme.of(context).colorScheme.error,
-          fontWeight: FontWeight.w500,
-        ),
-      );
-    } else if (t.isIncome) {
-      amountText = Text(
-        '+ ${t.amount} $code',
-        style: kTextStyle.copyWith(
-          color: Colors.green[500],
-          fontWeight: FontWeight.w500,
-        ),
-      );
-    } else {
-      amountText = Text(
-        '${t.amount} $code',
-        style: kTextStyle.copyWith(fontWeight: FontWeight.w500),
-      );
-    }
+    final primary = t.isTransfer
+        ? (t.accountDestinationName ?? '')
+        : (t.categoryName ?? '');
+    final secondary = t.accountName ?? '';
 
-    return ListTile(
+    final Color amountColor = t.isExpense
+        ? AppColors.negative
+        : t.isIncome
+        ? AppColors.positive
+        : AppColors.textPrimary;
+    final String amountStr = t.isExpense
+        ? '-${formatMoney(t.amount, code)}'
+        : t.isIncome
+        ? '+${formatMoney(t.amount, code)}'
+        : formatMoney(t.amount, code);
+    final time =
+        '${t.date.hour.toString().padLeft(2, '0')}:'
+        '${t.date.minute.toString().padLeft(2, '0')}';
+
+    return InkWell(
       onTap: () => Navigator.of(
         context,
       ).pushNamed('/add-transaction', arguments: t),
-      leading: Container(
-        width: 45,
-        height: 45,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: t.categoryColor,
-        ),
-        child: Icon(t.categoryIcon, color: t.categoryIconColor, size: 25),
-      ),
-      title: amountText,
-      subtitle: RichText(
-        text: TextSpan(
-          style: DefaultTextStyle.of(context).style,
+      borderRadius: BorderRadius.circular(kRadiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+        child: Row(
           children: [
-            TextSpan(text: t.accountName ?? ''),
-            WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: Icon(
-                t.isIncome
-                    ? Icons.arrow_left_rounded
-                    : Icons.arrow_right_rounded,
-                size: 20,
-                color: Colors.grey,
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: t.categoryColor,
+              ),
+              child: Icon(t.categoryIcon, color: t.categoryIconColor, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    primary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: kTextStyle.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    secondary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: kTextStyle.copyWith(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
-            TextSpan(
-              text: t.isTransfer
-                  ? (t.accountDestinationName ?? '')
-                  : (t.categoryName ?? ''),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  amountStr,
+                  style: kTextStyle.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: amountColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  time,
+                  style: kTextStyle.copyWith(
+                    fontSize: 12,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-      ),
-      trailing: Text(
-        '${t.date.hour.toString().padLeft(2, '0')}:'
-        '${t.date.minute.toString().padLeft(2, '0')}',
-        style: kTextStyle.copyWith(),
       ),
     );
   }

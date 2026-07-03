@@ -1,4 +1,5 @@
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/format.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/home/cubit/analytics_cubit.dart';
@@ -23,10 +24,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-String _money(double value, String? symbol) {
-  final s = value.toStringAsFixed(2);
-  return symbol == null || symbol.isEmpty ? s : '$s $symbol';
-}
+String _money(double value, String? symbol) => formatMoney(value, symbol);
 
 class _AnalyticsView extends StatelessWidget {
   const _AnalyticsView();
