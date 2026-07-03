@@ -9,6 +9,18 @@ abstract class TransactionRepository {
 
   /// Reactive stream that re-emits whenever any involved table changes.
   Stream<List<TransactionDetails>> watchAllWithDetails();
+
+  /// Inserts a transaction and returns its new id.
+  Future<int> add({
+    required int accountId,
+    int? accountDestinationId,
+    required int categoryId,
+    required int currencyId,
+    required double amount,
+    required DateTime date,
+    String? note,
+    required String type,
+  });
 }
 
 class DriftTransactionRepository implements TransactionRepository {
@@ -55,6 +67,34 @@ class DriftTransactionRepository implements TransactionRepository {
     return _db.customSelect(_detailsSql, readsFrom: _readsFrom).watch().map(
       (rows) =>
           rows.map((row) => TransactionDetails.fromMap(row.data)).toList(),
+    );
+  }
+
+  @override
+  Future<int> add({
+    required int accountId,
+    int? accountDestinationId,
+    required int categoryId,
+    required int currencyId,
+    required double amount,
+    required DateTime date,
+    String? note,
+    required String type,
+  }) {
+    return _db.into(_db.transactions).insert(
+      TransactionsCompanion.insert(
+        accountId: Value(accountId),
+        accountDestinationId: accountDestinationId == null
+            ? const Value.absent()
+            : Value(accountDestinationId),
+        categoryId: Value(categoryId),
+        currencyId: Value(currencyId),
+        amount: Value(amount),
+        date: Value(date.toUtc().toIso8601String()),
+        note: Value(note),
+        type: Value(type),
+        isCanceled: const Value(false),
+      ),
     );
   }
 }
