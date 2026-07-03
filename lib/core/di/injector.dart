@@ -3,6 +3,7 @@ import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
+import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:get_it/get_it.dart';
 
 /// Global service locator.
@@ -39,6 +40,15 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<CategoryRepository>()) {
     getIt.registerLazySingleton<CategoryRepository>(
       () => DriftCategoryRepository(getIt<AppDatabase>()),
+    );
+  }
+
+  if (!getIt.isRegistered<WidgetService>()) {
+    getIt.registerLazySingleton<WidgetService>(
+      () => WidgetService(
+        getIt<TransactionRepository>(),
+        getIt<CurrencyRepository>(),
+      ),
     );
   }
 }

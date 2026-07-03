@@ -26,6 +26,8 @@ dependencies:
   equatable: ^2.0.7
   # --- Analytics (Phase 3: charts) ---
   fl_chart: ^0.69.2
+  # --- Home-screen widgets ---
+  home_widget: ^0.7.0
 
 dev_dependencies:
   flutter_test:
