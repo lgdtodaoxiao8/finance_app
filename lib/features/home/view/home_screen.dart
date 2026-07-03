@@ -1,5 +1,6 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/empty_state.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/home/cubit/analytics_cubit.dart';
@@ -274,13 +275,12 @@ class _SpendingCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (spends.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32),
-              child: Center(
-                child: Text(
-                  'No expenses in this period',
-                  style: kTextStyle.copyWith(color: Colors.grey[600]),
-                ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 28),
+              child: AppEmptyState(
+                icon: Icons.pie_chart_outline_rounded,
+                title: 'No expenses',
+                subtitle: 'Add a transaction to see the breakdown',
               ),
             )
           else ...[

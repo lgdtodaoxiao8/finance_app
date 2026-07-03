@@ -1,5 +1,6 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/empty_state.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
@@ -106,13 +107,12 @@ class _TransactionsListView extends StatelessWidget {
                 ),
               ),
               if (groups.isEmpty)
-                SliverFillRemaining(
+                const SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      'Нет транзакций в выбранном диапазоне',
-                      style: kTextStyle.copyWith(),
-                    ),
+                  child: AppEmptyState(
+                    icon: Icons.receipt_long_rounded,
+                    title: 'No transactions',
+                    subtitle: 'Nothing in this period yet',
                   ),
                 )
               else
