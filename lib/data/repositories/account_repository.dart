@@ -12,6 +12,12 @@ abstract class AccountRepository {
     required int iconCodePoint,
   });
 
+  /// Number of transactions referencing this account (as source or
+  /// destination) — used to block deletion of an account still in use.
+  Future<int> transactionCount(int accountId);
+
+  Future<void> delete(int id);
+
   Stream<List<Account>> watchAll();
 }
 
@@ -49,6 +55,24 @@ class DriftAccountRepository implements AccountRepository {
         iconCodePoint: Value(iconCodePoint),
       ),
     );
+  }
+
+  @override
+  Future<int> transactionCount(int accountId) async {
+    final row = await _db
+        .customSelect(
+          'SELECT COUNT(*) AS c FROM transactions '
+          'WHERE account_id = ? OR account_destination_id = ?',
+          variables: [Variable<int>(accountId), Variable<int>(accountId)],
+          readsFrom: {_db.transactions},
+        )
+        .getSingle();
+    return row.read<int>('c');
+  }
+
+  @override
+  Future<void> delete(int id) async {
+    await (_db.delete(_db.accounts)..where((a) => a.id.equals(id))).go();
   }
 
   @override

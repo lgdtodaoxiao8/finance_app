@@ -123,11 +123,6 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
-                  onPressed: busy ? null : () => Navigator.of(context).pop(),
-                  child: Text('Cancel', style: kTextStyle.copyWith()),
-                ),
-                const SizedBox(width: 10),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,

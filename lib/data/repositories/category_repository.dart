@@ -13,6 +13,12 @@ abstract class CategoryRepository {
     required int iconCodePoint,
   });
 
+  /// Number of transactions using this category — used to block deletion of a
+  /// category still in use.
+  Future<int> transactionCount(int categoryId);
+
+  Future<void> delete(int id);
+
   Stream<List<Category>> watchAll();
 }
 
@@ -53,6 +59,23 @@ class DriftCategoryRepository implements CategoryRepository {
         iconCodePoint: Value(iconCodePoint),
       ),
     );
+  }
+
+  @override
+  Future<int> transactionCount(int categoryId) async {
+    final row = await _db
+        .customSelect(
+          'SELECT COUNT(*) AS c FROM transactions WHERE category_id = ?',
+          variables: [Variable<int>(categoryId)],
+          readsFrom: {_db.transactions},
+        )
+        .getSingle();
+    return row.read<int>('c');
+  }
+
+  @override
+  Future<void> delete(int id) async {
+    await (_db.delete(_db.categories)..where((c) => c.id.equals(id))).go();
   }
 
   @override

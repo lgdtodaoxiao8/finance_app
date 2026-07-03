@@ -12,15 +12,60 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F7FA),
       appBar: AppBar(
         title: Text('Settings', style: kTextStyle.copyWith()),
+        backgroundColor: const Color(0xFFF7F7FA),
+        scrolledUnderElevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(25),
-        child: BlocProvider(
-          create: (_) => BaseCurrencyCubit(getIt<CurrencyRepository>()),
-          child: const SetBaseCurrency(),
-        ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        children: [
+          _Card(
+            title: 'Base currency',
+            child: BlocProvider(
+              create: (_) => BaseCurrencyCubit(getIt<CurrencyRepository>()),
+              child: const SetBaseCurrency(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const AccountsSection(),
+          const SizedBox(height: 16),
+          const CategoriesSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  const _Card({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black12)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: kTextStyle.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
       ),
     );
   }
