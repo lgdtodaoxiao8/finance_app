@@ -91,17 +91,23 @@ List<TransactionDetails> filterByRange(
       .toList();
 }
 
-/// Sum of income/expense amounts within [filtered].
-///
-/// NOTE: does not convert between currencies yet (mixes currencies) — this is
-/// addressed when multi-currency analytics land.
+/// Sum of income/expense within [filtered], converted to the base currency
+/// so amounts in different currencies are comparable.
 Map<String, double> report(List<TransactionDetails> filtered) {
   final result = <String, double>{};
   for (final t in filtered) {
     if (t.isExpense) {
-      result.update('expense', (v) => v + t.amount, ifAbsent: () => t.amount);
+      result.update(
+        'expense',
+        (v) => v + t.amountInBase,
+        ifAbsent: () => t.amountInBase,
+      );
     } else if (t.isIncome) {
-      result.update('income', (v) => v + t.amount, ifAbsent: () => t.amount);
+      result.update(
+        'income',
+        (v) => v + t.amountInBase,
+        ifAbsent: () => t.amountInBase,
+      );
     }
   }
   return result;

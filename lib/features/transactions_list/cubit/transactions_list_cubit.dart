@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
 import 'package:flutter/material.dart';
@@ -13,13 +14,15 @@ part 'transactions_list_state.dart';
 /// so the list refreshes automatically when a transaction is added elsewhere,
 /// and holds the selected period window.
 class TransactionsListCubit extends Cubit<TransactionsListState> {
-  TransactionsListCubit(this._repository)
+  TransactionsListCubit(this._repository, this._currencyRepository)
     : super(const TransactionsListState()) {
     _subscribe();
   }
 
   final TransactionRepository _repository;
+  final CurrencyRepository _currencyRepository;
   StreamSubscription<List<TransactionDetails>>? _subscription;
+  StreamSubscription<List<dynamic>>? _currencySubscription;
 
   void _subscribe() {
     _subscription = _repository.watchAllWithDetails().listen(
@@ -34,6 +37,16 @@ class TransactionsListCubit extends Cubit<TransactionsListState> {
         emit(state.copyWith(status: TransactionsStatus.error, error: '$e'));
       },
     );
+
+    // Keep the base-currency symbol (used to label totals) in sync.
+    _currencySubscription = _currencyRepository.watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          emit(state.copyWith(baseSymbol: c.currencySymbol));
+          return;
+        }
+      }
+    });
   }
 
   void selectPreset(PeriodPreset preset) {
@@ -56,6 +69,7 @@ class TransactionsListCubit extends Cubit<TransactionsListState> {
   @override
   Future<void> close() {
     _subscription?.cancel();
+    _currencySubscription?.cancel();
     return super.close();
   }
 }

@@ -87,18 +87,21 @@ class DriftCurrencyRepository implements CurrencyRepository {
 
   @override
   Future<void> makeBase(int id) async {
-    // NOTE: this preserves the original app's rebasing behaviour verbatim.
-    // The multiplier maths is known to be imperfect for chained rebases and is
-    // slated for a deliberate fix with dedicated tests later.
+    // rate_to_base(C) = value of 1 unit of C expressed in the base currency.
+    // When currency X becomes the new base, every rate must be re-expressed in
+    // X units: new_rate(C) = old_rate(C) / old_rate(X). Dividing all rates by
+    // X's current rate also makes X itself exactly 1.0.
     final base = await getBase();
+    final newBaseRate = await getRate(id);
 
     await _db.transaction(() async {
-      if (base == null) {
+      if (base == null || newBaseRate == null || newBaseRate == 0) {
+        // First-time setup (or a rate-less pick): X simply anchors at 1.0.
         await (_db.update(_db.currencies)..where((c) => c.id.equals(id))).write(
           const CurrenciesCompanion(rateToBase: Value(1.0)),
         );
       } else {
-        final multiplier = 1.0 / (base.currencyRateToBase ?? 1.0);
+        final multiplier = 1.0 / newBaseRate;
         await _db.customUpdate(
           'UPDATE currencies SET rate_to_base = rate_to_base * ? '
           'WHERE rate_to_base IS NOT NULL',

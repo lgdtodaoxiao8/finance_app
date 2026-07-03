@@ -8,6 +8,7 @@ class TransactionsListState extends Equatable {
     this.transactions = const [],
     this.preset = PeriodPreset.month,
     this.customRange,
+    this.baseSymbol,
     this.error,
   });
 
@@ -15,6 +16,9 @@ class TransactionsListState extends Equatable {
   final List<TransactionDetails> transactions;
   final PeriodPreset preset;
   final DateTimeRange? customRange;
+
+  /// Symbol of the base currency, used to label the converted totals.
+  final String? baseSymbol;
   final String? error;
 
   /// Active date window for [preset].
@@ -36,6 +40,7 @@ class TransactionsListState extends Equatable {
     List<TransactionDetails>? transactions,
     PeriodPreset? preset,
     DateTimeRange? customRange,
+    String? baseSymbol,
     String? error,
   }) {
     return TransactionsListState(
@@ -43,6 +48,7 @@ class TransactionsListState extends Equatable {
       transactions: transactions ?? this.transactions,
       preset: preset ?? this.preset,
       customRange: customRange ?? this.customRange,
+      baseSymbol: baseSymbol ?? this.baseSymbol,
       error: error,
     );
   }
@@ -53,6 +59,7 @@ class TransactionsListState extends Equatable {
     transactions,
     preset,
     customRange,
+    baseSymbol,
     error,
   ];
 }

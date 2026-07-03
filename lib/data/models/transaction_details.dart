@@ -23,6 +23,7 @@ class TransactionDetails extends Equatable {
     this.categoryIconCode,
     this.currencyName,
     this.currencyCode,
+    this.currencyRateToBase,
   });
 
   final int id;
@@ -47,9 +48,16 @@ class TransactionDetails extends Equatable {
   final String? currencyName;
   final String? currencyCode;
 
+  /// Exchange rate of this transaction's currency to the base currency.
+  final double? currencyRateToBase;
+
   bool get isExpense => type == 'expense';
   bool get isIncome => type == 'income';
   bool get isTransfer => type == 'transfer';
+
+  /// Amount converted into the base currency (falls back to the raw amount
+  /// when no rate is available).
+  double get amountInBase => amount * (currencyRateToBase ?? 1);
 
   Color get categoryColor =>
       categoryColorValue != null ? Color(categoryColorValue!) : Colors.grey;
@@ -88,6 +96,7 @@ class TransactionDetails extends Equatable {
       categoryIconCode: map['category_icon_code'] as int?,
       currencyName: map['currency_name'] as String?,
       currencyCode: map['currency_code'] as String?,
+      currencyRateToBase: (map['currency_rate_to_base'] as num?)?.toDouble(),
     );
   }
 
@@ -106,5 +115,6 @@ class TransactionDetails extends Equatable {
     categoryIconColorValue,
     categoryIconCode,
     currencyCode,
+    currencyRateToBase,
   ];
 }

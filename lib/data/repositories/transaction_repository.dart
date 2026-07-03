@@ -38,7 +38,8 @@ class DriftTransactionRepository implements TransactionRepository {
            c.icon_color as category_icon_color,
            c.icon_code_point as category_icon_code,
            cur.name as currency_name,
-           cur.code as currency_code
+           cur.code as currency_code,
+           cur.rate_to_base as currency_rate_to_base
     FROM transactions t
     JOIN accounts a ON t.account_id = a.id
     LEFT JOIN accounts a_des ON t.account_destination_id = a_des.id

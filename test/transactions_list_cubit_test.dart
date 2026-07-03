@@ -58,7 +58,10 @@ void main() {
 
   test('reactively surfaces a newly added transaction', () async {
     final (baseId, accountId, categoryId) = await seedReady();
-    final cubit = TransactionsListCubit(getIt<TransactionRepository>());
+    final cubit = TransactionsListCubit(
+      getIt<TransactionRepository>(),
+      getIt<CurrencyRepository>(),
+    );
 
     final expectation = expectLater(
       cubit.stream,
@@ -87,9 +90,65 @@ void main() {
     await cubit.close();
   });
 
+  test('totals are converted to the base currency', () async {
+    await seedData();
+    final currencyRepo = getIt<CurrencyRepository>();
+    final all = await currencyRepo.getAll();
+    final aId = all[0].currencyId;
+    final bId = all[1].currencyId;
+    await currencyRepo.makeBase(aId); // A base, rate 1.0
+    await currencyRepo.setRate(bId, 2.0); // 1 B = 2 A
+
+    final accountId = await getIt<AccountRepository>().add(
+      name: 'Cash',
+      currencyId: aId,
+      iconCodePoint: Icons.account_balance_wallet_rounded.codePoint,
+    );
+    final categoryId =
+        (await getIt<CategoryRepository>().getAll()).first.categoryId;
+    final now = DateTime.now();
+    final txRepo = getIt<TransactionRepository>();
+    await txRepo.add(
+      accountId: accountId,
+      categoryId: categoryId,
+      currencyId: aId,
+      amount: 10,
+      date: now,
+      type: 'income',
+    );
+    await txRepo.add(
+      accountId: accountId,
+      categoryId: categoryId,
+      currencyId: bId,
+      amount: 3,
+      date: now,
+      type: 'expense',
+    );
+
+    final cubit = TransactionsListCubit(txRepo, currencyRepo);
+    await expectLater(
+      cubit.stream,
+      emitsThrough(
+        predicate<TransactionsListState>(
+          (s) =>
+              s.status == TransactionsStatus.ready &&
+              s.transactions.length == 2,
+        ),
+      ),
+    );
+
+    final totals = cubit.state.totals;
+    expect(totals['income'], 10.0);
+    expect(totals['expense'], 6.0); // 3 B * 2 = 6 A
+    await cubit.close();
+  });
+
   test('selectPreset updates the state', () async {
     await seedReady();
-    final cubit = TransactionsListCubit(getIt<TransactionRepository>());
+    final cubit = TransactionsListCubit(
+      getIt<TransactionRepository>(),
+      getIt<CurrencyRepository>(),
+    );
     await expectLater(
       cubit.stream,
       emitsThrough(

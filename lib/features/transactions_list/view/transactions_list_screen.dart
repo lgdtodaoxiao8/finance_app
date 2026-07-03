@@ -1,5 +1,6 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/transactions_list/cubit/transactions_list_cubit.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
@@ -13,7 +14,10 @@ class TransactionsListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => TransactionsListCubit(getIt<TransactionRepository>()),
+      create: (_) => TransactionsListCubit(
+        getIt<TransactionRepository>(),
+        getIt<CurrencyRepository>(),
+      ),
       child: const _TransactionsListView(),
     );
   }
@@ -94,6 +98,7 @@ class _TransactionsListView extends StatelessWidget {
                         label: formatAuto(state.range, state.preset),
                         income: state.totals['income'] ?? 0,
                         expense: state.totals['expense'] ?? 0,
+                        baseSymbol: state.baseSymbol ?? '',
                       ),
                     ],
                   ),
@@ -162,14 +167,17 @@ class _PeriodSummary extends StatelessWidget {
     required this.label,
     required this.income,
     required this.expense,
+    required this.baseSymbol,
   });
 
   final String label;
   final double income;
   final double expense;
+  final String baseSymbol;
 
   @override
   Widget build(BuildContext context) {
+    final suffix = baseSymbol.isEmpty ? '' : ' $baseSymbol';
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -179,7 +187,7 @@ class _PeriodSummary extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '+${income.toStringAsFixed(2)}',
+              '+${income.toStringAsFixed(2)}$suffix',
               style: kTextStyle.copyWith(
                 color: Colors.green[400],
                 fontSize: 16,
@@ -187,7 +195,7 @@ class _PeriodSummary extends StatelessWidget {
               ),
             ),
             Text(
-              '-${expense.toStringAsFixed(2)}',
+              '-${expense.toStringAsFixed(2)}$suffix',
               style: kTextStyle.copyWith(
                 color: Theme.of(context).colorScheme.onSecondaryContainer,
                 fontSize: 14,
