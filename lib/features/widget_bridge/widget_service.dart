@@ -25,8 +25,9 @@ class WidgetService {
   static const String androidWidgetName = 'FinanceWidgetProvider';
 
   /// iOS App Group shared between the app and the widget extension.
-  /// Set the real value once the widget extension is created in Xcode.
-  static const String appGroupId = 'group.finance.app.widget';
+  /// Must match the App Group capability added to both the Runner and the
+  /// widget-extension targets in Xcode.
+  static const String appGroupId = 'group.com.example.financeApp';
 
   StreamSubscription<List<TransactionDetails>>? _txSubscription;
   StreamSubscription<List<dynamic>>? _currencySubscription;
