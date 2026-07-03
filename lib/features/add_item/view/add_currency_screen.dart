@@ -1,280 +1,190 @@
-import 'package:finance_app/database/database_helper.dart';
+import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/data/repositories/currency_repository.dart';
+import 'package:finance_app/features/add_item/cubit/add_currency_cubit.dart';
 import 'package:finance_app/features/add_item/widgets/widgets.dart';
-import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class AddCurrencyScreen extends StatefulWidget {
-  const AddCurrencyScreen({
-    super.key,
-  });
+class AddCurrencyScreen extends StatelessWidget {
+  const AddCurrencyScreen({super.key});
+
   @override
-  State<AddCurrencyScreen> createState() => _AddCurrencyScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AddCurrencyCubit(getIt<CurrencyRepository>()),
+      child: const _AddCurrencyView(),
+    );
+  }
 }
 
-class _AddCurrencyScreenState extends State<AddCurrencyScreen> {
-  double _rateToBase = 0;
-
-  final _rateKey = GlobalKey<CustomTextFieldState>();
-
-  final db = DatabaseHelper.instance;
-
-  int? _currencyId;
-  String? defaultCurrencySymbol;
-
-  late Future<List<Map<String, dynamic>>> _currencyListFuture;
-
-  bool isSending = false;
-  bool baseIsNotSet = false;
+class _AddCurrencyView extends StatefulWidget {
+  const _AddCurrencyView();
 
   @override
-  void initState() {
-    super.initState();
-    _currencyListFuture = fetchRateWithNull();
-    // fetchDefaultCurrency();
+  State<_AddCurrencyView> createState() => _AddCurrencyViewState();
+}
+
+class _AddCurrencyViewState extends State<_AddCurrencyView> {
+  final _rateKey = GlobalKey<CustomTextFieldState>();
+
+  double? _parseRate(String text) => double.tryParse(text.replaceAll(',', '.'));
+
+  String? _validateRate(String text) {
+    final value = _parseRate(text);
+    if (value == null) return 'Must be a number';
+    if (value <= 0) return 'Must be more than 0';
+    return null;
   }
 
-  Future<List<Map<String, dynamic>>> fetchRateWithNull() async {
-    try {
-      await db.database;
-
-      final currencyList = await db.getCurrenciesWithNullRate();
-      initializeCurrency(currencyList);
-
-      await fetchDefaultCurrency();
-
-      return currencyList;
-    } catch (e, st) {
-      debugPrint('Faild to fetch currencies with null rate: $e\n$st');
-      return [];
+  void _save(AddCurrencyState state) {
+    if (!state.baseIsNotSet) {
+      final valid = _rateKey.currentState?.validate() ?? false;
+      if (!valid) return;
     }
+    context.read<AddCurrencyCubit>().save();
   }
 
-  // Future<List<Map<String, dynamic>>> fetchDefaultCurrency() async {
-  Future fetchDefaultCurrency() async {
-    try {
-      await db.database;
-
-      final baseCurrency = await db.getDefaultCurrency();
-      if (baseCurrency.isEmpty) {
-        setState(() {
-          baseIsNotSet = true;
-        });
-      } else {
-        defaultCurrencySymbol = baseCurrency.first['symbol'];
-      }
-      //else ... work out the case when default currensy wasn't set
-
-      // return baseCurrency;
-    } catch (e, st) {
-      debugPrint('Faild to fetch base currency: $e\n$st');
-    }
+  String _counterText(AddCurrencyState state) {
+    if (state.rate <= 0) return 'Exchange rate to base cur.';
+    final rateText = state.rate % 1 == 0
+        ? state.rate.toInt().toString()
+        : state.rate.toString();
+    return '1 ${state.baseSymbol ?? ''}  is equal  '
+        '$rateText ${state.selected?.currencySymbol ?? ''}';
   }
 
-  void initializeCurrency(List<Map<String, dynamic>> currenyList) {
-    if (currenyList.isNotEmpty) {
-      _currencyId = currenyList.first['id'];
-    } //re-write all currency list in db
-  }
-
-  void updateCurrencyId(int value) {
-    setState(() {
-      _currencyId = value;
-    });
-  }
-
-  void saveNewItem() async {
-    final rateIsValid = _rateKey.currentState?.validate() ?? false;
-
-    if (!rateIsValid && !baseIsNotSet) return;
-
-    if (_currencyId case final id?) {
-      try {
-        setState(() {
-          isSending = true;
-        });
-
-        if (baseIsNotSet) {
-          await db.makeCurrencyBase(
-            id,
-          );
-        } else {
-          await db.setNewRate(_rateToBase, _currencyId!);
-        }
-
-        setState(() {
-          isSending = false;
-        });
-
-        if (mounted) {
-          Navigator.of(context).pop(_currencyId!);
-          //return currency object instead id
-        }
-      } catch (e) {
-        setState(() {
-          isSending = false;
-        });
-
-        debugPrint("Error in add_currency_screen: $e");
-
-        if (mounted) {
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AddCurrencyCubit, AddCurrencyState>(
+      listenWhen: (p, c) => p.savedId != c.savedId || p.error != c.error,
+      listener: (context, state) {
+        if (state.savedId != null) {
+          Navigator.of(context).pop(state.savedId);
+        } else if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                "Somethig went wrong with the adding new currency: $e",
+                'Something went wrong with the adding new currency: '
+                '${state.error}',
                 style: kTextStyle.copyWith(overflow: TextOverflow.visible),
               ),
               backgroundColor: Colors.red,
             ),
           );
         }
-      }
-    }
-  }
-
-  double? parseRateText(String text) {
-    final normalized = text.replaceAll(',', '.');
-    final value = double.tryParse(normalized);
-    return value;
-  }
-
-  String? rateValidate(String text) {
-    final value = parseRateText(text);
-    if (value == null) return 'Must be a number';
-    if (value <= 0) return 'Must be more than 0';
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          baseIsNotSet ? 'Set Base Currency' : 'New Currency',
-          style: kTextStyle.copyWith(
-            fontSize: 22,
-            color: const Color(0xFF242528),
+      },
+      builder: (context, state) {
+        final cubit = context.read<AddCurrencyCubit>();
+        return Scaffold(
+          appBar: AppBar(
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            title: Text(
+              state.baseIsNotSet ? 'Set Base Currency' : 'New Currency',
+              style: kTextStyle.copyWith(
+                fontSize: 22,
+                color: const Color(0xFF242528),
+              ),
+            ),
           ),
-        ),
-      ),
-      body: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: FutureBuilder(
-            future: _currencyListFuture,
-            builder: (context, asyncSnapshot) {
-              if (asyncSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-              if (asyncSnapshot.hasError) {
-                debugPrint(asyncSnapshot.error.toString());
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Text(
-                      'Something went wrong',
-                    ),
-                  ),
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  PopupDropdownConstant(
-                    currentId: _currencyId,
-                    onSelect: updateCurrencyId,
-                    values: asyncSnapshot.data,
-                    label: 'All currencies',
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  if (!baseIsNotSet) ...[
-                    CustomTextField(
-                      key: _rateKey,
-                      hint: 'e.g. 1.25 or 0.73',
-                      label: 'Rate to base',
-                      textPadding: const EdgeInsetsGeometry.symmetric(
-                        horizontal: 10,
+          body: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: state.status == AddCurrencyStatus.loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : state.status == AddCurrencyStatus.error
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Text('Something went wrong'),
                       ),
-                      fieldFontSize: 15,
-                      errorTextPadding: const EdgeInsetsGeometry.symmetric(
-                        horizontal: 15,
-                        vertical: 4,
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      validate: rateValidate,
-                      onChanged: () {
-                        final text = _rateKey.currentState?.text ?? '';
-                        final rate = parseRateText(text);
-                        setState(() {
-                          _rateToBase = rate ?? 0;
-                        });
-                      },
-                      counterTextPadding: const EdgeInsetsGeometry.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      counter: _rateToBase > 0
-                          ? '1 $defaultCurrencySymbol  is equal  ${_rateToBase % 1 == 0 ? _rateToBase.toInt() : _rateToBase.toDouble()} ${asyncSnapshot.data?.firstWhere((raw) => raw['id'] == _currencyId)['symbol']}'
-                          : 'Exchange rate to base cur.',
-                    ),
-
-                    const SizedBox(height: 20),
-                  ],
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: isSending
-                            ? null
-                            : () {
-                                Navigator.of(context).pop();
-                              },
-                        child: Text(
-                          'Cancel',
-                          style: kTextStyle.copyWith(),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        PopupDropdownConstant(
+                          currentId: state.selectedId,
+                          onSelect: cubit.selectCurrency,
+                          values: [for (final c in state.currencies) c.toMap()],
+                          label: 'All currencies',
                         ),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onPrimary,
-                        ),
-                        onPressed: isSending ? null : saveNewItem,
-                        child: isSending
-                            ? const CircularProgressIndicator()
-                            : Text(
-                                'Add',
-                                style: kTextStyle.copyWith(),
+                        const SizedBox(height: 15),
+                        if (!state.baseIsNotSet) ...[
+                          CustomTextField(
+                            key: _rateKey,
+                            hint: 'e.g. 1.25 or 0.73',
+                            label: 'Rate to base',
+                            textPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                            ),
+                            fieldFontSize: 15,
+                            errorTextPadding: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 4,
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            validate: _validateRate,
+                            onChanged: () {
+                              final text = _rateKey.currentState?.text ?? '';
+                              cubit.setRate(_parseRate(text));
+                            },
+                            counterTextPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            counter: _counterText(state),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: state.sending
+                                  ? null
+                                  : () => Navigator.of(context).pop(),
+                              child: Text('Cancel', style: kTextStyle.copyWith()),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimary,
                               ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
+                              onPressed: state.sending
+                                  ? null
+                                  : () => _save(state),
+                              child: state.sending
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text('Add', style: kTextStyle.copyWith()),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1,169 +1,148 @@
-import 'package:finance_app/database/database_helper.dart';
+import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/data/repositories/category_repository.dart';
+import 'package:finance_app/features/add_item/cubit/add_category_cubit.dart';
 import 'package:finance_app/features/add_item/widgets/widgets.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class AddCategoryScreen extends StatefulWidget {
+class AddCategoryScreen extends StatelessWidget {
   const AddCategoryScreen({super.key});
 
   @override
-  State<AddCategoryScreen> createState() => _AddCategoryScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AddCategoryCubit(getIt<CategoryRepository>()),
+      child: const _AddCategoryView(),
+    );
+  }
 }
 
-class _AddCategoryScreenState extends State<AddCategoryScreen> {
-  final db = DatabaseHelper.instance;
+class _AddCategoryView extends StatefulWidget {
+  const _AddCategoryView();
 
-  Color? _currentColor;
-  Color? _currentIconColor;
+  @override
+  State<_AddCategoryView> createState() => _AddCategoryViewState();
+}
 
-  IconData? _selectedIcon;
+class _AddCategoryViewState extends State<_AddCategoryView> {
+  final _nameKey = GlobalKey<CustomTextFieldState>();
 
-  bool isSending = false;
-
-  void updateColor(Color value) {
-    setState(() {
-      _currentColor = value;
-    });
-  }
-
-  void updateIconColor(Color value) {
-    setState(() {
-      _currentIconColor = value;
-    });
-  }
-
-  void updateIcon(IconData icon) {
-    setState(() {
-      _selectedIcon = icon;
-    });
-  }
-
-  void saveNewItem() async {
-    final nameIsValid = _nameKey.currentState?.validate() ?? false;
-    if (nameIsValid && _currentColor != null && _selectedIcon != null) {
-      final nameText = _nameKey.currentState?.text;
-      final colorValue = _currentColor!.toARGB32();
-      final iconColorValue = _currentIconColor!.toARGB32();
-      final iconCode = _selectedIcon!.codePoint;
-
-      setState(() {
-        isSending = true;
-      });
-
-      final response = await db.insert("categories", {
-        "name": nameText,
-        "color": colorValue,
-        "icon_color": iconColorValue,
-        "icon_code_point": iconCode,
-      });
-
-      setState(() {
-        isSending = false;
-      });
-
-      if (mounted) {
-        Navigator.of(context).pop(response);
-      }
-    }
-  }
-
-  String? nameValidator(String value) {
-    if (value.length < 4) {
-      return 'Must be at least 4 characters long.';
-    }
-    if (value.length > 30) {
-      return 'Maximum 30 characters long.';
-    }
+  String? _nameValidator(String value) {
+    if (value.length < 4) return 'Must be at least 4 characters long.';
+    if (value.length > 30) return 'Maximum 30 characters long.';
     return null;
   }
 
-  final _nameKey = GlobalKey<CustomTextFieldState>();
+  void _save() {
+    final nameValid = _nameKey.currentState?.validate() ?? false;
+    if (!nameValid) return;
+    context.read<AddCategoryCubit>().save(_nameKey.currentState!.text);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'New Category',
-          style: kTextStyle.copyWith(
-            fontSize: 22,
-            color: const Color(0xFF242528),
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: ElevatedButton(
-              onPressed: isSending ? null : saveNewItem,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+    return BlocConsumer<AddCategoryCubit, AddCategoryState>(
+      listenWhen: (p, c) => p.savedId != c.savedId || p.error != c.error,
+      listener: (context, state) {
+        if (state.savedId != null) {
+          Navigator.of(context).pop(state.savedId);
+        } else if (state.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Something went wrong: ${state.error}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final cubit = context.read<AddCategoryCubit>();
+        return Scaffold(
+          appBar: AppBar(
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            title: Text(
+              'New Category',
+              style: kTextStyle.copyWith(
+                fontSize: 22,
+                color: const Color(0xFF242528),
               ),
-              child: isSending
-                  ? const CircularProgressIndicator()
-                  : Text('Add', style: kTextStyle.copyWith()),
             ),
-          ),
-        ],
-      ),
-      body: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 13, 20, 20),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CustomTextField(
-                  key: _nameKey,
-                  errorTextPadding: const EdgeInsetsGeometry.only(
-                    left: 20,
-                    top: 3,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                child: ElevatedButton(
+                  onPressed: state.sending ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   ),
-                  prefixBackgroundColor: _currentColor,
-                  prefixIcon: _selectedIcon,
-                  // prefixIconColor: const Color(0xFF40434A),
-                  prefixIconColor: _currentIconColor,
-                  hint: 'Name',
-                  validate: nameValidator,
+                  child: state.sending
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text('Add', style: kTextStyle.copyWith()),
                 ),
-
-                Divider(
-                  height: 2,
-                  thickness: 2,
-                  color: Theme.of(context).dividerColor,
-                  indent: 25,
-                  endIndent: 25,
+              ),
+            ],
+          ),
+          body: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 13, 20, 20),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-
-                const SizedBox(height: 10),
-                BlackAndWhiteSlider(
-                  onColorChanged: updateIconColor,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField(
+                      key: _nameKey,
+                      errorTextPadding: const EdgeInsets.only(left: 20, top: 3),
+                      prefixBackgroundColor: state.color,
+                      prefixIcon: state.icon,
+                      prefixIconColor: state.iconColor,
+                      hint: 'Name',
+                      validate: _nameValidator,
+                    ),
+                    Divider(
+                      height: 2,
+                      thickness: 2,
+                      color: Theme.of(context).dividerColor,
+                      indent: 25,
+                      endIndent: 25,
+                    ),
+                    const SizedBox(height: 10),
+                    BlackAndWhiteSlider(onColorChanged: cubit.setIconColor),
+                    const SizedBox(height: 10),
+                    ColorPickerr(onColorChanged: cubit.setColor),
+                    const SizedBox(height: 10),
+                    IconPicker(
+                      onSelectIcon: cubit.setIcon,
+                      backgroundColor: state.color,
+                      iconColor: state.iconColor,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-
-                ColorPickerr(onColorChanged: updateColor),
-                const SizedBox(height: 10),
-
-                IconPicker(
-                  onSelectIcon: updateIcon,
-                  backgroundColor: _currentColor,
-                  iconColor: _currentIconColor,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
