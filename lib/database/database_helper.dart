@@ -37,6 +37,22 @@ class DatabaseHelper {
     return rows.map((row) => row.data).toList();
   }
 
+  /// Maps a table name to its Drift table so writes notify reactive streams.
+  TableInfo? _tableByName(String table) {
+    switch (table) {
+      case 'currencies':
+        return _db.currencies;
+      case 'accounts':
+        return _db.accounts;
+      case 'categories':
+        return _db.categories;
+      case 'transactions':
+        return _db.transactions;
+      default:
+        return null;
+    }
+  }
+
   // ----------------------- currencies -----------------------
 
   Future<List<Map<String, dynamic>>> getCurrenciesWithRate() {
@@ -121,9 +137,11 @@ class DatabaseHelper {
     final sql =
         'INSERT OR REPLACE INTO $table (${columns.join(', ')}) '
         'VALUES ($placeholders)';
+    final tableInfo = _tableByName(table);
     return _db.customInsert(
       sql,
       variables: data.values.map(_toVariable).toList(),
+      updates: tableInfo == null ? const {} : {tableInfo},
     );
   }
 

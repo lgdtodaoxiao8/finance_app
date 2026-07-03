@@ -1,4 +1,5 @@
 import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:get_it/get_it.dart';
 
 /// Global service locator.
@@ -6,10 +7,17 @@ final getIt = GetIt.instance;
 
 /// Wires up singletons. Call once at startup, before any data access.
 ///
-/// Phase 1 registers the Drift [AppDatabase]. Repositories and blocs are
-/// added here as features are migrated in Phase 2.
+/// Registers the Drift [AppDatabase] and the typed repositories built on top
+/// of it. Blocs/cubits are created per-screen (via BlocProvider) and pull
+/// their repository from here.
 Future<void> configureDependencies() async {
   if (!getIt.isRegistered<AppDatabase>()) {
     getIt.registerSingleton<AppDatabase>(AppDatabase());
+  }
+
+  if (!getIt.isRegistered<TransactionRepository>()) {
+    getIt.registerLazySingleton<TransactionRepository>(
+      () => DriftTransactionRepository(getIt<AppDatabase>()),
+    );
   }
 }
