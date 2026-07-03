@@ -1,7 +1,6 @@
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
-import 'package:finance_app/database/database_helper.dart';
 import 'package:finance_app/features/finance_app/finance_app.dart';
 import 'package:finance_app/features/settings/cubit/base_currency_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,10 +20,8 @@ void main() {
       ..registerLazySingleton<CurrencyRepository>(
         () => DriftCurrencyRepository(getIt<AppDatabase>()),
       );
-    // seedData needs the facade, which reads AppDatabase from getIt.
+    // seedData writes directly through the Drift AppDatabase from getIt.
     await seedData();
-    // Ensure the facade instance is initialised too.
-    await DatabaseHelper.instance.database;
   });
 
   tearDown(() async {

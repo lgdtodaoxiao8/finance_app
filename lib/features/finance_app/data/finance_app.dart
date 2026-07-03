@@ -1,52 +1,64 @@
+import 'package:drift/drift.dart';
 import 'package:finance_app/assets/currencies/currencies_list.dart';
-import 'package:finance_app/database/database_helper.dart';
+import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/core/di/injector.dart';
 import 'package:flutter/material.dart';
 
-final db = DatabaseHelper.instance;
-
+/// Seeds the currency list and a couple of default categories on first run.
+///
+/// Base currency and accounts are intentionally left unset — the user picks a
+/// base currency during onboarding (Settings), which assigns rate_to_base.
 Future<void> seedData() async {
-  final currencies = await db.getAll("currencies");
+  final db = getIt<AppDatabase>();
+
+  final currencies = await db.select(db.currencies).get();
   if (currencies.isEmpty) {
-    // Seed the full currency list with no base and no rate yet.
-    // The user picks the base currency during onboarding (Settings),
-    // which is what assigns rate_to_base = 1.0 to the chosen currency.
-    for (final currency in currenciesList) {
-      await db.insert("currencies", {
-        ...currency,
-        "is_base": 0,
-      });
-    }
-  }
-  final accounts = await db.getAll("accounts");
-  if (accounts.isEmpty) {
-    // await db.insert("accounts", {
-    //   "name": "Cash",
-    //   "currency_id": 1,
-    //   "icon_code_point": Icons.account_balance_wallet.codePoint,
-    // });
-    // await db.insert("accounts", {
-    //   "name": "Bank",
-    //   "currency_id": 1,
-    //   "icon_code_point": Icons.account_balance_rounded.codePoint,
-    // });
-  }
-  final categories = await db.getAll("categories");
-  if (categories.isEmpty) {
-    await db.insert("categories", {
-      "name": "Food",
-      "color": 4282682111, // integer
-      "icon_color": 4278190080,
-      "icon_code_point": Icons.fastfood_rounded.codePoint,
+    await db.batch((batch) {
+      for (final currency in currenciesList) {
+        batch.insert(
+          db.currencies,
+          CurrenciesCompanion.insert(
+            name: Value(currency['name'] as String?),
+            code: Value(currency['code'] as String?),
+            symbol: Value(currency['symbol'] as String?),
+          ),
+        );
+      }
     });
-    await db.insert("categories", {
-      "name": "Salary",
-      "color": 4294953540,
-      "icon_color": 4278190080,
-      "icon_code_point": Icons.attach_money_rounded.codePoint,
+  }
+
+  final categories = await db.select(db.categories).get();
+  if (categories.isEmpty) {
+    await db.batch((batch) {
+      batch
+        ..insert(
+          db.categories,
+          CategoriesCompanion.insert(
+            name: const Value('Food'),
+            color: const Value(4282682111),
+            iconColor: const Value(4278190080),
+            iconCodePoint: Value(Icons.fastfood_rounded.codePoint),
+          ),
+        )
+        ..insert(
+          db.categories,
+          CategoriesCompanion.insert(
+            name: const Value('Salary'),
+            color: const Value(4294953540),
+            iconColor: const Value(4278190080),
+            iconCodePoint: Value(Icons.attach_money_rounded.codePoint),
+          ),
+        );
     });
   }
 }
 
-Future<void> delete() async {
-  await db.deleteDatabaseFile();
+/// Dev-only: wipes every row in the database.
+Future<void> deleteAllData() async {
+  final db = getIt<AppDatabase>();
+  await db.transaction(() async {
+    for (final table in db.allTables) {
+      await db.delete(table).go();
+    }
+  });
 }

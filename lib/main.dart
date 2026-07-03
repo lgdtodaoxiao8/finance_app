@@ -7,7 +7,7 @@ void main() async {
 
   await configureDependencies();
 
-  // await delete();
+  // await deleteAllData();
 
   await seedData();
 

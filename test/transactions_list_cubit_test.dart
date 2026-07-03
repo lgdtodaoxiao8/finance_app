@@ -1,7 +1,9 @@
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/data/repositories/account_repository.dart';
+import 'package:finance_app/data/repositories/category_repository.dart';
+import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
-import 'package:finance_app/database/database_helper.dart';
 import 'package:finance_app/features/finance_app/finance_app.dart';
 import 'package:finance_app/features/transactions_list/cubit/transactions_list_cubit.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
@@ -22,6 +24,15 @@ void main() {
       ..registerSingleton<AppDatabase>(db)
       ..registerLazySingleton<TransactionRepository>(
         () => DriftTransactionRepository(getIt<AppDatabase>()),
+      )
+      ..registerLazySingleton<CurrencyRepository>(
+        () => DriftCurrencyRepository(getIt<AppDatabase>()),
+      )
+      ..registerLazySingleton<AccountRepository>(
+        () => DriftAccountRepository(getIt<AppDatabase>()),
+      )
+      ..registerLazySingleton<CategoryRepository>(
+        () => DriftCategoryRepository(getIt<AppDatabase>()),
       );
   });
 
@@ -31,17 +42,17 @@ void main() {
   });
 
   Future<(int baseId, int accountId, int categoryId)> seedReady() async {
-    final helper = DatabaseHelper.instance;
     await seedData();
-    final baseId = (await helper.getAllCurrencies()).first['id'] as int;
-    await helper.makeCurrencyBase(baseId);
-    final accountId = (await helper.insert('accounts', {
-      'name': 'Cash',
-      'currency_id': baseId,
-      'icon_code_point': Icons.account_balance_wallet_rounded.codePoint,
-    }))!;
+    final currencyRepo = getIt<CurrencyRepository>();
+    final baseId = (await currencyRepo.getAll()).first.currencyId;
+    await currencyRepo.makeBase(baseId);
+    final accountId = await getIt<AccountRepository>().add(
+      name: 'Cash',
+      currencyId: baseId,
+      iconCodePoint: Icons.account_balance_wallet_rounded.codePoint,
+    );
     final categoryId =
-        (await helper.getAll('categories')).first['id'] as int;
+        (await getIt<CategoryRepository>().getAll()).first.categoryId;
     return (baseId, accountId, categoryId);
   }
 
@@ -60,18 +71,17 @@ void main() {
       ),
     );
 
-    // Let the initial (empty) stream event flush, then write via the facade.
+    // Let the initial (empty) stream event flush, then write via the repo.
     await Future<void>.delayed(Duration.zero);
-    await DatabaseHelper.instance.insert('transactions', {
-      'account_id': accountId,
-      'category_id': categoryId,
-      'currency_id': baseId,
-      'amount': 9.99,
-      'date': DateTime.now().toUtc().toIso8601String(),
-      'note': 'coffee',
-      'type': 'expense',
-      'is_canceled': 0,
-    });
+    await getIt<TransactionRepository>().add(
+      accountId: accountId,
+      categoryId: categoryId,
+      currencyId: baseId,
+      amount: 9.99,
+      date: DateTime.now(),
+      note: 'coffee',
+      type: 'expense',
+    );
 
     await expectation;
     await cubit.close();
