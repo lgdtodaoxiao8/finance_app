@@ -15,6 +15,9 @@ class AddTransactionState extends Equatable {
     this.categoryId,
     this.currencyId,
     this.date,
+    this.editingId,
+    this.initialAmount,
+    this.initialNote,
     this.sending = false,
     this.saved = false,
     this.loadError,
@@ -34,11 +37,17 @@ class AddTransactionState extends Equatable {
   final int? currencyId;
   final DateTime? date;
 
+  /// Non-null when editing an existing transaction.
+  final int? editingId;
+  final String? initialAmount;
+  final String? initialNote;
+
   final bool sending;
   final bool saved;
   final String? loadError;
 
   bool get isTransfer => type == 'transfer';
+  bool get isEditing => editingId != null;
 
   /// A blocking validation message for the current selection, or null if the
   /// transaction can be saved. Recomputed from state (never sticky).
@@ -67,6 +76,9 @@ class AddTransactionState extends Equatable {
     int? categoryId,
     int? currencyId,
     DateTime? date,
+    int? editingId,
+    String? initialAmount,
+    String? initialNote,
     bool? sending,
     bool? saved,
     String? loadError,
@@ -83,6 +95,9 @@ class AddTransactionState extends Equatable {
       categoryId: categoryId ?? this.categoryId,
       currencyId: currencyId ?? this.currencyId,
       date: date ?? this.date,
+      editingId: editingId ?? this.editingId,
+      initialAmount: initialAmount ?? this.initialAmount,
+      initialNote: initialNote ?? this.initialNote,
       sending: sending ?? this.sending,
       saved: saved ?? this.saved,
       loadError: loadError,
@@ -102,6 +117,9 @@ class AddTransactionState extends Equatable {
     categoryId,
     currencyId,
     date,
+    editingId,
+    initialAmount,
+    initialNote,
     sending,
     saved,
     loadError,

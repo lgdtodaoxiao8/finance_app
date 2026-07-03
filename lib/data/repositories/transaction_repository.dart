@@ -21,6 +21,21 @@ abstract class TransactionRepository {
     String? note,
     required String type,
   });
+
+  /// Updates an existing transaction.
+  Future<void> update({
+    required int id,
+    required int accountId,
+    int? accountDestinationId,
+    required int categoryId,
+    required int currencyId,
+    required double amount,
+    required DateTime date,
+    String? note,
+    required String type,
+  });
+
+  Future<void> delete(int id);
 }
 
 class DriftTransactionRepository implements TransactionRepository {
@@ -30,6 +45,8 @@ class DriftTransactionRepository implements TransactionRepository {
 
   static const String _detailsSql = '''
     SELECT t.id, t.amount, t.date, t.note, t.type, t.is_canceled,
+           t.account_id, t.account_destination_id,
+           t.category_id, t.currency_id,
            a.name as account_name, a.icon_code_point as account_icon_code,
            a_des.name as account_destination_name,
            a_des.icon_code_point as account_destination_icon_code,
@@ -97,5 +114,36 @@ class DriftTransactionRepository implements TransactionRepository {
         isCanceled: const Value(false),
       ),
     );
+  }
+
+  @override
+  Future<void> update({
+    required int id,
+    required int accountId,
+    int? accountDestinationId,
+    required int categoryId,
+    required int currencyId,
+    required double amount,
+    required DateTime date,
+    String? note,
+    required String type,
+  }) async {
+    await (_db.update(_db.transactions)..where((t) => t.id.equals(id))).write(
+      TransactionsCompanion(
+        accountId: Value(accountId),
+        accountDestinationId: Value(accountDestinationId),
+        categoryId: Value(categoryId),
+        currencyId: Value(currencyId),
+        amount: Value(amount),
+        date: Value(date.toUtc().toIso8601String()),
+        note: Value(note),
+        type: Value(type),
+      ),
+    );
+  }
+
+  @override
+  Future<void> delete(int id) async {
+    await (_db.delete(_db.transactions)..where((t) => t.id.equals(id))).go();
   }
 }

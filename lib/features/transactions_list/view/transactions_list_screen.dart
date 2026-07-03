@@ -280,6 +280,9 @@ class _TransactionTile extends StatelessWidget {
     }
 
     return ListTile(
+      onTap: () => Navigator.of(
+        context,
+      ).pushNamed('/add-transaction', arguments: t),
       leading: Container(
         width: 45,
         height: 45,

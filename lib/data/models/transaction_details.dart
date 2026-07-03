@@ -12,6 +12,10 @@ class TransactionDetails extends Equatable {
     required this.date,
     required this.type,
     required this.isCanceled,
+    this.accountId,
+    this.accountDestinationId,
+    this.categoryId,
+    this.currencyId,
     this.note,
     this.accountName,
     this.accountIconCode,
@@ -33,6 +37,13 @@ class TransactionDetails extends Equatable {
   final DateTime date;
   final String type; // expense | income | transfer
   final bool isCanceled;
+
+  // Raw foreign keys (used to prefill the edit form).
+  final int? accountId;
+  final int? accountDestinationId;
+  final int? categoryId;
+  final int? currencyId;
+
   final String? note;
 
   final String? accountName;
@@ -85,6 +96,10 @@ class TransactionDetails extends Equatable {
       date: date,
       type: map['type'] as String? ?? '',
       isCanceled: (map['is_canceled'] as int? ?? 0) == 1,
+      accountId: map['account_id'] as int?,
+      accountDestinationId: map['account_destination_id'] as int?,
+      categoryId: map['category_id'] as int?,
+      currencyId: map['currency_id'] as int?,
       note: map['note'] as String?,
       accountName: map['account_name'] as String?,
       accountIconCode: map['account_icon_code'] as int?,

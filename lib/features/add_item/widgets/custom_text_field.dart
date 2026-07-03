@@ -25,9 +25,11 @@ class CustomTextField extends StatefulWidget {
     this.label,
     this.counter,
     this.onChanged,
+    this.initialText,
     required this.hint,
   });
 
+  final String? initialText;
   final void Function()? onChanged;
   final TextInputType keyboardType;
   final EdgeInsetsGeometry textPadding;
@@ -60,6 +62,10 @@ class CustomTextFieldState extends State<CustomTextField> {
   @override
   void initState() {
     super.initState();
+
+    if (widget.initialText != null) {
+      _fieldTextController.text = widget.initialText!;
+    }
 
     _fieldFocusNode.addListener(() {
       setState(() {});

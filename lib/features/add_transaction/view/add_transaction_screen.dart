@@ -1,4 +1,5 @@
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
@@ -15,20 +16,28 @@ class AddTransaction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Passed via Navigator.pushNamed('/add-transaction', arguments: details)
+    // to edit an existing transaction; null when creating a new one.
+    final existing =
+        ModalRoute.of(context)?.settings.arguments as TransactionDetails?;
+
     return BlocProvider(
       create: (_) => AddTransactionCubit(
         getIt<AccountRepository>(),
         getIt<CategoryRepository>(),
         getIt<CurrencyRepository>(),
         getIt<TransactionRepository>(),
+        existing: existing,
       ),
-      child: const _AddTransactionView(),
+      child: _AddTransactionView(isEditing: existing != null),
     );
   }
 }
 
 class _AddTransactionView extends StatefulWidget {
-  const _AddTransactionView();
+  const _AddTransactionView({required this.isEditing});
+
+  final bool isEditing;
 
   @override
   State<_AddTransactionView> createState() => _AddTransactionViewState();
@@ -70,11 +79,53 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
     cubit.add(amount: amount, note: _noteKey.currentState?.text ?? '');
   }
 
+  Future<void> _confirmDelete() async {
+    final cubit = context.read<AddTransactionCubit>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete transaction?', style: kTextStyle.copyWith()),
+        content: Text(
+          'This action cannot be undone.',
+          style: kTextStyle.copyWith(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Cancel', style: kTextStyle.copyWith()),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'Delete',
+              style: kTextStyle.copyWith(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) cubit.deleteTransaction();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Transaction', style: kTextStyle.copyWith()),
+        title: Text(
+          widget.isEditing ? 'Edit Transaction' : 'Add Transaction',
+          style: kTextStyle.copyWith(),
+        ),
+        actions: [
+          if (widget.isEditing)
+            IconButton(
+              tooltip: 'Delete',
+              onPressed: _confirmDelete,
+              icon: Icon(
+                Icons.delete_outline_rounded,
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+        ],
       ),
       body: BlocConsumer<AddTransactionCubit, AddTransactionState>(
         listenWhen: (p, c) => !p.saved && c.saved,
@@ -168,6 +219,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                             decimal: true,
                           ),
                           hint: 'Amount',
+                          initialText: state.initialAmount,
                           validate: _amountValidate,
                         ),
                       ),
@@ -189,6 +241,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                         child: CustomTextField(
                           key: _noteKey,
                           hint: 'Note',
+                          initialText: state.initialNote,
                           prefixIcon: Icons.note,
                           prefixIconColor: const Color(0xFF40434A),
                           prefixIconSize: 23,
@@ -241,7 +294,10 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text('Add', style: kTextStyle.copyWith()),
+                            : Text(
+                                widget.isEditing ? 'Save' : 'Add',
+                                style: kTextStyle.copyWith(),
+                              ),
                       ),
                     ],
                   ),

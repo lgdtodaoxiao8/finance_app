@@ -122,4 +122,90 @@ void main() {
     );
     await cubit.close();
   });
+
+  test('edits an existing transaction', () async {
+    final accountId = await setupBaseAndAccount();
+    final categoryId =
+        (await getIt<CategoryRepository>().getAll()).first.categoryId;
+    final currencyId = (await getIt<CurrencyRepository>().getBase())!.currencyId;
+    final txRepo = getIt<TransactionRepository>();
+    await txRepo.add(
+      accountId: accountId,
+      categoryId: categoryId,
+      currencyId: currencyId,
+      amount: 5,
+      date: DateTime.now(),
+      note: 'old',
+      type: 'expense',
+    );
+    final existing = (await txRepo.getAllWithDetails()).first;
+
+    final cubit = AddTransactionCubit(
+      getIt<AccountRepository>(),
+      getIt<CategoryRepository>(),
+      getIt<CurrencyRepository>(),
+      txRepo,
+      existing: existing,
+    );
+    await expectLater(
+      cubit.stream,
+      emitsThrough(
+        predicate<AddTransactionState>(
+          (s) => s.status == AddTransactionStatus.ready,
+        ),
+      ),
+    );
+
+    expect(cubit.state.isEditing, isTrue);
+    expect(cubit.state.editingId, existing.id);
+    expect(cubit.state.accountId, accountId);
+    expect(cubit.state.initialAmount, '5');
+
+    await cubit.add(amount: 12.5, note: 'new');
+    expect(cubit.state.saved, isTrue);
+
+    final after = await txRepo.getAllWithDetails();
+    expect(after, hasLength(1));
+    expect(after.first.amount, 12.5);
+    expect(after.first.note, 'new');
+    await cubit.close();
+  });
+
+  test('deletes an existing transaction', () async {
+    final accountId = await setupBaseAndAccount();
+    final categoryId =
+        (await getIt<CategoryRepository>().getAll()).first.categoryId;
+    final currencyId = (await getIt<CurrencyRepository>().getBase())!.currencyId;
+    final txRepo = getIt<TransactionRepository>();
+    await txRepo.add(
+      accountId: accountId,
+      categoryId: categoryId,
+      currencyId: currencyId,
+      amount: 5,
+      date: DateTime.now(),
+      type: 'expense',
+    );
+    final existing = (await txRepo.getAllWithDetails()).first;
+
+    final cubit = AddTransactionCubit(
+      getIt<AccountRepository>(),
+      getIt<CategoryRepository>(),
+      getIt<CurrencyRepository>(),
+      txRepo,
+      existing: existing,
+    );
+    await expectLater(
+      cubit.stream,
+      emitsThrough(
+        predicate<AddTransactionState>(
+          (s) => s.status == AddTransactionStatus.ready,
+        ),
+      ),
+    );
+
+    await cubit.deleteTransaction();
+    expect(cubit.state.saved, isTrue);
+    expect(await txRepo.getAllWithDetails(), isEmpty);
+    await cubit.close();
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
@@ -9,13 +10,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'add_transaction_state.dart';
 
+const _typeIndex = {'expense': 0, 'income': 1, 'transfer': 2};
+
 class AddTransactionCubit extends Cubit<AddTransactionState> {
   AddTransactionCubit(
     this._accountRepository,
     this._categoryRepository,
     this._currencyRepository,
-    this._transactionRepository,
-  ) : super(const AddTransactionState()) {
+    this._transactionRepository, {
+    TransactionDetails? existing,
+  }) : _existing = existing,
+       super(const AddTransactionState()) {
     load();
   }
 
@@ -24,25 +29,54 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
   final CurrencyRepository _currencyRepository;
   final TransactionRepository _transactionRepository;
 
+  /// The transaction being edited, or null when creating a new one.
+  final TransactionDetails? _existing;
+
   Future<void> load() async {
     try {
       final currencies = await _currencyRepository.getWithRate();
       final accounts = await _accountRepository.getAll();
       final categories = await _categoryRepository.getAll();
 
-      emit(
-        state.copyWith(
-          status: AddTransactionStatus.ready,
-          accounts: accounts,
-          categories: categories,
-          currencies: currencies,
-          accountId: accounts.isNotEmpty ? accounts.first.id : null,
-          accountDestinationId: accounts.length > 1 ? accounts[1].id : null,
-          categoryId: categories.isNotEmpty ? categories.first.id : null,
-          currencyId: currencies.isNotEmpty ? currencies.first.id : null,
-          date: DateTime.now(),
-        ),
-      );
+      final existing = _existing;
+      if (existing != null) {
+        // Editing: prefill every field from the existing transaction.
+        final amount = existing.amount;
+        emit(
+          state.copyWith(
+            status: AddTransactionStatus.ready,
+            accounts: accounts,
+            categories: categories,
+            currencies: currencies,
+            type: existing.type,
+            typeIndex: _typeIndex[existing.type] ?? 0,
+            accountId: existing.accountId,
+            accountDestinationId: existing.accountDestinationId,
+            categoryId: existing.categoryId,
+            currencyId: existing.currencyId,
+            date: existing.date,
+            editingId: existing.id,
+            initialAmount: amount % 1 == 0
+                ? amount.toInt().toString()
+                : amount.toString(),
+            initialNote: existing.note ?? '',
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            status: AddTransactionStatus.ready,
+            accounts: accounts,
+            categories: categories,
+            currencies: currencies,
+            accountId: accounts.isNotEmpty ? accounts.first.id : null,
+            accountDestinationId: accounts.length > 1 ? accounts[1].id : null,
+            categoryId: categories.isNotEmpty ? categories.first.id : null,
+            currencyId: currencies.isNotEmpty ? currencies.first.id : null,
+            date: DateTime.now(),
+          ),
+        );
+      }
     } catch (e, st) {
       debugPrint('AddTransactionCubit.load error: $e\n$st');
       emit(state.copyWith(status: AddTransactionStatus.error, loadError: '$e'));
@@ -111,21 +145,49 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
 
     emit(state.copyWith(sending: true));
     try {
-      await _transactionRepository.add(
-        accountId: accountId,
-        accountDestinationId: state.isTransfer
-            ? state.accountDestinationId
-            : null,
-        categoryId: categoryId,
-        currencyId: currencyId,
-        amount: amount,
-        date: state.date ?? DateTime.now(),
-        note: note,
-        type: state.type,
-      );
+      final destination = state.isTransfer ? state.accountDestinationId : null;
+      final editingId = state.editingId;
+      if (editingId != null) {
+        await _transactionRepository.update(
+          id: editingId,
+          accountId: accountId,
+          accountDestinationId: destination,
+          categoryId: categoryId,
+          currencyId: currencyId,
+          amount: amount,
+          date: state.date ?? DateTime.now(),
+          note: note,
+          type: state.type,
+        );
+      } else {
+        await _transactionRepository.add(
+          accountId: accountId,
+          accountDestinationId: destination,
+          categoryId: categoryId,
+          currencyId: currencyId,
+          amount: amount,
+          date: state.date ?? DateTime.now(),
+          note: note,
+          type: state.type,
+        );
+      }
       emit(state.copyWith(sending: false, saved: true));
     } catch (e, st) {
       debugPrint('AddTransactionCubit.add error: $e\n$st');
+      emit(state.copyWith(sending: false));
+    }
+  }
+
+  Future<void> deleteTransaction() async {
+    final editingId = state.editingId;
+    if (editingId == null) return;
+
+    emit(state.copyWith(sending: true));
+    try {
+      await _transactionRepository.delete(editingId);
+      emit(state.copyWith(sending: false, saved: true));
+    } catch (e, st) {
+      debugPrint('AddTransactionCubit.deleteTransaction error: $e\n$st');
       emit(state.copyWith(sending: false));
     }
   }
