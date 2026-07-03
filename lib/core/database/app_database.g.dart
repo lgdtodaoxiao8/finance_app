@@ -4,7 +4,7 @@ part of 'app_database.dart';
 
 // ignore_for_file: type=lint
 class $CurrenciesTable extends Currencies
-    with TableInfo<$CurrenciesTable, Currency> {
+    with TableInfo<$CurrenciesTable, CurrencyRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -89,7 +89,7 @@ class $CurrenciesTable extends Currencies
   static const String $name = 'currencies';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Currency> instance, {
+    Insertable<CurrencyRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -136,9 +136,9 @@ class $CurrenciesTable extends Currencies
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Currency map(Map<String, dynamic> data, {String? tablePrefix}) {
+  CurrencyRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Currency(
+    return CurrencyRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -172,14 +172,14 @@ class $CurrenciesTable extends Currencies
   }
 }
 
-class Currency extends DataClass implements Insertable<Currency> {
+class CurrencyRow extends DataClass implements Insertable<CurrencyRow> {
   final int id;
   final String? name;
   final String? code;
   final String? symbol;
   final double? rateToBase;
   final bool isBase;
-  const Currency({
+  const CurrencyRow({
     required this.id,
     this.name,
     this.code,
@@ -222,12 +222,12 @@ class Currency extends DataClass implements Insertable<Currency> {
     );
   }
 
-  factory Currency.fromJson(
+  factory CurrencyRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Currency(
+    return CurrencyRow(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String?>(json['name']),
       code: serializer.fromJson<String?>(json['code']),
@@ -249,14 +249,14 @@ class Currency extends DataClass implements Insertable<Currency> {
     };
   }
 
-  Currency copyWith({
+  CurrencyRow copyWith({
     int? id,
     Value<String?> name = const Value.absent(),
     Value<String?> code = const Value.absent(),
     Value<String?> symbol = const Value.absent(),
     Value<double?> rateToBase = const Value.absent(),
     bool? isBase,
-  }) => Currency(
+  }) => CurrencyRow(
     id: id ?? this.id,
     name: name.present ? name.value : this.name,
     code: code.present ? code.value : this.code,
@@ -264,8 +264,8 @@ class Currency extends DataClass implements Insertable<Currency> {
     rateToBase: rateToBase.present ? rateToBase.value : this.rateToBase,
     isBase: isBase ?? this.isBase,
   );
-  Currency copyWithCompanion(CurrenciesCompanion data) {
-    return Currency(
+  CurrencyRow copyWithCompanion(CurrenciesCompanion data) {
+    return CurrencyRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       code: data.code.present ? data.code.value : this.code,
@@ -279,7 +279,7 @@ class Currency extends DataClass implements Insertable<Currency> {
 
   @override
   String toString() {
-    return (StringBuffer('Currency(')
+    return (StringBuffer('CurrencyRow(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('code: $code, ')
@@ -295,7 +295,7 @@ class Currency extends DataClass implements Insertable<Currency> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Currency &&
+      (other is CurrencyRow &&
           other.id == this.id &&
           other.name == this.name &&
           other.code == this.code &&
@@ -304,7 +304,7 @@ class Currency extends DataClass implements Insertable<Currency> {
           other.isBase == this.isBase);
 }
 
-class CurrenciesCompanion extends UpdateCompanion<Currency> {
+class CurrenciesCompanion extends UpdateCompanion<CurrencyRow> {
   final Value<int> id;
   final Value<String?> name;
   final Value<String?> code;
@@ -327,7 +327,7 @@ class CurrenciesCompanion extends UpdateCompanion<Currency> {
     this.rateToBase = const Value.absent(),
     this.isBase = const Value.absent(),
   });
-  static Insertable<Currency> custom({
+  static Insertable<CurrencyRow> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? code,
@@ -401,7 +401,8 @@ class CurrenciesCompanion extends UpdateCompanion<Currency> {
   }
 }
 
-class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
+class $AccountsTable extends Accounts
+    with TableInfo<$AccountsTable, AccountRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -462,7 +463,7 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
   static const String $name = 'accounts';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Account> instance, {
+    Insertable<AccountRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -497,9 +498,9 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Account map(Map<String, dynamic> data, {String? tablePrefix}) {
+  AccountRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Account(
+    return AccountRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -525,12 +526,12 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
   }
 }
 
-class Account extends DataClass implements Insertable<Account> {
+class AccountRow extends DataClass implements Insertable<AccountRow> {
   final int id;
   final String? name;
   final int? currencyId;
   final int? iconCodePoint;
-  const Account({
+  const AccountRow({
     required this.id,
     this.name,
     this.currencyId,
@@ -565,12 +566,12 @@ class Account extends DataClass implements Insertable<Account> {
     );
   }
 
-  factory Account.fromJson(
+  factory AccountRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Account(
+    return AccountRow(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String?>(json['name']),
       currencyId: serializer.fromJson<int?>(json['currencyId']),
@@ -588,12 +589,12 @@ class Account extends DataClass implements Insertable<Account> {
     };
   }
 
-  Account copyWith({
+  AccountRow copyWith({
     int? id,
     Value<String?> name = const Value.absent(),
     Value<int?> currencyId = const Value.absent(),
     Value<int?> iconCodePoint = const Value.absent(),
-  }) => Account(
+  }) => AccountRow(
     id: id ?? this.id,
     name: name.present ? name.value : this.name,
     currencyId: currencyId.present ? currencyId.value : this.currencyId,
@@ -601,8 +602,8 @@ class Account extends DataClass implements Insertable<Account> {
         ? iconCodePoint.value
         : this.iconCodePoint,
   );
-  Account copyWithCompanion(AccountsCompanion data) {
-    return Account(
+  AccountRow copyWithCompanion(AccountsCompanion data) {
+    return AccountRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       currencyId: data.currencyId.present
@@ -616,7 +617,7 @@ class Account extends DataClass implements Insertable<Account> {
 
   @override
   String toString() {
-    return (StringBuffer('Account(')
+    return (StringBuffer('AccountRow(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('currencyId: $currencyId, ')
@@ -630,14 +631,14 @@ class Account extends DataClass implements Insertable<Account> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Account &&
+      (other is AccountRow &&
           other.id == this.id &&
           other.name == this.name &&
           other.currencyId == this.currencyId &&
           other.iconCodePoint == this.iconCodePoint);
 }
 
-class AccountsCompanion extends UpdateCompanion<Account> {
+class AccountsCompanion extends UpdateCompanion<AccountRow> {
   final Value<int> id;
   final Value<String?> name;
   final Value<int?> currencyId;
@@ -654,7 +655,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.currencyId = const Value.absent(),
     this.iconCodePoint = const Value.absent(),
   });
-  static Insertable<Account> custom({
+  static Insertable<AccountRow> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<int>? currencyId,
@@ -713,7 +714,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
 }
 
 class $CategoriesTable extends Categories
-    with TableInfo<$CategoriesTable, Category> {
+    with TableInfo<$CategoriesTable, CategoryRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -786,7 +787,7 @@ class $CategoriesTable extends Categories
   static const String $name = 'categories';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Category> instance, {
+    Insertable<CategoryRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -827,9 +828,9 @@ class $CategoriesTable extends Categories
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Category map(Map<String, dynamic> data, {String? tablePrefix}) {
+  CategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Category(
+    return CategoryRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
@@ -859,13 +860,13 @@ class $CategoriesTable extends Categories
   }
 }
 
-class Category extends DataClass implements Insertable<Category> {
+class CategoryRow extends DataClass implements Insertable<CategoryRow> {
   final int id;
   final String? name;
   final int? color;
   final int? iconColor;
   final int? iconCodePoint;
-  const Category({
+  const CategoryRow({
     required this.id,
     this.name,
     this.color,
@@ -907,12 +908,12 @@ class Category extends DataClass implements Insertable<Category> {
     );
   }
 
-  factory Category.fromJson(
+  factory CategoryRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Category(
+    return CategoryRow(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String?>(json['name']),
       color: serializer.fromJson<int?>(json['color']),
@@ -932,13 +933,13 @@ class Category extends DataClass implements Insertable<Category> {
     };
   }
 
-  Category copyWith({
+  CategoryRow copyWith({
     int? id,
     Value<String?> name = const Value.absent(),
     Value<int?> color = const Value.absent(),
     Value<int?> iconColor = const Value.absent(),
     Value<int?> iconCodePoint = const Value.absent(),
-  }) => Category(
+  }) => CategoryRow(
     id: id ?? this.id,
     name: name.present ? name.value : this.name,
     color: color.present ? color.value : this.color,
@@ -947,8 +948,8 @@ class Category extends DataClass implements Insertable<Category> {
         ? iconCodePoint.value
         : this.iconCodePoint,
   );
-  Category copyWithCompanion(CategoriesCompanion data) {
-    return Category(
+  CategoryRow copyWithCompanion(CategoriesCompanion data) {
+    return CategoryRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       color: data.color.present ? data.color.value : this.color,
@@ -961,7 +962,7 @@ class Category extends DataClass implements Insertable<Category> {
 
   @override
   String toString() {
-    return (StringBuffer('Category(')
+    return (StringBuffer('CategoryRow(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('color: $color, ')
@@ -976,7 +977,7 @@ class Category extends DataClass implements Insertable<Category> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Category &&
+      (other is CategoryRow &&
           other.id == this.id &&
           other.name == this.name &&
           other.color == this.color &&
@@ -984,7 +985,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.iconCodePoint == this.iconCodePoint);
 }
 
-class CategoriesCompanion extends UpdateCompanion<Category> {
+class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   final Value<int> id;
   final Value<String?> name;
   final Value<int?> color;
@@ -1004,7 +1005,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.iconColor = const Value.absent(),
     this.iconCodePoint = const Value.absent(),
   });
-  static Insertable<Category> custom({
+  static Insertable<CategoryRow> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<int>? color,
@@ -1733,12 +1734,11 @@ typedef $$CurrenciesTableUpdateCompanionBuilder =
     });
 
 final class $$CurrenciesTableReferences
-    extends BaseReferences<_$AppDatabase, $CurrenciesTable, Currency> {
+    extends BaseReferences<_$AppDatabase, $CurrenciesTable, CurrencyRow> {
   $$CurrenciesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static MultiTypedResultKey<$AccountsTable, List<Account>> _accountsRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
+  static MultiTypedResultKey<$AccountsTable, List<AccountRow>>
+  _accountsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.accounts,
     aliasName: $_aliasNameGenerator(db.currencies.id, db.accounts.currencyId),
   );
@@ -1992,14 +1992,14 @@ class $$CurrenciesTableTableManager
         RootTableManager<
           _$AppDatabase,
           $CurrenciesTable,
-          Currency,
+          CurrencyRow,
           $$CurrenciesTableFilterComposer,
           $$CurrenciesTableOrderingComposer,
           $$CurrenciesTableAnnotationComposer,
           $$CurrenciesTableCreateCompanionBuilder,
           $$CurrenciesTableUpdateCompanionBuilder,
-          (Currency, $$CurrenciesTableReferences),
-          Currency,
+          (CurrencyRow, $$CurrenciesTableReferences),
+          CurrencyRow,
           PrefetchHooks Function({bool accountsRefs, bool transactionsRefs})
         > {
   $$CurrenciesTableTableManager(_$AppDatabase db, $CurrenciesTable table)
@@ -2066,9 +2066,9 @@ class $$CurrenciesTableTableManager
                     return [
                       if (accountsRefs)
                         await $_getPrefetchedData<
-                          Currency,
+                          CurrencyRow,
                           $CurrenciesTable,
-                          Account
+                          AccountRow
                         >(
                           currentTable: table,
                           referencedTable: $$CurrenciesTableReferences
@@ -2087,7 +2087,7 @@ class $$CurrenciesTableTableManager
                         ),
                       if (transactionsRefs)
                         await $_getPrefetchedData<
-                          Currency,
+                          CurrencyRow,
                           $CurrenciesTable,
                           TransactionRow
                         >(
@@ -2118,14 +2118,14 @@ typedef $$CurrenciesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $CurrenciesTable,
-      Currency,
+      CurrencyRow,
       $$CurrenciesTableFilterComposer,
       $$CurrenciesTableOrderingComposer,
       $$CurrenciesTableAnnotationComposer,
       $$CurrenciesTableCreateCompanionBuilder,
       $$CurrenciesTableUpdateCompanionBuilder,
-      (Currency, $$CurrenciesTableReferences),
-      Currency,
+      (CurrencyRow, $$CurrenciesTableReferences),
+      CurrencyRow,
       PrefetchHooks Function({bool accountsRefs, bool transactionsRefs})
     >;
 typedef $$AccountsTableCreateCompanionBuilder =
@@ -2144,7 +2144,7 @@ typedef $$AccountsTableUpdateCompanionBuilder =
     });
 
 final class $$AccountsTableReferences
-    extends BaseReferences<_$AppDatabase, $AccountsTable, Account> {
+    extends BaseReferences<_$AppDatabase, $AccountsTable, AccountRow> {
   $$AccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $CurrenciesTable _currencyIdTable(_$AppDatabase db) =>
@@ -2454,14 +2454,14 @@ class $$AccountsTableTableManager
         RootTableManager<
           _$AppDatabase,
           $AccountsTable,
-          Account,
+          AccountRow,
           $$AccountsTableFilterComposer,
           $$AccountsTableOrderingComposer,
           $$AccountsTableAnnotationComposer,
           $$AccountsTableCreateCompanionBuilder,
           $$AccountsTableUpdateCompanionBuilder,
-          (Account, $$AccountsTableReferences),
-          Account,
+          (AccountRow, $$AccountsTableReferences),
+          AccountRow,
           PrefetchHooks Function({
             bool currencyId,
             bool sourceTransactions,
@@ -2559,7 +2559,7 @@ class $$AccountsTableTableManager
                     return [
                       if (sourceTransactions)
                         await $_getPrefetchedData<
-                          Account,
+                          AccountRow,
                           $AccountsTable,
                           TransactionRow
                         >(
@@ -2580,7 +2580,7 @@ class $$AccountsTableTableManager
                         ),
                       if (destinationTransactions)
                         await $_getPrefetchedData<
-                          Account,
+                          AccountRow,
                           $AccountsTable,
                           TransactionRow
                         >(
@@ -2611,14 +2611,14 @@ typedef $$AccountsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $AccountsTable,
-      Account,
+      AccountRow,
       $$AccountsTableFilterComposer,
       $$AccountsTableOrderingComposer,
       $$AccountsTableAnnotationComposer,
       $$AccountsTableCreateCompanionBuilder,
       $$AccountsTableUpdateCompanionBuilder,
-      (Account, $$AccountsTableReferences),
-      Account,
+      (AccountRow, $$AccountsTableReferences),
+      AccountRow,
       PrefetchHooks Function({
         bool currencyId,
         bool sourceTransactions,
@@ -2643,7 +2643,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
     });
 
 final class $$CategoriesTableReferences
-    extends BaseReferences<_$AppDatabase, $CategoriesTable, Category> {
+    extends BaseReferences<_$AppDatabase, $CategoriesTable, CategoryRow> {
   $$CategoriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$TransactionsTable, List<TransactionRow>>
@@ -2820,14 +2820,14 @@ class $$CategoriesTableTableManager
         RootTableManager<
           _$AppDatabase,
           $CategoriesTable,
-          Category,
+          CategoryRow,
           $$CategoriesTableFilterComposer,
           $$CategoriesTableOrderingComposer,
           $$CategoriesTableAnnotationComposer,
           $$CategoriesTableCreateCompanionBuilder,
           $$CategoriesTableUpdateCompanionBuilder,
-          (Category, $$CategoriesTableReferences),
-          Category,
+          (CategoryRow, $$CategoriesTableReferences),
+          CategoryRow,
           PrefetchHooks Function({bool transactionsRefs})
         > {
   $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
@@ -2886,7 +2886,7 @@ class $$CategoriesTableTableManager
                 return [
                   if (transactionsRefs)
                     await $_getPrefetchedData<
-                      Category,
+                      CategoryRow,
                       $CategoriesTable,
                       TransactionRow
                     >(
@@ -2915,14 +2915,14 @@ typedef $$CategoriesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $CategoriesTable,
-      Category,
+      CategoryRow,
       $$CategoriesTableFilterComposer,
       $$CategoriesTableOrderingComposer,
       $$CategoriesTableAnnotationComposer,
       $$CategoriesTableCreateCompanionBuilder,
       $$CategoriesTableUpdateCompanionBuilder,
-      (Category, $$CategoriesTableReferences),
-      Category,
+      (CategoryRow, $$CategoriesTableReferences),
+      CategoryRow,
       PrefetchHooks Function({bool transactionsRefs})
     >;
 typedef $$TransactionsTableCreateCompanionBuilder =

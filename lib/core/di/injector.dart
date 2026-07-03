@@ -1,4 +1,5 @@
 import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:get_it/get_it.dart';
 
@@ -18,6 +19,12 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<TransactionRepository>()) {
     getIt.registerLazySingleton<TransactionRepository>(
       () => DriftTransactionRepository(getIt<AppDatabase>()),
+    );
+  }
+
+  if (!getIt.isRegistered<CurrencyRepository>()) {
+    getIt.registerLazySingleton<CurrencyRepository>(
+      () => DriftCurrencyRepository(getIt<AppDatabase>()),
     );
   }
 }

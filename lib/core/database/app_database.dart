@@ -10,6 +10,7 @@ part 'app_database.g.dart';
 /// Currencies known to the app. A single currency is flagged [isBase]
 /// (rate 1.0); every other currency stores its [rateToBase] once the user
 /// provides an exchange rate.
+@DataClassName('CurrencyRow')
 class Currencies extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().nullable()();
@@ -21,6 +22,7 @@ class Currencies extends Table {
 }
 
 /// User money accounts (cash, bank, card, ...), each tied to a currency.
+@DataClassName('AccountRow')
 class Accounts extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().nullable()();
@@ -31,6 +33,7 @@ class Accounts extends Table {
 }
 
 /// Spending / income categories with their own color + icon.
+@DataClassName('CategoryRow')
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().nullable()();
