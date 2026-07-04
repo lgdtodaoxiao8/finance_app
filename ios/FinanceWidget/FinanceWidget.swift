@@ -1,3 +1,8 @@
+//
+//  FinanceWidget.swift
+//  FinanceWidget
+//
+
 import WidgetKit
 import SwiftUI
 

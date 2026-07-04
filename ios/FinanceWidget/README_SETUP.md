@@ -31,6 +31,17 @@ Tapping the widget opens the app on the quick add-transaction screen
 (`financeapp://add`, already handled). The widget refreshes automatically
 whenever you add/edit/delete a transaction.
 
+## Fix the "Cycle inside Runner" build error
+
+Adding an extension to a Flutter app triggers a known Xcode build cycle
+(`Cycle inside Runner … ExtractAppIntentsMetadata`). Fix (per Flutter docs):
+
+1. Project navigator → select **Runner** (blue icon) → under **TARGETS** select
+   **Runner** → **Build Phases** tab.
+2. Drag the **Embed Foundation Extensions** phase **above** the **Run Script**
+   (Flutter "Thin Binary") phase.
+3. **Product → Clean Build Folder** (⇧⌘K), then build again.
+
 ## Notes
 
 - The widget reads the shared store written by `home_widget`
