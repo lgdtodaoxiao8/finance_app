@@ -120,14 +120,20 @@ class _PopupDropdownState extends State<PopupDropdownObject> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final currentValue = widget.values?.cast<RootData>().firstWhere(
-      (value) => value.id == widget.currentValue,
-      orElse: () => widget.values!.first as RootData,
-    );
-    final isNull =
-        widget.values == null ||
-        widget.currentValue == null ||
-        currentValue == null;
+    // Find the selected item without ever calling `.first` on a possibly-empty
+    // list — an empty list (e.g. no currencies with a rate yet) must simply
+    // render the "Have no items" state instead of crashing with "No element".
+    final values = widget.values?.cast<RootData>();
+    RootData? currentValue;
+    if (values != null && widget.currentValue != null) {
+      for (final value in values) {
+        if (value.id == widget.currentValue) {
+          currentValue = value;
+          break;
+        }
+      }
+    }
+    final isNull = values == null || currentValue == null;
 
     final String? label = currentValue?.displayName;
 

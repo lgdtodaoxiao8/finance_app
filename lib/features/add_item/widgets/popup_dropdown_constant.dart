@@ -132,11 +132,14 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
   Widget build(BuildContext context) {
     final isNullCurrentValue = widget.currentId == null;
     final isNullValues = widget.values == null;
-    late Map<String, dynamic>? currentValue;
+    Map<String, dynamic>? currentValue;
     if (!isNullCurrentValue && !isNullValues) {
-      currentValue = widget.values?.firstWhere(
-        (value) => value['id'] == widget.currentId,
-      );
+      for (final value in widget.values!) {
+        if (value['id'] == widget.currentId) {
+          currentValue = value;
+          break;
+        }
+      }
     }
 
     return Container(
