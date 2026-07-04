@@ -3,6 +3,7 @@
 //  FinanceWidget
 //
 
+import AppIntents
 import WidgetKit
 import SwiftUI
 
@@ -130,12 +131,21 @@ struct FinanceWidgetEntryView: View {
 
       if family != .systemSmall {
         Spacer(minLength: 2)
-        ForEach(entry.categories.prefix(3)) { category in
+        ForEach(entry.categories.prefix(2)) { category in
           HStack(spacing: 6) {
             Circle().fill(category.color).frame(width: 8, height: 8)
             Text(category.name).font(.caption).lineLimit(1)
             Spacer()
             Text(money(category.value, entry.symbol)).font(.caption).bold()
+          }
+        }
+        Spacer(minLength: 4)
+        // Interactive quick-add: logs an expense without opening the app.
+        if #available(iOS 17.0, *) {
+          HStack(spacing: 8) {
+            quickAddButton(5)
+            quickAddButton(10)
+            quickAddButton(20)
           }
         }
       }
@@ -144,30 +154,21 @@ struct FinanceWidgetEntryView: View {
     .padding(14)
     .widgetURL(URL(string: "financeapp://add"))
   }
-}
 
-// ---------------------------------------------------------------------------
-// INTERACTIVE QUICK-ADD (iOS 17+) — enable during on-device wiring.
-//
-// After adding `BackgroundIntent.swift` to the FinanceWidget target AND linking
-// the `home_widget` package to this extension (see INTERACTIVE_SETUP.md), paste
-// the buttons below into `FinanceWidgetEntryView` (inside `if family != .small`)
-// and add this helper method to the struct:
-//
-//   @available(iOS 17.0, *)
-//   private func quickAddButton(_ amount: Int) -> some View {
-//     Button(intent: BackgroundIntent(
-//       url: URL(string: "financeapp://quickadd?amount=\(amount)"),
-//       appGroup: appGroupId)) {
-//       Text("+\(amount)").font(.caption).bold().foregroundColor(accent)
-//         .padding(.vertical, 6).padding(.horizontal, 12)
-//         .background(accent.opacity(0.12)).clipShape(Capsule())
-//     }.buttonStyle(.plain)
-//   }
-//
-//   // in body: if #available(iOS 17.0, *) { HStack(spacing: 8) {
-//   //   quickAddButton(5); quickAddButton(10); quickAddButton(20) } }
-// ---------------------------------------------------------------------------
+  @available(iOS 17.0, *)
+  private func quickAddButton(_ amount: Int) -> some View {
+    Button(intent: QuickAddIntent(amount: amount)) {
+      Text("+\(amount)")
+        .font(.caption).bold()
+        .foregroundColor(accent)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(accent.opacity(0.12))
+        .clipShape(Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+}
 
 @main
 struct FinanceWidget: Widget {
@@ -186,5 +187,49 @@ struct FinanceWidget: Widget {
     .configurationDisplayName("Finance")
     .description("Your spending at a glance. Tap to add a transaction.")
     .supportedFamilies([.systemSmall, .systemMedium])
+  }
+}
+
+// MARK: - Interactive quick-add (iOS 17+)
+
+/// Pure-Swift App Intent (no Flutter dependency): queues the amount in the
+/// shared App Group store and optimistically updates the widget totals. The
+/// Flutter app drains the queue and writes the real transaction on next launch
+/// / resume (see drainPendingQuickAdds in Dart).
+@available(iOS 17.0, *)
+struct QuickAddIntent: AppIntent {
+  static var title: LocalizedStringResource = "Quick add expense"
+
+  @Parameter(title: "Amount")
+  var amount: Int
+
+  init() {}
+  init(amount: Int) { self.amount = amount }
+
+  func perform() async throws -> some IntentResult {
+    let defaults = UserDefaults(suiteName: appGroupId)
+
+    var amounts: [Double] = []
+    if let json = defaults?.string(forKey: "pending_quickadd"),
+      let data = json.data(using: .utf8),
+      let arr = try? JSONSerialization.jsonObject(with: data) as? [Double]
+    {
+      amounts = arr
+    }
+    amounts.append(Double(amount))
+    if let out = try? JSONSerialization.data(withJSONObject: amounts),
+      let outStr = String(data: out, encoding: .utf8)
+    {
+      defaults?.set(outStr, forKey: "pending_quickadd")
+    }
+
+    // Optimistic update so the widget reflects the spend immediately.
+    let expense = defaults?.double(forKey: "expense") ?? 0
+    defaults?.set(expense + Double(amount), forKey: "expense")
+    let balance = defaults?.double(forKey: "balance") ?? 0
+    defaults?.set(balance - Double(amount), forKey: "balance")
+
+    WidgetCenter.shared.reloadTimelines(ofKind: "FinanceWidget")
+    return .result()
   }
 }

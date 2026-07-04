@@ -1,45 +1,30 @@
-# Interactive quick-add (iOS 17+) — wiring
+# Interactive quick-add (iOS 17+)
 
-The read-only widget + deep-link already work. This adds **buttons inside the
-widget** that log an expense without opening the app. It runs the Flutter
-`widgetInteractiveCallback` (already registered in `main.dart`) via
-`home_widget`'s background engine.
+The medium widget has `+5 / +10 / +20` buttons that log an expense **without
+opening the app**. No manual Xcode wiring is needed — it's all in code.
 
-> Test on a **real device** (App Groups + interactive widgets are unreliable on
-> the simulator). iOS 17+ required. When the app is fully suspended iOS may
-> briefly foreground it to run the callback — "no-open" is fully silent only
-> while the app is in memory (an iOS + Flutter limitation).
+## How it works
 
-Already in the repo (safe, don't break the current build):
-- Dart: `lib/features/widget_bridge/widget_interactivity.dart` + registration in
-  `main.dart` + `WidgetService.publishOnce()`.
-- Swift: `ios/Runner/BackgroundIntent.swift`, and `AppDelegate` registers the
-  background plugin registrant.
+- **Widget (pure Swift, no Flutter):** `QuickAddIntent` in `FinanceWidget.swift`
+  is an `AppIntent`. On tap it appends the amount to a JSON queue
+  (`pending_quickadd`) in the shared App Group store, optimistically bumps the
+  displayed `expense`/`balance`, and reloads the widget — so the change shows
+  instantly. Because it's pure Swift it doesn't drag Flutter into the extension.
+- **App (Dart):** `drainPendingQuickAdds()` reads the queue, writes each amount
+  as a real expense (first account, base currency, first category) via the
+  repositories, clears the queue and republishes the snapshot. It runs at
+  startup (`main.dart`) and whenever the app resumes (`FinanceApp` lifecycle
+  observer).
 
-## Steps (on device)
+So a tapped amount is reflected on the widget immediately and persisted to the
+database the next time the app runs (launch/resume) — no manual open required.
 
-1. **Add `BackgroundIntent.swift` to both targets.** In Xcode select
-   `Runner/BackgroundIntent.swift` → File inspector → **Target Membership** →
-   check **Runner** and **FinanceWidgetExtension**.
+## Requirements / caveats
 
-2. **Link `home_widget` to the widget extension** (so `BackgroundIntent`
-   compiles there). In `ios/Podfile` add:
-   ```ruby
-   target 'FinanceWidgetExtension' do
-     use_frameworks!
-     pod 'home_widget', :path => '.symlinks/plugins/home_widget/ios'
-   end
-   ```
-   then run `cd ios && pod install`.
-   (Alternative: add the `home_widget` Swift package via SPM to the extension.)
-
-3. **Enable the buttons** in `FinanceWidget/FinanceWidget.swift` — paste the
-   `quickAddButton(_:)` helper and the `HStack` of buttons from the commented
-   block at the bottom of that file into `FinanceWidgetEntryView`.
-
-4. **Run on your iPhone** (Runner scheme). Add the medium widget; the `+5 / +10
-   / +20` buttons log an expense (first account, base currency, first category)
-   and the widget refreshes.
-
-If the build complains about Flutter embedding in the extension, ping me — we'll
-adjust the linking (this is the finicky part and best iterated on-device).
+- iOS 17+ (App Intents `Button(intent:)`); buttons are `#available`-gated.
+- Test on a **real device** — App Groups and widget registration are unreliable
+  on the simulator.
+- The widget extension deployment target is set to iOS 17.0.
+- The transaction is written by the app process (which owns the Drift DB), so it
+  lands in the DB on the next app run; the widget total updates optimistically
+  in the meantime.
