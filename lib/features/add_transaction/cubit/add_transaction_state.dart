@@ -49,6 +49,13 @@ class AddTransactionState extends Equatable {
   bool get isTransfer => type == 'transfer';
   bool get isEditing => editingId != null;
 
+  // Onboarding readiness: a transaction needs a usable currency (which implies
+  // a base currency), an account, and a category.
+  bool get needsBaseCurrency => currencies.isEmpty;
+  bool get needsAccount => accounts.isEmpty;
+  bool get needsCategory => categories.isEmpty;
+  bool get isReady => !needsBaseCurrency && !needsAccount && !needsCategory;
+
   /// A blocking validation message for the current selection, or null if the
   /// transaction can be saved. Recomputed from state (never sticky).
   String? get validationError {

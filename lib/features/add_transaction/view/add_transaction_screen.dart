@@ -144,6 +144,12 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
             );
           }
 
+          // Onboarding gate: guide the user to set up prerequisites instead of
+          // showing a half-empty form that can't be saved.
+          if (!state.isReady) {
+            return _OnboardingGate(state: state);
+          }
+
           final cubit = context.read<AddTransactionCubit>();
           final keyboardSpace = MediaQuery.viewInsetsOf(context).bottom;
           final accountMaps = [for (final a in state.accounts) a.toMap()];
@@ -306,6 +312,93 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Shown instead of the form when prerequisites are missing, guiding the user
+/// through the first-time setup (base currency -> account) with a clear CTA.
+class _OnboardingGate extends StatelessWidget {
+  const _OnboardingGate({required this.state});
+
+  final AddTransactionState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final IconData icon;
+    final String title;
+    final String subtitle;
+    final String cta;
+    final String route;
+
+    if (state.needsBaseCurrency) {
+      icon = Icons.currency_exchange_rounded;
+      title = 'Set your base currency';
+      subtitle = 'Choose the currency you track everything in. '
+          'You can add more currencies later.';
+      cta = 'Set base currency';
+      route = '/add-currency';
+    } else if (state.needsAccount) {
+      icon = Icons.account_balance_wallet_rounded;
+      title = 'Add an account';
+      subtitle = 'Create an account (Cash, Card, Bank…) to log '
+          'your transactions into.';
+      cta = 'Add account';
+      route = '/add-account';
+    } else {
+      icon = Icons.category_rounded;
+      title = 'Add a category';
+      subtitle = 'Create at least one category for your transactions.';
+      cta = 'Add category';
+      route = '/add-category';
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.field,
+              ),
+              child: Icon(icon, size: 34, color: AppColors.primary),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: kTextStyle.copyWith(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: kTextStyle.copyWith(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () async {
+                await Navigator.of(context).pushNamed(route);
+                if (context.mounted) {
+                  context.read<AddTransactionCubit>().load();
+                }
+              },
+              child: Text(cta, style: kTextStyle.copyWith(color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }

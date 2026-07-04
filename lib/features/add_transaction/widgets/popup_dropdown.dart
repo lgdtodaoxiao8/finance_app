@@ -197,7 +197,18 @@ class _PopupDropdownState extends State<PopupDropdown> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isNull = widget.values == null || widget.currentValue == null;
+    // Resolve the selected row once, safely (no `.firstWhere` that can throw
+    // "No element" when the id isn't present / the list is empty).
+    Map<String, dynamic>? selected;
+    if (widget.values != null && widget.currentValue != null) {
+      for (final value in widget.values!) {
+        if (value['id'] == widget.currentValue) {
+          selected = value;
+          break;
+        }
+      }
+    }
+    final isNull = selected == null;
 
     return Container(
       height: 55,
@@ -245,9 +256,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                           ? null
                           : widget.tableType == Tables.currency
                           ? Text(
-                              widget.values!.firstWhere(
-                                (value) => value['id'] == widget.currentValue,
-                              )['symbol'],
+                              selected['symbol'],
                               style: kTextStyle.copyWith(
                                 fontSize: 20,
                                 color: const Color(0xFF242528),
@@ -257,9 +266,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                           : widget.tableType == Tables.account
                           ? Icon(
                               IconData(
-                                widget.values!.firstWhere(
-                                  (value) => value['id'] == widget.currentValue,
-                                )['icon_code_point'],
+                                selected['icon_code_point'],
                                 fontFamily: 'MaterialIcons',
                                 fontPackage: null,
                               ),
@@ -269,32 +276,18 @@ class _PopupDropdownState extends State<PopupDropdown> {
                           : Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(
-                                  widget.values!.firstWhere(
-                                    (value) =>
-                                        value['id'] == widget.currentValue,
-                                  )['color'],
-                                ),
+                                color: Color(selected['color']),
                               ),
                               padding: const EdgeInsets.all(7),
                               margin: const EdgeInsets.only(top: 4),
                               child: Icon(
                                 IconData(
-                                  widget.values!.firstWhere(
-                                    (value) =>
-                                        value['id'] == widget.currentValue,
-                                  )['icon_code_point'],
+                                  selected['icon_code_point'],
                                   fontFamily: 'MaterialIcons',
                                   fontPackage: null,
                                 ),
                                 size: 23,
-                                // color: const Color(0xFF40434A),
-                                color: Color(
-                                  widget.values!.firstWhere(
-                                    (value) =>
-                                        value['id'] == widget.currentValue,
-                                  )['icon_color'],
-                                ),
+                                color: Color(selected['icon_color']),
                               ),
                             ),
                     ),
@@ -303,9 +296,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                       child: Text(
                         isNull
                             ? 'Have no items'
-                            : widget.values!.firstWhere(
-                                (value) => value['id'] == widget.currentValue,
-                              )[tablesValues[widget.tableType]![1]],
+                            : selected[tablesValues[widget.tableType]![1]],
                         style: kTextStyle.copyWith(
                           fontSize: 16,
                           color: const Color(0xFF242528),
