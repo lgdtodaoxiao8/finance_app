@@ -115,6 +115,7 @@ struct FinanceWidgetEntryView: View {
           .font(.caption)
           .foregroundColor(.secondary)
         Spacer()
+        // Tapping the widget body (outside buttons) opens the full add screen.
         Image(systemName: "plus.circle.fill")
           .foregroundColor(accent)
       }
@@ -144,6 +145,29 @@ struct FinanceWidgetEntryView: View {
     .widgetURL(URL(string: "financeapp://add"))
   }
 }
+
+// ---------------------------------------------------------------------------
+// INTERACTIVE QUICK-ADD (iOS 17+) — enable during on-device wiring.
+//
+// After adding `BackgroundIntent.swift` to the FinanceWidget target AND linking
+// the `home_widget` package to this extension (see INTERACTIVE_SETUP.md), paste
+// the buttons below into `FinanceWidgetEntryView` (inside `if family != .small`)
+// and add this helper method to the struct:
+//
+//   @available(iOS 17.0, *)
+//   private func quickAddButton(_ amount: Int) -> some View {
+//     Button(intent: BackgroundIntent(
+//       url: URL(string: "financeapp://quickadd?amount=\(amount)"),
+//       appGroup: appGroupId)) {
+//       Text("+\(amount)").font(.caption).bold().foregroundColor(accent)
+//         .padding(.vertical, 6).padding(.horizontal, 12)
+//         .background(accent.opacity(0.12)).clipShape(Capsule())
+//     }.buttonStyle(.plain)
+//   }
+//
+//   // in body: if #available(iOS 17.0, *) { HStack(spacing: 8) {
+//   //   quickAddButton(5); quickAddButton(10); quickAddButton(20) } }
+// ---------------------------------------------------------------------------
 
 @main
 struct FinanceWidget: Widget {

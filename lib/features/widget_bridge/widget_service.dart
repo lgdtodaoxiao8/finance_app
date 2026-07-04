@@ -60,6 +60,20 @@ class WidgetService {
     });
   }
 
+  /// Fetches the current data once and publishes a fresh snapshot. Used by the
+  /// background interactivity callback (a separate isolate with no live stream).
+  Future<void> publishOnce() async {
+    _transactions = await _transactionRepository.getAllWithDetails();
+    final currencies = await _currencyRepository.getAll();
+    for (final c in currencies) {
+      if (c.isBaseCurrency) {
+        _baseSymbol = c.currencySymbol;
+        break;
+      }
+    }
+    await _publish();
+  }
+
   Future<void> _publish() async {
     final snapshot = buildWidgetSnapshot(_transactions, baseSymbol: _baseSymbol);
     try {
