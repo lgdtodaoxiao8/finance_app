@@ -6,7 +6,7 @@ that must be done in the Xcode UI (they can't be reliably scripted). Everything
 else — the data bridge, deep-link handling, snapshot — is already wired in the
 Flutter app.
 
-App Group used everywhere: **`group.com.example.financeApp`**
+App Group used everywhere: **`group.com.lgdtodaoxiao.financeApp`**
 (matches `WidgetService.appGroupId` and `FinanceWidget.swift`).
 
 ## Steps (~5 min)
@@ -14,12 +14,12 @@ App Group used everywhere: **`group.com.example.financeApp`**
 1. Open the workspace: `open ios/Runner.xcworkspace` (use the **workspace**, not
    the project).
 2. **Runner target → Signing & Capabilities → + Capability → App Groups**, then
-   add `group.com.example.financeApp`.
+   add `group.com.lgdtodaoxiao.financeApp`.
 3. **File → New → Target… → Widget Extension**. Name it **`FinanceWidget`**.
    Uncheck "Include Live Activity" and "Include Configuration App Intent"
    (we use a static widget). Finish, and **Activate** the scheme when prompted.
 4. On the new **FinanceWidget target → Signing & Capabilities → + Capability →
-   App Groups**, add the same `group.com.example.financeApp`.
+   App Groups**, add the same `group.com.lgdtodaoxiao.financeApp`.
 5. Open the auto-generated `FinanceWidget/FinanceWidget.swift` in Xcode and
    **replace its entire contents** with the code from
    `ios/FinanceWidget/FinanceWidget.swift` in this folder.
@@ -45,7 +45,7 @@ Adding an extension to a Flutter app triggers a known Xcode build cycle
 ## Notes
 
 - The widget reads the shared store written by `home_widget`
-  (`UserDefaults(suiteName: "group.com.example.financeApp")`), keys:
+  (`UserDefaults(suiteName: "group.com.lgdtodaoxiao.financeApp")`), keys:
   `income`, `expense`, `balance`, `symbol`, `categories` (JSON).
 - True "add without opening the app" (interactive buttons) needs iOS 17
   App Intents — a follow-up on top of this read-only + deep-link version.

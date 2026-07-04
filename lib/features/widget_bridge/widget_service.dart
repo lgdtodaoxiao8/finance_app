@@ -27,7 +27,7 @@ class WidgetService {
   /// iOS App Group shared between the app and the widget extension.
   /// Must match the App Group capability added to both the Runner and the
   /// widget-extension targets in Xcode.
-  static const String appGroupId = 'group.com.example.financeApp';
+  static const String appGroupId = 'group.com.lgdtodaoxiao.financeApp';
 
   StreamSubscription<List<TransactionDetails>>? _txSubscription;
   StreamSubscription<List<dynamic>>? _currencySubscription;

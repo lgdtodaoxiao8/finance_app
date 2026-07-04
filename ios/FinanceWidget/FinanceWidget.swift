@@ -8,7 +8,7 @@ import SwiftUI
 
 // Must match WidgetService.appGroupId in the Flutter app and the App Group
 // capability added to both the Runner and this extension target.
-private let appGroupId = "group.com.example.financeApp"
+private let appGroupId = "group.com.lgdtodaoxiao.financeApp"
 
 // MARK: - Model
 

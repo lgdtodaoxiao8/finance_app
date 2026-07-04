@@ -94,7 +94,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		CF8B7BAA2FF8FE480043C177 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		CF8B7BAA2FF8FE480043C177 /* Exceptions for "FinanceWidget" folder in "FinanceWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -104,7 +104,18 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		CF8B7B9D2FF8FE460043C177 /* FinanceWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (CF8B7BAA2FF8FE480043C177 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = FinanceWidget; sourceTree = "<group>"; };
+		CF8B7B9D2FF8FE460043C177 /* FinanceWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CF8B7BAA2FF8FE480043C177 /* Exceptions for "FinanceWidget" folder in "FinanceWidgetExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = FinanceWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,9 +262,9 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				CF8B7BAF2FF8FE480043C177 /* Embed Foundation Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				57F6344A175271D7187E9110 /* [CP] Embed Pods Frameworks */,
-				CF8B7BAF2FF8FE480043C177 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -281,8 +292,6 @@
 				CF8B7B9D2FF8FE460043C177 /* FinanceWidget */,
 			);
 			name = FinanceWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = FinanceWidgetExtension;
 			productReference = CF8B7B982FF8FE460043C177 /* FinanceWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
