@@ -1,0 +1,28 @@
+<svg viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <ellipse cx="160" cy="150" rx="132" ry="96" fill="#3B82F6" opacity="0.08"/>
+
+  <!-- card -->
+  <rect x="52" y="46" width="216" height="176" rx="26" fill="#FFFFFF"/>
+  <rect x="52" y="46" width="216" height="176" rx="26" fill="#3B82F6" opacity="0.03"/>
+
+  <!-- donut -->
+  <g transform="rotate(-90 122 120)">
+    <circle cx="122" cy="120" r="38" stroke="#EEF1F5" stroke-width="20" fill="none"/>
+    <circle cx="122" cy="120" r="38" stroke="#3B82F6" stroke-width="20" fill="none"
+            stroke-dasharray="95.5 143.3" stroke-dashoffset="0"/>
+    <circle cx="122" cy="120" r="38" stroke="#1FB574" stroke-width="20" fill="none"
+            stroke-dasharray="59.7 179.1" stroke-dashoffset="-95.5"/>
+    <circle cx="122" cy="120" r="38" stroke="#FDB022" stroke-width="20" fill="none"
+            stroke-dasharray="47.8 191" stroke-dashoffset="-155.2"/>
+    <circle cx="122" cy="120" r="38" stroke="#F04E5E" stroke-width="20" fill="none"
+            stroke-dasharray="35.8 203" stroke-dashoffset="-203"/>
+  </g>
+
+  <!-- bars -->
+  <rect x="188" y="132" width="14" height="46" rx="7" fill="#3B82F6" opacity="0.85"/>
+  <rect x="212" y="104" width="14" height="74" rx="7" fill="#1FB574"/>
+  <rect x="236" y="120" width="14" height="58" rx="7" fill="#3B82F6" opacity="0.55"/>
+
+  <!-- header line + dots -->
+  <rect x="74" y="66" width="70" height="9" rx="4.5" fill="#1A1C1E" opacity="0.14"/>
+</svg>
