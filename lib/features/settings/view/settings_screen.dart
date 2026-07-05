@@ -2,6 +2,7 @@ import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/settings/cubit/base_currency_cubit.dart';
 import 'package:finance_app/features/settings/widgets/widgets.dart';
+import 'package:finance_app/features/subscription/widgets/premium_upgrade_card.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,6 +22,8 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
+          const PremiumUpgradeCard(),
+          const SizedBox(height: 16),
           _Card(
             title: 'Base currency',
             child: BlocProvider(
