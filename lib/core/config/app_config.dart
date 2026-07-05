@@ -18,4 +18,17 @@ class AppConfig {
 
   /// Backend API root used for account auth and sync (Phase 4 steps 3–4).
   static const String apiBaseUrl = 'https://your-domain.example/api';
+
+  // --- Supabase (auth + sync + AI proxy via Edge Functions) ---
+  // Fill these from your Supabase project → Settings → API. The anon key is a
+  // public client key (safe to ship); Row Level Security protects the data.
+  static const String supabaseUrl = 'https://YOUR-PROJECT.supabase.co';
+  static const String supabasePublishableKey = 'YOUR-SUPABASE-PUBLISHABLE-KEY';
+
+  /// Whether the backend has been wired up. Until the owner fills the Supabase
+  /// values above, the app runs fully local-first and hides account/sync UI
+  /// gracefully instead of throwing.
+  static bool get isBackendConfigured =>
+      !supabaseUrl.contains('YOUR-PROJECT') &&
+      !supabasePublishableKey.contains('YOUR-SUPABASE');
 }

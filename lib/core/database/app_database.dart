@@ -67,8 +67,7 @@ class Transactions extends Table {
   TextColumn get date => text().nullable()();
   TextColumn get note => text().nullable()();
   TextColumn get type => text().nullable()();
-  BoolColumn get isCanceled =>
-      boolean().named('is_canceled').nullable()();
+  BoolColumn get isCanceled => boolean().named('is_canceled').nullable()();
 }
 
 @DriftDatabase(tables: [Currencies, Accounts, Categories, Transactions])
