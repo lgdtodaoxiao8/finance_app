@@ -1,9 +1,9 @@
 import 'package:finance_app/features/add_item/add_item.dart';
 import 'package:finance_app/features/add_transaction/add_transaction.dart';
-import 'package:finance_app/features/root_node/root_node.dart';
+import 'package:finance_app/features/finance_app/view/launch_gate.dart';
 
 final routes = {
-  '/': (ctx) => const RootNodeScreen(),
+  '/': (ctx) => const LaunchGate(),
   '/add-transaction': (ctx) => const AddTransaction(),
   '/add-category': (ctx) => const AddCategoryScreen(),
   '/add-currency': (ctx) => const AddCurrencyScreen(),

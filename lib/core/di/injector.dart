@@ -1,10 +1,12 @@
 import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/core/preferences/app_preferences.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Global service locator.
 final getIt = GetIt.instance;
@@ -17,6 +19,11 @@ final getIt = GetIt.instance;
 Future<void> configureDependencies() async {
   if (!getIt.isRegistered<AppDatabase>()) {
     getIt.registerSingleton<AppDatabase>(AppDatabase());
+  }
+
+  if (!getIt.isRegistered<AppPreferences>()) {
+    final prefs = await SharedPreferences.getInstance();
+    getIt.registerSingleton<AppPreferences>(AppPreferences(prefs));
   }
 
   if (!getIt.isRegistered<TransactionRepository>()) {
