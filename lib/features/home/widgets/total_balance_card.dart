@@ -60,8 +60,8 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         decoration: BoxDecoration(
-          // Subtle primary tint + border hints this one is interactive.
-          color: AppColors.primary.withValues(alpha: 0.06),
+          // White like the other tiles; a thin border still hints it's tappable.
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
         ),
