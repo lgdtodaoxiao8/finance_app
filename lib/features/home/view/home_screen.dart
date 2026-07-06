@@ -5,6 +5,9 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/view/ai_dashboard.dart';
 import 'package:finance_app/features/home/cubit/analytics_cubit.dart';
+import 'package:finance_app/features/home/widgets/daily_spend_chart.dart';
+import 'package:finance_app/features/home/widgets/stat_strip.dart';
+import 'package:finance_app/features/home/widgets/weekly_digest_teaser.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -91,7 +94,13 @@ class _AnalyticsView extends StatelessWidget {
                 symbol: state.baseSymbol,
               ),
               const SizedBox(height: 16),
+              const StatStrip(),
+              const SizedBox(height: 16),
+              const WeeklyDigestTeaser(),
+              const SizedBox(height: 20),
               const AiDashboard(),
+              const SizedBox(height: 16),
+              const DailySpendChart(),
               const SizedBox(height: 16),
               _SpendingCard(
                 spends: state.categorySpends,
