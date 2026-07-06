@@ -6,6 +6,7 @@ import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
+import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,6 +37,12 @@ Future<void> configureDependencies() async {
 
   if (!getIt.isRegistered<AuthService>()) {
     getIt.registerSingleton<AuthService>(AuthService());
+  }
+
+  if (!getIt.isRegistered<SyncService>()) {
+    getIt.registerSingleton<SyncService>(
+      SyncService(getIt<AppDatabase>(), getIt<AuthService>()),
+    );
   }
 
   if (!getIt.isRegistered<TransactionRepository>()) {

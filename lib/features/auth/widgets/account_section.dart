@@ -1,7 +1,9 @@
+import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/features/auth/data/app_user.dart';
 import 'package:finance_app/features/auth/view/auth_screen.dart';
-import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/features/subscription/widgets/premium_gate.dart';
+import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -83,40 +85,102 @@ class _SignedIn extends StatelessWidget {
   final AppUser user;
   final AuthService auth;
 
+  Future<void> _syncNow(BuildContext context) async {
+    // Sync is a premium feature — opens the paywall if the user isn't premium.
+    if (!await ensurePremium(context)) return;
+    try {
+      await getIt<SyncService>().sync();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sync failed: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sync = getIt<SyncService>();
     return _Card(
-      child: Row(
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-            child: const Icon(Icons.person_rounded, color: AppColors.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Signed in',
-                  style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primary,
                 ),
-                Text(
-                  user.email,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Signed in',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                    Text(
+                      user.email,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => auth.signOut(),
+                child: const Text('Sign out'),
+              ),
+            ],
+          ),
+          const Divider(height: 20, color: AppColors.divider),
+          ValueListenableBuilder<bool>(
+            valueListenable: sync.isSyncing,
+            builder: (context, syncing, _) {
+              return Row(
+                children: [
+                  const Icon(
+                    Icons.cloud_done_rounded,
+                    size: 20,
+                    color: AppColors.textSecondary,
                   ),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () => auth.signOut(),
-            child: const Text('Sign out'),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Cloud sync',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (syncing)
+                    const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    FilledButton.tonal(
+                      onPressed: () => _syncNow(context),
+                      child: const Text('Sync now'),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),

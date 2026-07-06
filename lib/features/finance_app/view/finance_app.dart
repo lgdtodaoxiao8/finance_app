@@ -1,5 +1,9 @@
 import 'dart:async';
 
+import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/features/auth/auth_service.dart';
+import 'package:finance_app/features/subscription/subscription_service.dart';
+import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_interactivity.dart';
 import 'package:finance_app/router/router.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -27,14 +31,26 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
     _widgetClickSubscription = HomeWidget.widgetClicked.listen(
       _handleWidgetLaunch,
     );
+    // Sync whenever the account changes (e.g. just signed in).
+    getIt<AuthService>().currentUser.addListener(_autoSync);
+    _autoSync();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Persist any quick-adds the user queued from the widget while away.
     if (state == AppLifecycleState.resumed) {
+      // Persist any quick-adds the user queued from the widget while away,
+      // then pull down anything that changed on other devices.
       drainPendingQuickAdds();
+      _autoSync();
     }
+  }
+
+  /// Opportunistic cloud sync — only for signed-in premium users. Failures are
+  /// swallowed: sync is best-effort and never blocks the UI.
+  void _autoSync() {
+    if (!getIt<SubscriptionService>().isPremium.value) return;
+    getIt<SyncService>().sync().catchError((_) {});
   }
 
   /// Routes a home-widget deep link. `*://add` opens the quick add-transaction
@@ -52,6 +68,7 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _widgetClickSubscription?.cancel();
+    getIt<AuthService>().currentUser.removeListener(_autoSync);
     super.dispose();
   }
 
