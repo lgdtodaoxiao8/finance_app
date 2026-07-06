@@ -23,11 +23,17 @@ class AiInsight {
 class AiInsightsResult {
   const AiInsightsResult({
     required this.summary,
+    required this.score,
+    required this.scoreLabel,
     required this.insights,
     required this.tip,
   });
 
   final String summary;
+
+  /// Overall financial-health score, 0-100.
+  final int score;
+  final String scoreLabel;
   final List<AiInsight> insights;
   final String tip;
 
@@ -35,6 +41,8 @@ class AiInsightsResult {
     final raw = (json['insights'] as List?) ?? const [];
     return AiInsightsResult(
       summary: json['summary'] as String? ?? '',
+      score: (json['score'] as num?)?.round().clamp(0, 100) ?? 0,
+      scoreLabel: json['scoreLabel'] as String? ?? '',
       insights: raw
           .whereType<Map<String, dynamic>>()
           .map(AiInsight.fromJson)

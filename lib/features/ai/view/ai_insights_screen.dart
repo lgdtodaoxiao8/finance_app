@@ -124,7 +124,9 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       children: [
         const Center(child: PremiumBadge(label: 'AI COACH')),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
+        _ScoreHero(score: result.score, label: result.scoreLabel),
+        const SizedBox(height: 20),
         Text(
           result.summary,
           style: const TextStyle(
@@ -141,6 +143,95 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
           _TipCard(tip: result.tip),
         ],
       ],
+    );
+  }
+}
+
+class _ScoreHero extends StatelessWidget {
+  const _ScoreHero({required this.score, required this.label});
+
+  final int score;
+  final String label;
+
+  Color get _color => switch (score) {
+    >= 70 => AppColors.positive,
+    >= 40 => const Color(0xFFF5A623),
+    _ => AppColors.negative,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(kRadiusLg),
+        boxShadow: kCardShadow,
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 130,
+            width: 130,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  height: 130,
+                  width: 130,
+                  child: CircularProgressIndicator(
+                    value: score / 100,
+                    strokeWidth: 10,
+                    strokeCap: StrokeCap.round,
+                    backgroundColor: AppColors.field,
+                    valueColor: AlwaysStoppedAnimation(_color),
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$score',
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w800,
+                        color: _color,
+                        height: 1,
+                      ),
+                    ),
+                    const Text(
+                      'out of 100',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Financial health',
+            style: TextStyle(
+              fontSize: 12,
+              letterSpacing: 0.4,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

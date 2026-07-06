@@ -1,17 +1,20 @@
 // Supabase Edge Function: ai-insights
 //
-// The app sends a compact spending summary; this function calls Anthropic with
-// a SERVER-SIDE key and returns structured insights. The Anthropic key never
-// leaves the server — set it once with:
-//   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-// then deploy:
+// The app sends a compact spending summary; this function calls OpenAI with a
+// SERVER-SIDE key and returns structured insights. The API key never leaves the
+// server. Set it once, then deploy:
+//   supabase secrets set OPENAI_API_KEY=sk-...
+//   supabase secrets set OPENAI_MODEL=gpt-4o        # optional; default gpt-4o
 //   supabase functions deploy ai-insights
 //
+// Swap models any time via the OPENAI_MODEL secret (e.g. gpt-4o-mini to cut
+// cost ~40x) — no code change or redeploy of this file needed for a re-set.
+//
 // Supabase verifies the caller's JWT before this runs (default), so only
-// signed-in users can invoke it. Gate premium in the app before calling.
+// signed-in users can invoke it. Premium is gated in the app before calling.
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-const MODEL = "claude-opus-4-8";
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
+const MODEL = Deno.env.get("OPENAI_MODEL") ?? "gpt-4o";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -19,12 +22,15 @@ const cors = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Shape we ask Claude to return, enforced via structured outputs.
+// Shape we force the model to return via OpenAI structured outputs.
 const schema = {
   type: "object",
   additionalProperties: false,
   properties: {
     summary: { type: "string" },
+    // Overall financial-health score, 0-100 (enforced by the prompt).
+    score: { type: "integer" },
+    scoreLabel: { type: "string" },
     insights: {
       type: "array",
       items: {
@@ -40,14 +46,27 @@ const schema = {
     },
     tip: { type: "string" },
   },
-  required: ["summary", "insights", "tip"],
+  required: ["summary", "score", "scoreLabel", "insights", "tip"],
 };
+
+const systemPrompt =
+  "You are a sharp, encouraging personal-finance coach. You are given a " +
+  "user's spending summary (amounts already in their base currency). Analyse " +
+  "it and reply ONLY via the structured schema. Be specific: reference real " +
+  "numbers and category names from the data, never invent figures. " +
+  "`summary`: one punchy sentence on their money right now. " +
+  "`score`: an integer 0-100 rating their financial health this period " +
+  "(spending vs income, balance, concentration in one category — higher is " +
+  "healthier). `scoreLabel`: 2-4 words for that score (e.g. 'Overspending', " +
+  "'On track', 'Great shape'). `insights`: 3-4 concrete observations, each " +
+  "with a tone (positive | warning | neutral). `tip`: one specific, " +
+  "actionable next step.";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
-  if (!ANTHROPIC_API_KEY) {
-    return json({ error: "ANTHROPIC_API_KEY is not set on the server." }, 500);
+  if (!OPENAI_API_KEY) {
+    return json({ error: "OPENAI_API_KEY is not set on the server." }, 500);
   }
 
   let payload: unknown;
@@ -57,43 +76,44 @@ Deno.serve(async (req) => {
     return json({ error: "Invalid JSON body." }, 400);
   }
 
-  const prompt =
-    "You are a sharp, encouraging personal-finance coach. Given this user's " +
-    "spending summary (amounts are in their base currency), write a short, " +
-    "concrete analysis. Be specific and reference real numbers and category " +
-    "names from the data. Return 3-4 insights and one actionable tip. Do not " +
-    "invent data that isn't present.\n\nSpending summary (JSON):\n" +
-    JSON.stringify(payload);
-
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
+      "authorization": `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 1200,
-      output_config: { format: { type: "json_schema", schema } },
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: "Spending summary (JSON):\n" + JSON.stringify(payload),
+        },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: "insights", strict: true, schema },
+      },
     }),
   });
 
   if (!res.ok) {
     const text = await res.text();
-    return json({ error: `Anthropic error ${res.status}: ${text}` }, 502);
+    return json({ error: `OpenAI error ${res.status}: ${text}` }, 502);
   }
 
   const data = await res.json();
-  const block = (data.content ?? []).find((b: { type: string }) =>
-    b.type === "text"
-  );
-  if (!block) return json({ error: "No content returned." }, 502);
+  const message = data.choices?.[0]?.message;
+  if (message?.refusal) return json({ error: "AI declined the request." }, 502);
+  const content = message?.content;
+  if (typeof content !== "string") {
+    return json({ error: "No content returned." }, 502);
+  }
 
   try {
-    // With output_config.format the text block is guaranteed valid JSON.
-    return json(JSON.parse(block.text), 200);
+    // With json_schema strict mode the content is guaranteed valid JSON.
+    return json(JSON.parse(content), 200);
   } catch {
     return json({ error: "Could not parse AI response." }, 502);
   }
