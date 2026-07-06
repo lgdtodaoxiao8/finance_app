@@ -5,8 +5,12 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/view/ai_dashboard.dart';
 import 'package:finance_app/features/home/cubit/analytics_cubit.dart';
+import 'package:finance_app/features/home/widgets/biggest_expenses.dart';
 import 'package:finance_app/features/home/widgets/daily_spend_chart.dart';
+import 'package:finance_app/features/home/widgets/monthly_trend_chart.dart';
+import 'package:finance_app/features/home/widgets/recent_activity.dart';
 import 'package:finance_app/features/home/widgets/stat_strip.dart';
+import 'package:finance_app/features/home/widgets/weekday_pattern.dart';
 import 'package:finance_app/features/home/widgets/weekly_digest_teaser.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -107,6 +111,14 @@ class _AnalyticsView extends StatelessWidget {
                 total: state.totalExpense,
                 symbol: state.baseSymbol,
               ),
+              const SizedBox(height: 16),
+              const MonthlyTrendChart(),
+              const SizedBox(height: 16),
+              const WeekdayPattern(),
+              const SizedBox(height: 16),
+              const BiggestExpenses(),
+              const SizedBox(height: 16),
+              const RecentActivity(),
             ],
           );
         },
