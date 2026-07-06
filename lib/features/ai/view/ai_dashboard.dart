@@ -8,7 +8,9 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/ai/view/ai_insights_screen.dart';
+import 'package:finance_app/features/ai/view/category_detail_screen.dart';
 import 'package:finance_app/features/ai/view/forecast_screen.dart';
+import 'package:finance_app/features/ai/view/month_detail_screen.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -138,6 +140,11 @@ class _AiDashboardState extends State<AiDashboard> {
                   expense: _expense,
                   net: _net,
                   symbol: _symbol,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const MonthDetailScreen(),
+                    ),
+                  ),
                 ),
                 _TopCategoryCard(
                   name: _topName,
@@ -145,6 +152,11 @@ class _AiDashboardState extends State<AiDashboard> {
                   share: _topShare,
                   color: _topColor,
                   symbol: _symbol,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const CategoryDetailScreen(),
+                    ),
+                  ),
                 ),
                 _AiCoachCard(
                   premium: premium,
@@ -254,11 +266,13 @@ class _ThisMonthCard extends StatelessWidget {
     required this.expense,
     required this.net,
     required this.symbol,
+    required this.onTap,
   });
   final double income;
   final double expense;
   final double net;
   final String? symbol;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -334,17 +348,19 @@ class _TopCategoryCard extends StatelessWidget {
     required this.share,
     required this.color,
     required this.symbol,
+    required this.onTap,
   });
   final String? name;
   final double amount;
   final double share;
   final Color color;
   final String? symbol;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return _CardShell(
-      onTap: () {},
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
