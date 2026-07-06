@@ -1,14 +1,18 @@
 import 'dart:async';
 
+import 'package:finance_app/core/config/app_config.dart';
+import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_interactivity.dart';
+import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:finance_app/router/router.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FinanceApp extends StatefulWidget {
   const FinanceApp({super.key});
@@ -20,6 +24,8 @@ class FinanceApp extends StatefulWidget {
 class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   StreamSubscription<Uri?>? _widgetClickSubscription;
+  StreamSubscription<dynamic>? _dbSubscription;
+  Timer? _syncDebounce;
 
   @override
   void initState() {
@@ -31,8 +37,39 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
     _widgetClickSubscription = HomeWidget.widgetClicked.listen(
       _handleWidgetLaunch,
     );
-    // Sync whenever the account changes (e.g. just signed in).
-    getIt<AuthService>().currentUser.addListener(_autoSync);
+    // Everything network/IO-heavy runs after the first frame so opening the
+    // app is instant.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
+  }
+
+  /// Brings up the backend and background services off the launch critical
+  /// path: Supabase (session refresh is a network call), home-widget
+  /// publishing, queued quick-adds, live-change sync, and the first sync.
+  Future<void> _bootstrap() async {
+    if (AppConfig.isBackendConfigured) {
+      try {
+        await Supabase.initialize(
+          url: AppConfig.supabaseUrl,
+          publishableKey: AppConfig.supabasePublishableKey,
+        );
+        getIt<AuthService>().bind();
+        // Re-sync whenever the signed-in account changes.
+        getIt<AuthService>().currentUser.addListener(_autoSync);
+      } catch (e) {
+        debugPrint('Supabase init failed: $e');
+      }
+    }
+
+    await getIt<WidgetService>().start();
+    await drainPendingQuickAdds();
+
+    // Invisible auto-sync: push local edits shortly after they happen.
+    _dbSubscription = getIt<AppDatabase>().tableUpdates().listen((_) {
+      if (getIt<SyncService>().isSyncing.value) return;
+      _syncDebounce?.cancel();
+      _syncDebounce = Timer(const Duration(seconds: 2), _autoSync);
+    });
+
     _autoSync();
   }
 
@@ -68,6 +105,8 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _widgetClickSubscription?.cancel();
+    _dbSubscription?.cancel();
+    _syncDebounce?.cancel();
     getIt<AuthService>().currentUser.removeListener(_autoSync);
     super.dispose();
   }

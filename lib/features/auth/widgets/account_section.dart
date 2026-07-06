@@ -2,46 +2,50 @@ import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/features/auth/data/app_user.dart';
 import 'package:finance_app/features/auth/view/auth_screen.dart';
-import 'package:finance_app/features/subscription/widgets/premium_gate.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
-/// Settings card for the account: sign-in prompt, signed-in identity + sign
-/// out, or a gentle "coming soon" when the backend isn't configured.
+/// Settings card for the account: sign-in prompt, or signed-in identity with a
+/// quiet automatic-sync status. Sync itself is invisible — it runs on its own.
 class AccountSection extends StatelessWidget {
   const AccountSection({super.key});
 
   @override
   Widget build(BuildContext context) {
     final auth = getIt<AuthService>();
-
-    if (!auth.isAvailable) {
-      return const _Card(
-        child: Row(
-          children: [
-            Icon(Icons.cloud_off_rounded, color: AppColors.textTertiary),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Cloud sync isn\'t set up yet',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+    // Rebuild once the backend finishes wiring up (post-launch), so this never
+    // gets stuck on the initial "not ready" state.
+    return ValueListenableBuilder<bool>(
+      valueListenable: auth.isReady,
+      builder: (context, _, _) {
+        if (!auth.isAvailable) {
+          return const _Card(
+            child: Row(
+              children: [
+                Icon(Icons.cloud_off_rounded, color: AppColors.textTertiary),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Cloud sync isn\'t set up yet',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
-
-    return ValueListenableBuilder<AppUser?>(
-      valueListenable: auth.currentUser,
-      builder: (context, user, _) {
-        if (user == null) return const _SignedOut();
-        return _SignedIn(user: user, auth: auth);
+          );
+        }
+        return ValueListenableBuilder<AppUser?>(
+          valueListenable: auth.currentUser,
+          builder: (context, user, _) {
+            if (user == null) return const _SignedOut();
+            return _SignedIn(user: user, auth: auth);
+          },
+        );
       },
     );
   }
@@ -84,20 +88,6 @@ class _SignedIn extends StatelessWidget {
 
   final AppUser user;
   final AuthService auth;
-
-  Future<void> _syncNow(BuildContext context) async {
-    // Sync is a premium feature — opens the paywall if the user isn't premium.
-    if (!await ensurePremium(context)) return;
-    try {
-      await getIt<SyncService>().sync();
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sync failed: $e')),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,27 +136,12 @@ class _SignedIn extends StatelessWidget {
             ],
           ),
           const Divider(height: 20, color: AppColors.divider),
+          // Sync is automatic — this is a quiet status line, not a button.
           ValueListenableBuilder<bool>(
             valueListenable: sync.isSyncing,
             builder: (context, syncing, _) {
               return Row(
                 children: [
-                  const Icon(
-                    Icons.cloud_done_rounded,
-                    size: 20,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      'Cloud sync',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
                   if (syncing)
                     const SizedBox(
                       height: 18,
@@ -174,10 +149,19 @@ class _SignedIn extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   else
-                    FilledButton.tonal(
-                      onPressed: () => _syncNow(context),
-                      child: const Text('Sync now'),
+                    const Icon(
+                      Icons.cloud_done_rounded,
+                      size: 20,
+                      color: AppColors.positive,
                     ),
+                  const SizedBox(width: 10),
+                  Text(
+                    syncing ? 'Syncing…' : 'Synced automatically',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               );
             },

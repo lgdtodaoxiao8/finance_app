@@ -20,15 +20,7 @@ class AuthFailure implements Exception {
 /// the service stays inert: [isAvailable] is false and any auth call throws a
 /// friendly [AuthFailure], so the app runs local-first without crashing.
 class AuthService {
-  AuthService() {
-    if (!AppConfig.isBackendConfigured) return;
-    final client = sb.Supabase.instance.client;
-    _client = client;
-    currentUser.value = _map(client.auth.currentUser);
-    _sub = client.auth.onAuthStateChange.listen((event) {
-      currentUser.value = _map(event.session?.user);
-    });
-  }
+  AuthService();
 
   sb.SupabaseClient? _client;
   StreamSubscription<sb.AuthState>? _sub;
@@ -36,8 +28,25 @@ class AuthService {
   /// Reactive account state. `null` means signed out (or backend off).
   final ValueNotifier<AppUser?> currentUser = ValueNotifier<AppUser?>(null);
 
+  /// Flips true once [bind] has wired up Supabase, so account/sync UI can
+  /// refresh from its initial "not ready" state.
+  final ValueNotifier<bool> isReady = ValueNotifier<bool>(false);
+
   bool get isAvailable => _client != null;
   bool get isSignedIn => currentUser.value != null;
+
+  /// Connects to Supabase Auth. Call AFTER `Supabase.initialize` completes
+  /// (done off the launch critical path). No-op if the backend isn't set up.
+  void bind() {
+    if (_client != null || !AppConfig.isBackendConfigured) return;
+    final client = sb.Supabase.instance.client;
+    _client = client;
+    currentUser.value = _map(client.auth.currentUser);
+    _sub = client.auth.onAuthStateChange.listen((event) {
+      currentUser.value = _map(event.session?.user);
+    });
+    isReady.value = true;
+  }
 
   AppUser? _map(sb.User? u) =>
       u == null ? null : AppUser(id: u.id, email: u.email ?? '');
@@ -77,5 +86,6 @@ class AuthService {
   void dispose() {
     _sub?.cancel();
     currentUser.dispose();
+    isReady.dispose();
   }
 }
