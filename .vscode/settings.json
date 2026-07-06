@@ -1,0 +1,6 @@
+{
+  "//": "Supabase Edge Functions are Deno, not Node. Enable Deno only for that folder so the `Deno` global and remote imports stop showing red underlines. Requires the 'Deno' VS Code extension (denoland.vscode-deno).",
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.lint": true,
+  "deno.unstable": false
+}
