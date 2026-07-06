@@ -1,5 +1,6 @@
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/preferences/app_preferences.dart';
+import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
@@ -43,6 +44,10 @@ Future<void> configureDependencies() async {
     getIt.registerSingleton<SyncService>(
       SyncService(getIt<AppDatabase>(), getIt<AuthService>()),
     );
+  }
+
+  if (!getIt.isRegistered<AiService>()) {
+    getIt.registerSingleton<AiService>(AiService());
   }
 
   if (!getIt.isRegistered<TransactionRepository>()) {

@@ -1,0 +1,45 @@
+/// A single AI-generated insight card.
+class AiInsight {
+  const AiInsight({
+    required this.title,
+    required this.detail,
+    required this.tone,
+  });
+
+  final String title;
+  final String detail;
+
+  /// One of: positive | warning | neutral. Drives the accent colour.
+  final String tone;
+
+  factory AiInsight.fromJson(Map<String, dynamic> json) => AiInsight(
+    title: json['title'] as String? ?? '',
+    detail: json['detail'] as String? ?? '',
+    tone: json['tone'] as String? ?? 'neutral',
+  );
+}
+
+/// Full AI insights payload returned by the ai-insights Edge Function.
+class AiInsightsResult {
+  const AiInsightsResult({
+    required this.summary,
+    required this.insights,
+    required this.tip,
+  });
+
+  final String summary;
+  final List<AiInsight> insights;
+  final String tip;
+
+  factory AiInsightsResult.fromJson(Map<String, dynamic> json) {
+    final raw = (json['insights'] as List?) ?? const [];
+    return AiInsightsResult(
+      summary: json['summary'] as String? ?? '',
+      insights: raw
+          .whereType<Map<String, dynamic>>()
+          .map(AiInsight.fromJson)
+          .toList(),
+      tip: json['tip'] as String? ?? '',
+    );
+  }
+}
