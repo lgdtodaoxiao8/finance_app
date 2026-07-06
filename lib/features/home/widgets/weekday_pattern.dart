@@ -92,7 +92,7 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 90,
+            height: 104,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
