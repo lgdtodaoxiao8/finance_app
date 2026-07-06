@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/core/sync/sync_metadata.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:flutter/material.dart';
 
@@ -75,7 +76,13 @@ class DriftCategoryRepository implements CategoryRepository {
 
   @override
   Future<void> delete(int id) async {
-    await (_db.delete(_db.categories)..where((c) => c.id.equals(id))).go();
+    await _db.transaction(() async {
+      final row = await (_db.select(
+        _db.categories,
+      )..where((c) => c.id.equals(id))).getSingleOrNull();
+      await _db.recordTombstone(SyncEntity.categories, row?.uuid);
+      await (_db.delete(_db.categories)..where((c) => c.id.equals(id))).go();
+    });
   }
 
   @override

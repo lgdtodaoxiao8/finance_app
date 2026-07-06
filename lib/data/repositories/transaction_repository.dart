@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/core/sync/sync_metadata.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 
 /// Access to transactions joined with their related entities.
@@ -138,12 +139,19 @@ class DriftTransactionRepository implements TransactionRepository {
         date: Value(date.toUtc().toIso8601String()),
         note: Value(note),
         type: Value(type),
+        updatedAt: Value(nowMs()),
       ),
     );
   }
 
   @override
   Future<void> delete(int id) async {
-    await (_db.delete(_db.transactions)..where((t) => t.id.equals(id))).go();
+    await _db.transaction(() async {
+      final row = await (_db.select(
+        _db.transactions,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      await _db.recordTombstone(SyncEntity.transactions, row?.uuid);
+      await (_db.delete(_db.transactions)..where((t) => t.id.equals(id))).go();
+    });
   }
 }

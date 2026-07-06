@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/core/sync/sync_metadata.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:flutter/material.dart';
 
@@ -72,7 +73,13 @@ class DriftAccountRepository implements AccountRepository {
 
   @override
   Future<void> delete(int id) async {
-    await (_db.delete(_db.accounts)..where((a) => a.id.equals(id))).go();
+    await _db.transaction(() async {
+      final row = await (_db.select(
+        _db.accounts,
+      )..where((a) => a.id.equals(id))).getSingleOrNull();
+      await _db.recordTombstone(SyncEntity.accounts, row?.uuid);
+      await (_db.delete(_db.accounts)..where((a) => a.id.equals(id))).go();
+    });
   }
 
   @override
