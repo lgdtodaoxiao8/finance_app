@@ -5,11 +5,14 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/view/ai_dashboard.dart';
 import 'package:finance_app/features/home/cubit/analytics_cubit.dart';
+import 'package:finance_app/features/home/widgets/activity_calendar.dart';
 import 'package:finance_app/features/home/widgets/biggest_expenses.dart';
 import 'package:finance_app/features/home/widgets/daily_spend_chart.dart';
 import 'package:finance_app/features/home/widgets/monthly_trend_chart.dart';
 import 'package:finance_app/features/home/widgets/recent_activity.dart';
 import 'package:finance_app/features/home/widgets/stat_strip.dart';
+import 'package:finance_app/features/home/widgets/total_balance_card.dart';
+import 'package:finance_app/features/home/widgets/week_compare_card.dart';
 import 'package:finance_app/features/home/widgets/weekday_pattern.dart';
 import 'package:finance_app/features/home/widgets/weekly_digest_teaser.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
@@ -94,7 +97,6 @@ class _AnalyticsView extends StatelessWidget {
               _SummaryRow(
                 income: state.totalIncome,
                 expense: state.totalExpense,
-                balance: state.balance,
                 symbol: state.baseSymbol,
               ),
               const SizedBox(height: 16),
@@ -106,6 +108,8 @@ class _AnalyticsView extends StatelessWidget {
               const SizedBox(height: 16),
               const DailySpendChart(),
               const SizedBox(height: 16),
+              const WeekCompareCard(),
+              const SizedBox(height: 16),
               _SpendingCard(
                 spends: state.categorySpends,
                 total: state.totalExpense,
@@ -115,6 +119,8 @@ class _AnalyticsView extends StatelessWidget {
               const MonthlyTrendChart(),
               const SizedBox(height: 16),
               const WeekdayPattern(),
+              const SizedBox(height: 16),
+              const ActivityCalendar(),
               const SizedBox(height: 16),
               const BiggestExpenses(),
               const SizedBox(height: 16),
@@ -171,48 +177,41 @@ class _SummaryRow extends StatelessWidget {
   const _SummaryRow({
     required this.income,
     required this.expense,
-    required this.balance,
     required this.symbol,
   });
 
   final double income;
   final double expense;
-  final double balance;
   final String? symbol;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            label: 'Income',
-            value: _money(income, symbol),
-            color: Colors.green[600]!,
-            icon: Icons.arrow_downward_rounded,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _StatCard(
+              label: 'Income',
+              value: _money(income, symbol),
+              color: Colors.green[600]!,
+              icon: Icons.arrow_downward_rounded,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            label: 'Expense',
-            value: _money(expense, symbol),
-            color: Theme.of(context).colorScheme.error,
-            icon: Icons.arrow_upward_rounded,
+          const SizedBox(width: 10),
+          Expanded(
+            child: _StatCard(
+              label: 'Expense',
+              value: _money(expense, symbol),
+              color: Theme.of(context).colorScheme.error,
+              icon: Icons.arrow_upward_rounded,
+            ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            label: 'Balance',
-            value: _money(balance, symbol),
-            color: balance < 0
-                ? Theme.of(context).colorScheme.error
-                : Theme.of(context).colorScheme.primary,
-            icon: Icons.account_balance_wallet_rounded,
-          ),
-        ),
-      ],
+          const SizedBox(width: 10),
+          // Net worth — tappable, opens the per-account balances screen.
+          const Expanded(child: TotalBalanceCard()),
+        ],
+      ),
     );
   }
 }
