@@ -31,12 +31,6 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // App launched by tapping the home-screen widget.
-    HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
-    // App already running and the widget was tapped.
-    _widgetClickSubscription = HomeWidget.widgetClicked.listen(
-      _handleWidgetLaunch,
-    );
     // Everything network/IO-heavy runs after the first frame so opening the
     // app is instant.
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
@@ -60,8 +54,17 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
       }
     }
 
+    // start() sets the iOS App Group id; the widget-launch handlers below need
+    // it, so they must run after this.
     await getIt<WidgetService>().start();
     await drainPendingQuickAdds();
+
+    // App launched by tapping the home-screen widget (one-shot check).
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_handleWidgetLaunch);
+    // App already running and the widget was tapped.
+    _widgetClickSubscription = HomeWidget.widgetClicked.listen(
+      _handleWidgetLaunch,
+    );
 
     // Invisible auto-sync: push local edits shortly after they happen.
     _dbSubscription = getIt<AppDatabase>().tableUpdates().listen((_) {
