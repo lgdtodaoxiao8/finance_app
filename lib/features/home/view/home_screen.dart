@@ -1,12 +1,10 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
 import 'package:finance_app/core/widgets/empty_state.dart';
-import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
-import 'package:finance_app/features/ai/view/ai_insights_screen.dart';
+import 'package:finance_app/features/ai/view/ai_dashboard.dart';
 import 'package:finance_app/features/home/cubit/analytics_cubit.dart';
-import 'package:finance_app/features/subscription/widgets/premium_gate.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -93,7 +91,16 @@ class _AnalyticsView extends StatelessWidget {
                 symbol: state.baseSymbol,
               ),
               const SizedBox(height: 16),
-              const _AiInsightsEntry(),
+              AiDashboard(
+                income: state.totalIncome,
+                expense: state.totalExpense,
+                balance: state.balance,
+                symbol: state.baseSymbol,
+                categories: [
+                  for (final s in state.categorySpends)
+                    (name: s.name, amount: s.total, color: s.color),
+                ],
+              ),
               const SizedBox(height: 16),
               _SpendingCard(
                 spends: state.categorySpends,
@@ -103,72 +110,6 @@ class _AnalyticsView extends StatelessWidget {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _AiInsightsEntry extends StatelessWidget {
-  const _AiInsightsEntry();
-
-  Future<void> _open(BuildContext context) async {
-    // AI is premium — opens the paywall first if the user isn't subscribed.
-    if (!await ensurePremium(context)) return;
-    if (!context.mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const AiInsightsScreen()),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _open(context),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: PremiumBadge.gradient,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: kCardShadow,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.auto_awesome_rounded,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'AI Insights',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Get a coach\'s read on your spending',
-                    style: TextStyle(fontSize: 13, color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white),
-          ],
-        ),
       ),
     );
   }
