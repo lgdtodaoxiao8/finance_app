@@ -47,7 +47,7 @@ Future<void> configureDependencies() async {
   }
 
   if (!getIt.isRegistered<AiService>()) {
-    getIt.registerSingleton<AiService>(AiService());
+    getIt.registerSingleton<AiService>(AiService(getIt<AppPreferences>()));
   }
 
   if (!getIt.isRegistered<TransactionRepository>()) {

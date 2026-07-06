@@ -64,7 +64,7 @@ class PaywallSheet extends StatelessWidget {
                     const Center(child: PremiumBadge()),
                     const SizedBox(height: 18),
                     const Text(
-                      'Do more with your money',
+                      'Turn tracking into a plan',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 26,
@@ -75,10 +75,12 @@ class PaywallSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Unlock the AI features that turn tracking into a plan.',
+                      'Tracking shows the past. Premium changes what happens '
+                      'next — most people find the price back in the first week '
+                      'of catching overspend early.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14.5,
                         color: AppColors.textSecondary,
                         height: 1.4,
                       ),

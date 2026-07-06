@@ -91,16 +91,7 @@ class _AnalyticsView extends StatelessWidget {
                 symbol: state.baseSymbol,
               ),
               const SizedBox(height: 16),
-              AiDashboard(
-                income: state.totalIncome,
-                expense: state.totalExpense,
-                balance: state.balance,
-                symbol: state.baseSymbol,
-                categories: [
-                  for (final s in state.categorySpends)
-                    (name: s.name, amount: s.total, color: s.color),
-                ],
-              ),
+              const AiDashboard(),
               const SizedBox(height: 16),
               _SpendingCard(
                 spends: state.categorySpends,

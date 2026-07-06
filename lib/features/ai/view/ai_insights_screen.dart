@@ -76,14 +76,16 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
 
   double _round(double v) => (v * 100).roundToDouble() / 100;
 
-  Future<void> _load() async {
+  Future<void> _load({bool force = false}) async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final summary = await _buildSummary();
-      final result = await _ai.insights(summary);
+      // Cache-aware: no network call unless the data changed or the user
+      // forced a refresh.
+      final result = await _ai.insights(summary, force: force);
       if (mounted) setState(() => _result = result);
     } on AiFailure catch (e) {
       if (mounted) setState(() => _error = e.message);
@@ -101,7 +103,8 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
         title: const Text('AI Insights'),
         actions: [
           IconButton(
-            onPressed: _loading ? null : _load,
+            tooltip: 'Re-analyze',
+            onPressed: _loading ? null : () => _load(force: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],

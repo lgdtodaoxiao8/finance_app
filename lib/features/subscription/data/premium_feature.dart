@@ -13,33 +13,33 @@ class PremiumFeature {
 /// settings upgrade card and any teasers stay in sync.
 const premiumFeatures = <PremiumFeature>[
   PremiumFeature(
-    Icons.auto_awesome_rounded,
-    'AI money insights',
-    'Weekly, human-readable breakdowns of where your money went and why.',
+    Icons.psychology_rounded,
+    'AI money coach',
+    'A personal read on where your money leaks — and the one move to fix it.',
   ),
   PremiumFeature(
     Icons.trending_up_rounded,
-    'Spending forecasts',
-    'See your projected month-end balance before you overspend.',
+    'Month-end forecast',
+    'See how the month will end while you can still change it, not after.',
   ),
   PremiumFeature(
-    Icons.savings_rounded,
-    'AI budget coach',
-    'Personal budgets that adapt to your habits, with nudges that keep you on track.',
+    Icons.speed_rounded,
+    'Financial health score',
+    'One number that tells you if you\'re winning with money — and how to raise it.',
   ),
   PremiumFeature(
     Icons.cloud_sync_rounded,
     'Sync everywhere',
-    'Your data on phone and web, always backed up and up to date.',
-  ),
-  PremiumFeature(
-    Icons.widgets_rounded,
-    'AI home-screen widget',
-    'A smart widget that surfaces the number that matters right now.',
+    'Your money on phone and web, always backed up. Never lose a record.',
   ),
   PremiumFeature(
     Icons.chat_bubble_outline_rounded,
     'Ask your money anything',
-    '“How much did I spend on coffee last month?” — answered instantly.',
+    '“How much on coffee last month?” — answered in plain language, instantly.',
+  ),
+  PremiumFeature(
+    Icons.notifications_active_rounded,
+    'Smart alerts',
+    'A nudge before a category blows its budget — catch overspend early.',
   ),
 ];
