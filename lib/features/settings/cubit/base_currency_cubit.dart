@@ -39,10 +39,15 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
 
   Future<void> selectCurrency(int id) async {
     emit(state.copyWith(selectedId: id));
-    // A new currency that has no rate yet needs one before it can be base
-    // (unless we're doing the very first setup, which sets rate = 1.0).
-    final rate = await _repository.getRate(id);
-    emit(state.copyWith(needToEnterRate: !state.isFirstSetup && rate == null));
+    // Changing the base to a different currency always needs its exchange rate
+    // (so it can also be re-entered/corrected). No rate for the first setup or
+    // when re-picking the current base.
+    final base = await _repository.getBase();
+    emit(
+      state.copyWith(
+        needToEnterRate: !state.isFirstSetup && base?.currencyId != id,
+      ),
+    );
   }
 
   void setRate(double? rate) => emit(state.copyWith(rateToBase: rate ?? 0));
@@ -59,8 +64,12 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
 
       if (state.needToEnterRate) {
         final rate = state.rateToBase;
-        if (rate == null) throw Exception('Rate is null');
-        await _repository.setRate(id, rate);
+        if (rate == null || rate == 0) throw Exception('Rate is null');
+        // The user entered "1 currentBase = rate selected" (e.g. 1 USD = 475
+        // KZT). rate_to_base stores "value of 1 selected in base", i.e. the
+        // reciprocal (1 KZT = 1/475 USD). Storing `rate` directly inverted the
+        // whole conversion.
+        await _repository.setRate(id, 1 / rate);
       }
       await _repository.makeBase(id);
 
