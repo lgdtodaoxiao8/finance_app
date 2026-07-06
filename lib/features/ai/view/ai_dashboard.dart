@@ -284,7 +284,7 @@ class _ThisMonthCard extends StatelessWidget {
         ? 1
         : (expense / total * 100).round().clamp(1, 100);
     return _CardShell(
-      onTap: () {},
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
