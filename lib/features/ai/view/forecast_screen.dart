@@ -1,9 +1,11 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Premium feature: projects the month-end balance from the current run-rate.
@@ -64,7 +66,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Forecast')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).forecast)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _buildBody(_data!),
@@ -77,7 +79,11 @@ class _ForecastScreenState extends State<ForecastScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       children: [
-        const Center(child: PremiumBadge(label: 'FORECAST')),
+        Center(
+          child: PremiumBadge(
+            label: AppLocalizations.of(context).forecastBadge,
+          ),
+        ),
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
@@ -88,13 +94,17 @@ class _ForecastScreenState extends State<ForecastScreen> {
           ),
           child: Column(
             children: [
-              const Text(
-                'Projected month-end balance',
-                style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+              Text(
+                AppLocalizations.of(context).projectedMonthEndBalance,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textTertiary,
+                ),
               ),
               const SizedBox(height: 8),
-              Text(
-                formatMoney(f.projectedBalance, f.symbol),
+              AmountText(
+                f.projectedBalance,
+                symbol: f.symbol,
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
@@ -104,8 +114,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
               const SizedBox(height: 6),
               Text(
                 positive
-                    ? 'On track to finish the month in the green.'
-                    : 'At this pace you\'ll end the month negative.',
+                    ? AppLocalizations.of(context).onTrackGreen
+                    : AppLocalizations.of(context).atThisPaceNegative,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13.5,
@@ -116,14 +126,26 @@ class _ForecastScreenState extends State<ForecastScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        _Row('Income this month', formatMoney(f.income, f.symbol)),
-        _Row('Spent so far', formatMoney(f.expenseSoFar, f.symbol)),
         _Row(
-          'Projected total spend',
-          formatMoney(f.projectedExpense, f.symbol),
+          AppLocalizations.of(context).incomeThisMonth,
+          AmountText.maskString(formatMoney(f.income, f.symbol)),
         ),
-        _Row('Daily spend rate', formatMoney(f.dailyRate, f.symbol)),
-        _Row('Days left in month', '${f.daysLeft}'),
+        _Row(
+          AppLocalizations.of(context).spentSoFar,
+          AmountText.maskString(formatMoney(f.expenseSoFar, f.symbol)),
+        ),
+        _Row(
+          AppLocalizations.of(context).projectedTotalSpend,
+          AmountText.maskString(formatMoney(f.projectedExpense, f.symbol)),
+        ),
+        _Row(
+          AppLocalizations.of(context).dailySpendRate,
+          AmountText.maskString(formatMoney(f.dailyRate, f.symbol)),
+        ),
+        _Row(
+          AppLocalizations.of(context).daysLeftInMonth,
+          '${f.daysLeft}',
+        ),
       ],
     );
   }

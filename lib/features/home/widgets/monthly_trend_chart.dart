@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// Full-width infographic: income vs expense over the last 6 months as grouped
 /// bars. Free, local.
@@ -19,11 +21,6 @@ class MonthlyTrendChart extends StatefulWidget {
 class _MonthlyTrendChartState extends State<MonthlyTrendChart> {
   StreamSubscription<List<TransactionDetails>>? _sub;
   List<_MonthBar> _months = const [];
-
-  static const _labels = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
 
   @override
   void initState() {
@@ -41,7 +38,7 @@ class _MonthlyTrendChartState extends State<MonthlyTrendChart> {
     for (var i = 5; i >= 0; i--) {
       final m = DateTime(now.year, now.month - i);
       final key = '${m.year}-${m.month}';
-      buckets[key] = _MonthBar(label: _labels[m.month - 1]);
+      buckets[key] = _MonthBar(date: m);
       order.add(key);
     }
     for (final t in txns) {
@@ -73,10 +70,11 @@ class _MonthlyTrendChartState extends State<MonthlyTrendChart> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -86,34 +84,37 @@ class _MonthlyTrendChartState extends State<MonthlyTrendChart> {
           Row(
             children: [
               Text(
-                '6-month trend',
+                l.sixMonthTrend,
                 style: kTextStyle.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const Spacer(),
-              const _LegendDot(color: AppColors.positive, label: 'In'),
+              _LegendDot(color: AppColors.positive, label: l.legendIn),
               const SizedBox(width: 12),
-              const _LegendDot(color: AppColors.negative, label: 'Out'),
+              _LegendDot(color: AppColors.negative, label: l.legendOut),
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(height: 150, child: _chart()),
+          SizedBox(height: 150, child: _chart(context)),
         ],
       ),
     );
   }
 
-  Widget _chart() {
+  Widget _chart(BuildContext context) {
     if (_max == 0) {
-      return const Center(
+      return Center(
         child: Text(
-          'Not enough history yet',
-          style: TextStyle(color: AppColors.textTertiary),
+          AppLocalizations.of(context).notEnoughHistory,
+          style: const TextStyle(color: AppColors.textTertiary),
         ),
       );
     }
+    final monthFormat = DateFormat.MMM(
+      Localizations.localeOf(context).toString(),
+    );
     return BarChart(
       BarChartData(
         maxY: _max * 1.2,
@@ -141,7 +142,7 @@ class _MonthlyTrendChartState extends State<MonthlyTrendChart> {
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    _months[i].label,
+                    monthFormat.format(_months[i].date),
                     style: const TextStyle(
                       fontSize: 10,
                       color: AppColors.textTertiary,
@@ -181,8 +182,10 @@ class _MonthlyTrendChartState extends State<MonthlyTrendChart> {
 }
 
 class _MonthBar {
-  _MonthBar({required this.label});
-  final String label;
+  _MonthBar({required this.date});
+
+  /// First day of the month — formatted with the active locale at build time.
+  final DateTime date;
   double income = 0;
   double expense = 0;
 }

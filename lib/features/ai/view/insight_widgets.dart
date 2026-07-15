@@ -1,4 +1,5 @@
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -110,7 +111,7 @@ class CategoryBarRow extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                formatMoney(bar.amount, symbol),
+                AmountText.maskString(formatMoney(bar.amount, symbol)),
                 style: const TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,

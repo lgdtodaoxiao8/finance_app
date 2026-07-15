@@ -1,6 +1,7 @@
 import 'package:finance_app/features/add_item/widgets/widgets.dart';
 import 'package:finance_app/features/settings/cubit/base_currency_cubit.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,9 +19,9 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
 
   String? _validateRate(String text) {
     final value = _parseRate(text);
-    if (value == null) return 'Must be a number';
-    if (value == 0) return 'Can not be null';
-    if (value < 0) return 'Can not be negative';
+    if (value == null) return AppLocalizations.of(context).mustBeNumber;
+    if (value == 0) return AppLocalizations.of(context).cannotBeZero;
+    if (value < 0) return AppLocalizations.of(context).cannotBeNegative;
     return null;
   }
 
@@ -34,21 +35,27 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
 
   String _counterText(BaseCurrencyState state) {
     final rate = state.rateToBase;
-    if (rate == null || rate <= 0) return 'Exchange rate to base cur.';
+    if (rate == null || rate <= 0) {
+      return AppLocalizations.of(context).exchangeRateToBase;
+    }
     final rateText = rate % 1 == 0 ? rate.toInt().toString() : rate.toString();
-    return '1 ${state.baseSymbol ?? ''}  is equal  '
-        '$rateText ${state.selected?.currencySymbol ?? ''}';
+    return AppLocalizations.of(context).rateEquals(
+      state.baseSymbol ?? '',
+      rateText,
+      state.selected?.currencySymbol ?? '',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<BaseCurrencyCubit, BaseCurrencyState>(
-      listenWhen: (prev, curr) => prev.error != curr.error && curr.error != null,
+      listenWhen: (prev, curr) =>
+          prev.error != curr.error && curr.error != null,
       listener: (context, state) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Something went wrong while setting default currency: '
+              '${AppLocalizations.of(context).somethingWentWrong}: '
               '${state.error}',
               style: kTextStyle.copyWith(overflow: TextOverflow.visible),
             ),
@@ -61,15 +68,13 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
           return const Center(child: CircularProgressIndicator());
         }
         if (state.status == BaseCurrencyStatus.error) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(10),
-              child: Text('Something went wrong'),
+              padding: const EdgeInsets.all(10),
+              child: Text(AppLocalizations.of(context).somethingWentWrong),
             ),
           );
         }
-
-        final busy = state.sending || state.success;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +83,7 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
               currentId: state.selectedId,
               onSelect: context.read<BaseCurrencyCubit>().selectCurrency,
               values: [for (final c in state.currencies) c.toMap()],
-              label: 'All currencies',
+              label: AppLocalizations.of(context).allCurrencies,
             ),
             const SizedBox(height: 15),
             AnimatedSize(
@@ -90,8 +95,9 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: CustomTextField(
                           key: _rateKey,
-                          hint: 'e.g. 1.25 or 0.73',
-                          label: 'Rate to base',
+                          hint: AppLocalizations.of(context).rateHint,
+                          label: AppLocalizations.of(context).rateToBase,
+                          autofocus: true,
                           textPadding: const EdgeInsets.symmetric(
                             horizontal: 10,
                           ),
@@ -120,44 +126,74 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
                     : const SizedBox(width: double.infinity, height: 0),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                  onPressed: busy ? null : () => _submit(state),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: state.sending
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : state.success
-                        ? const Icon(
-                            Icons.check_rounded,
-                            key: ValueKey('success'),
-                            color: Colors.white,
-                          )
-                        : Text(
-                            'Add',
-                            style: kTextStyle.copyWith(),
-                            key: const ValueKey('default'),
-                          ),
-                  ),
-                ),
-              ],
+            // The Save button only exists while there's something to save: a
+            // rate to enter, or an in-flight / just-finished save (so its
+            // spinner + success tick still show). Otherwise it collapses away
+            // instead of sitting empty under the dropdown.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: (state.needToEnterRate || state.sending || state.success)
+                  ? Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: _SaveButton(
+                          state: state,
+                          onPressed: () => _submit(state),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity, height: 0),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+/// The morphing "Save" action for a base-currency change: label → spinner while
+/// saving → tick on success.
+class _SaveButton extends StatelessWidget {
+  const _SaveButton({required this.state, required this.onPressed});
+
+  final BaseCurrencyState state;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final busy = state.sending || state.success;
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+      ),
+      onPressed: busy ? null : onPressed,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: state.sending
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : state.success
+            ? const Icon(
+                Icons.check_rounded,
+                key: ValueKey('success'),
+                color: Colors.white,
+              )
+            : Text(
+                AppLocalizations.of(context).save,
+                style: kTextStyle.copyWith(),
+                key: const ValueKey('default'),
+              ),
+      ),
     );
   }
 }

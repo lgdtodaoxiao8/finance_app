@@ -3,6 +3,7 @@ import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/features/settings/cubit/categories_cubit.dart';
 import 'package:finance_app/features/settings/cubit/manage_status.dart';
 import 'package:finance_app/features/settings/widgets/manage_section.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,10 +34,10 @@ class _CategoriesView extends StatelessWidget {
       },
       builder: (context, state) {
         return ManageSection(
-          title: 'Categories',
+          title: AppLocalizations.of(context).categories,
           onAdd: () => Navigator.of(context).pushNamed('/add-category'),
           loading: state.status == ManageStatus.loading,
-          emptyLabel: 'No categories yet',
+          emptyLabel: AppLocalizations.of(context).noCategoriesYet,
           isEmpty: state.categories.isEmpty,
           children: [
             for (final category in state.categories)
@@ -58,9 +59,9 @@ class _CategoriesView extends StatelessWidget {
                 onDelete: () => confirmDelete(
                   context,
                   what: category.categoryName,
-                  onConfirm: () => context
-                      .read<CategoriesCubit>()
-                      .delete(category.categoryId),
+                  onConfirm: () => context.read<CategoriesCubit>().delete(
+                    category.categoryId,
+                  ),
                 ),
               ),
           ],

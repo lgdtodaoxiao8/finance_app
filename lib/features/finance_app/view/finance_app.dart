@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:finance_app/core/config/app_config.dart';
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/settings/app_settings.dart';
+import 'package:finance_app/core/settings/settings_service.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
@@ -116,10 +119,23 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
-      theme: themeFromSeed,
-      routes: routes,
+    // Rebuild the whole app when preferences change (theme, language) — the
+    // values come from SettingsService, which is fed by local edits and cloud
+    // sync alike.
+    return ValueListenableBuilder<AppSettings>(
+      valueListenable: getIt<SettingsService>().settings,
+      builder: (context, settings, _) {
+        return MaterialApp(
+          navigatorKey: _navigatorKey,
+          theme: themeFromSeed,
+          darkTheme: darkThemeFromSeed,
+          themeMode: settings.themeMode.material,
+          locale: settings.locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routes: routes,
+        );
+      },
     );
   }
 }

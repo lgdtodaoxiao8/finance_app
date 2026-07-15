@@ -1,4 +1,5 @@
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -14,12 +15,22 @@ const Map<PeriodPreset, List<String>> periodsNames = {
   PeriodPreset.custom: ['Custom', 'd.MM.yy'],
 };
 
-const Map<PeriodPreset, String> periodChipLabels = {
-  PeriodPreset.day: 'Day',
-  PeriodPreset.week: 'Week',
-  PeriodPreset.month: 'Month',
-  PeriodPreset.year: 'Year',
-  PeriodPreset.custom: 'Other',
+/// Localised label for a period chip.
+String periodChipLabel(AppLocalizations l, PeriodPreset p) => switch (p) {
+  PeriodPreset.day => l.periodDay,
+  PeriodPreset.week => l.periodWeek,
+  PeriodPreset.month => l.periodMonth,
+  PeriodPreset.year => l.periodYear,
+  PeriodPreset.custom => l.periodOther,
+};
+
+/// Localised name of the period used when describing the active range.
+String periodDisplayName(AppLocalizations l, PeriodPreset p) => switch (p) {
+  PeriodPreset.day => l.periodToday,
+  PeriodPreset.week => l.periodWeek,
+  PeriodPreset.month => l.periodMonth,
+  PeriodPreset.year => l.periodYear,
+  PeriodPreset.custom => l.periodCustom,
 };
 
 /// A titled bucket of transactions produced by [groupTransactions].
@@ -50,13 +61,21 @@ String fmt(DateTime d) =>
     '${d.day.toString().padLeft(2, '0')}.'
     '${d.month.toString().padLeft(2, '0')}.${d.year}';
 
-String formatAuto(DateTimeRange range, PeriodPreset preset) {
-  final start = DateFormat(periodsNames[preset]![1], 'en_US').format(
-    range.start,
-  );
-  final end = DateFormat(periodsNames[preset]!.last, 'en_US').format(range.end);
+/// Describes the active range, e.g. "Month: 13 Jun - 13 Jul". [locale] drives
+/// month/weekday names so dates read naturally in the user's language.
+String formatAuto(
+  DateTimeRange range,
+  PeriodPreset preset,
+  AppLocalizations l,
+  String locale,
+) {
+  final start = DateFormat(
+    periodsNames[preset]![1],
+    locale,
+  ).format(range.start);
+  final end = DateFormat(periodsNames[preset]!.last, locale).format(range.end);
 
-  return '${periodsNames[preset]![0]}: '
+  return '${periodDisplayName(l, preset)}: '
       '${preset != PeriodPreset.day ? '$start - ' : ''}$end';
 }
 

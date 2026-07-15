@@ -66,4 +66,28 @@ void main() {
 
     await cubit.close();
   });
+
+  test('first setup commits on selection alone (no explicit submit)', () async {
+    final repo = getIt<CurrencyRepository>();
+    final cubit = BaseCurrencyCubit(repo);
+
+    await expectLater(
+      cubit.stream,
+      emitsThrough(
+        predicate<BaseCurrencyState>(
+          (s) => s.status == BaseCurrencyStatus.ready,
+        ),
+      ),
+    );
+
+    final firstId = cubit.state.currencies.first.currencyId;
+    // Selecting a currency during first setup is enough — no submit button.
+    await cubit.selectCurrency(firstId);
+
+    final base = await repo.getBase();
+    expect(base?.currencyId, firstId);
+    expect(base?.currencyRateToBase, 1.0);
+
+    await cubit.close();
+  });
 }

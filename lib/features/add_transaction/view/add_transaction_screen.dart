@@ -8,6 +8,7 @@ import 'package:finance_app/features/add_item/widgets/custom_text_field.dart';
 import 'package:finance_app/features/add_transaction/cubit/add_transaction_cubit.dart';
 import 'package:finance_app/features/add_transaction/widgets/widgets.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -49,8 +50,8 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
 
   String? _amountValidate(String value) {
     final v = double.tryParse(value);
-    if (v == null) return 'Must be a number';
-    if (v <= 0) return 'Must be more than 0';
+    if (v == null) return AppLocalizations.of(context).mustBeNumber;
+    if (v <= 0) return AppLocalizations.of(context).mustBeMoreThanZero;
     return null;
   }
 
@@ -63,12 +64,25 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
     return -1;
   }
 
+  /// The state layer reports a [TransactionBlocker]; turn it into a message in
+  /// the user's language here.
+  String _blockerText(TransactionBlocker blocker) {
+    final l = AppLocalizations.of(context);
+    return switch (blocker) {
+      TransactionBlocker.noAccount => l.blockerNoAccount,
+      TransactionBlocker.noCategory => l.blockerNoCategory,
+      TransactionBlocker.noCurrency => l.blockerNoCurrency,
+      TransactionBlocker.noSecondAccount => l.blockerNoSecondAccount,
+      TransactionBlocker.sameAccounts => l.blockerSameAccounts,
+    };
+  }
+
   void _submit() {
     final cubit = context.read<AddTransactionCubit>();
-    final error = cubit.state.validationError;
-    if (error != null) {
+    final blocker = cubit.state.validationError;
+    if (blocker != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(_blockerText(blocker))),
       );
       return;
     }
@@ -84,20 +98,26 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete transaction?', style: kTextStyle.copyWith()),
+        title: Text(
+          AppLocalizations.of(context).deleteTransactionQuestion,
+          style: kTextStyle.copyWith(),
+        ),
         content: Text(
-          'This action cannot be undone.',
+          AppLocalizations.of(context).actionCannotBeUndone,
           style: kTextStyle.copyWith(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel', style: kTextStyle.copyWith()),
+            child: Text(
+              AppLocalizations.of(context).cancel,
+              style: kTextStyle.copyWith(),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Delete',
+              AppLocalizations.of(context).delete,
               style: kTextStyle.copyWith(color: Colors.red),
             ),
           ),
@@ -112,13 +132,15 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.isEditing ? 'Edit Transaction' : 'Add Transaction',
+          widget.isEditing
+              ? AppLocalizations.of(context).editTransactionTitle
+              : AppLocalizations.of(context).addTransactionTitle,
           style: kTextStyle.copyWith(),
         ),
         actions: [
           if (widget.isEditing)
             IconButton(
-              tooltip: 'Delete',
+              tooltip: AppLocalizations.of(context).delete,
               onPressed: _confirmDelete,
               icon: Icon(
                 Icons.delete_outline_rounded,
@@ -137,7 +159,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
           if (state.status == AddTransactionStatus.error) {
             return Center(
               child: Text(
-                'Something went wrong',
+                AppLocalizations.of(context).somethingWentWrong,
                 style: kTextStyle.copyWith(),
                 softWrap: true,
               ),
@@ -224,7 +246,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          hint: 'Amount',
+                          hint: AppLocalizations.of(context).amount,
                           initialText: state.initialAmount,
                           validate: _amountValidate,
                         ),
@@ -235,7 +257,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                         onSelect: cubit.setCurrency,
                         onAddNew: addNewCurrency,
                         values: state.currencies,
-                        label: 'Currency',
+                        label: AppLocalizations.of(context).currency,
                       ),
                     ],
                   ),
@@ -246,7 +268,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                         flex: 3,
                         child: CustomTextField(
                           key: _noteKey,
-                          hint: 'Note',
+                          hint: AppLocalizations.of(context).note,
                           initialText: state.initialNote,
                           prefixIcon: Icons.note,
                           prefixIconColor: const Color(0xFF40434A),
@@ -280,12 +302,17 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                         onPressed: state.sending
                             ? null
                             : () => Navigator.of(context).pop(),
-                        child: Text('Cancel', style: kTextStyle.copyWith()),
+                        child: Text(
+                          AppLocalizations.of(context).cancel,
+                          style: kTextStyle.copyWith(),
+                        ),
                       ),
                       const SizedBox(width: 10),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           foregroundColor: Theme.of(
                             context,
                           ).colorScheme.onPrimary,
@@ -301,7 +328,9 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                                 ),
                               )
                             : Text(
-                                widget.isEditing ? 'Save' : 'Add',
+                                widget.isEditing
+                                    ? AppLocalizations.of(context).save
+                                    : AppLocalizations.of(context).add,
                                 style: kTextStyle.copyWith(),
                               ),
                       ),
@@ -332,25 +361,24 @@ class _OnboardingGate extends StatelessWidget {
     final String cta;
     final String route;
 
+    final l = AppLocalizations.of(context);
     if (state.needsBaseCurrency) {
       icon = Icons.currency_exchange_rounded;
-      title = 'Set your base currency';
-      subtitle = 'Choose the currency you track everything in. '
-          'You can add more currencies later.';
-      cta = 'Set base currency';
+      title = l.setupBaseCurrencyTitle;
+      subtitle = l.setupBaseCurrencyBody;
+      cta = l.setupBaseCurrencyAction;
       route = '/add-currency';
     } else if (state.needsAccount) {
       icon = Icons.account_balance_wallet_rounded;
-      title = 'Add an account';
-      subtitle = 'Create an account (Cash, Card, Bank…) to log '
-          'your transactions into.';
-      cta = 'Add account';
+      title = l.setupAccountTitle;
+      subtitle = l.setupAccountBody;
+      cta = l.setupAccountAction;
       route = '/add-account';
     } else {
       icon = Icons.category_rounded;
-      title = 'Add a category';
-      subtitle = 'Create at least one category for your transactions.';
-      cta = 'Add category';
+      title = l.setupCategoryTitle;
+      subtitle = l.setupCategoryBody;
+      cta = l.setupCategoryAction;
       route = '/add-category';
     }
 

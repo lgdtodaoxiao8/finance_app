@@ -49,18 +49,34 @@ const schema = {
   required: ["summary", "score", "scoreLabel", "insights", "tip"],
 };
 
-const systemPrompt =
-  "You are a sharp, encouraging personal-finance coach. You are given a " +
-  "user's spending summary (amounts already in their base currency). Analyse " +
-  "it and reply ONLY via the structured schema. Be specific: reference real " +
-  "numbers and category names from the data, never invent figures. " +
-  "`summary`: one punchy sentence on their money right now. " +
-  "`score`: an integer 0-100 rating their financial health this period " +
-  "(spending vs income, balance, concentration in one category — higher is " +
-  "healthier). `scoreLabel`: 2-4 words for that score (e.g. 'Overspending', " +
-  "'On track', 'Great shape'). `insights`: 3-4 concrete observations, each " +
-  "with a tone (positive | warning | neutral). `tip`: one specific, " +
-  "actionable next step.";
+// Human-readable names for the languages the app ships, so the model gets an
+// unambiguous instruction. Unknown codes fall back to the code itself.
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  ru: "Russian (русский)",
+};
+
+function systemPrompt(language: string): string {
+  const name = LANGUAGE_NAMES[language] ?? language;
+  return (
+    "You are a sharp, encouraging personal-finance coach. You are given a " +
+    "user's spending summary (amounts already in their base currency). Analyse " +
+    "it and reply ONLY via the structured schema. Be specific: reference real " +
+    "numbers and category names from the data, never invent figures. " +
+    "`summary`: one punchy sentence on their money right now. " +
+    "`score`: an integer 0-100 rating their financial health this period " +
+    "(spending vs income, balance, concentration in one category — higher is " +
+    "healthier). `scoreLabel`: 2-4 words for that score (e.g. 'Overspending', " +
+    "'On track', 'Great shape'). `insights`: 3-4 concrete observations, each " +
+    "with a tone (positive | warning | neutral). `tip`: one specific, " +
+    "actionable next step. " +
+    // Language comes last so it is the most recent instruction the model sees.
+    `Write EVERY human-readable string (summary, scoreLabel, insights.title, ` +
+    `insights.detail, tip) in ${name}. Keep category names exactly as the user ` +
+    `wrote them — do not translate them. The 'tone' values stay in English ` +
+    `because they are enum keys.`
+  );
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -69,12 +85,15 @@ Deno.serve(async (req) => {
     return json({ error: "OPENAI_API_KEY is not set on the server." }, 500);
   }
 
-  let payload: unknown;
+  let payload: Record<string, unknown>;
   try {
     payload = await req.json();
   } catch {
     return json({ error: "Invalid JSON body." }, 400);
   }
+
+  // The app sends the UI language so the coach answers in it.
+  const language = typeof payload.language === "string" ? payload.language : "en";
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -85,7 +104,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       model: MODEL,
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: systemPrompt(language) },
         {
           role: "user",
           content: "Spending summary (JSON):\n" + JSON.stringify(payload),

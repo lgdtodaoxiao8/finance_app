@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -19,7 +20,10 @@ class DatePickerField extends StatelessWidget {
   final DateTime value;
 
   String _formatDate(DateTime date) {
-    return DateFormat('d MMM HH:mm', 'en_US').format(date).toString();
+    return DateFormat(
+      'd MMM HH:mm',
+      Localizations.localeOf(context).toString(),
+    ).format(date);
   }
 
   Future<void> _pickDate() async {
@@ -62,7 +66,10 @@ class DatePickerField extends StatelessWidget {
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  child: Text('Done', style: kTextStyle.copyWith()),
+                  child: Text(
+                    AppLocalizations.of(context).done,
+                    style: kTextStyle.copyWith(),
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),

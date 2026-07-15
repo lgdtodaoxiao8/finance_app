@@ -21,6 +21,7 @@ class CustomTextField extends StatefulWidget {
     ),
     this.prefixPadding = const EdgeInsets.symmetric(horizontal: 6),
     this.keyboardType = TextInputType.text,
+    this.autofocus = false,
     this.validate,
     this.label,
     this.counter,
@@ -32,6 +33,7 @@ class CustomTextField extends StatefulWidget {
   final String? initialText;
   final void Function()? onChanged;
   final TextInputType keyboardType;
+  final bool autofocus;
   final EdgeInsetsGeometry textPadding;
   final EdgeInsetsGeometry prefixPadding;
   final EdgeInsetsGeometry errorTextPadding;
@@ -137,6 +139,7 @@ class CustomTextFieldState extends State<CustomTextField> {
               Expanded(
                 child: TextField(
                   focusNode: _fieldFocusNode,
+                  autofocus: widget.autofocus,
                   onTapOutside: (event) {
                     _fieldFocusNode.unfocus();
                   },

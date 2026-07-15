@@ -55,16 +55,28 @@ create table if not exists public.transactions (
   primary key (user_id, uuid)
 );
 
+-- ============================================================== settings ====
+-- App preferences (theme, language, week start, privacy, base currency, …) as
+-- a per-user key/value store. Keyed by (user_id, key); LWW on updated_at.
+create table if not exists public.settings (
+  user_id    uuid   not null default auth.uid() references auth.users (id) on delete cascade,
+  key        text   not null,
+  value      text,
+  updated_at bigint not null default 0,
+  primary key (user_id, key)
+);
+
 -- ================================================== Row Level Security ======
 -- Each user can only see and touch their own rows.
 alter table public.categories   enable row level security;
 alter table public.accounts     enable row level security;
 alter table public.transactions enable row level security;
+alter table public.settings     enable row level security;
 
 do $$
 declare t text;
 begin
-  foreach t in array array['categories', 'accounts', 'transactions'] loop
+  foreach t in array array['categories', 'accounts', 'transactions', 'settings'] loop
     execute format($f$
       drop policy if exists "own rows" on public.%1$I;
       create policy "own rows" on public.%1$I

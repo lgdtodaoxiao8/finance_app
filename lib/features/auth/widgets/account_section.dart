@@ -4,6 +4,7 @@ import 'package:finance_app/features/auth/data/app_user.dart';
 import 'package:finance_app/features/auth/view/auth_screen.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Settings card for the account: sign-in prompt, or signed-in identity with a
@@ -20,15 +21,18 @@ class AccountSection extends StatelessWidget {
       valueListenable: auth.isReady,
       builder: (context, _, _) {
         if (!auth.isAvailable) {
-          return const _Card(
+          return _Card(
             child: Row(
               children: [
-                Icon(Icons.cloud_off_rounded, color: AppColors.textTertiary),
-                SizedBox(width: 12),
+                const Icon(
+                  Icons.cloud_off_rounded,
+                  color: AppColors.textTertiary,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Cloud sync isn\'t set up yet',
-                    style: TextStyle(
+                    AppLocalizations.of(context).cloudSyncNotSetUp,
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
@@ -61,13 +65,12 @@ class _SignedOut extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_sync_rounded, color: AppColors.primary),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Sign in to sync across devices',
-              style: TextStyle(
+              AppLocalizations.of(context).signInToSync,
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
               ),
             ),
           ),
@@ -75,7 +78,7 @@ class _SignedOut extends StatelessWidget {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const AuthScreen()),
             ),
-            child: const Text('Sign in'),
+            child: Text(AppLocalizations.of(context).signIn),
           ),
         ],
       ),
@@ -110,9 +113,9 @@ class _SignedIn extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Signed in',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context).signedIn,
+                      style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textTertiary,
                       ),
@@ -123,7 +126,6 @@ class _SignedIn extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -131,7 +133,7 @@ class _SignedIn extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => auth.signOut(),
-                child: const Text('Sign out'),
+                child: Text(AppLocalizations.of(context).signOut),
               ),
             ],
           ),
@@ -156,7 +158,9 @@ class _SignedIn extends StatelessWidget {
                     ),
                   const SizedBox(width: 10),
                   Text(
-                    syncing ? 'Syncing…' : 'Synced automatically',
+                    syncing
+                        ? AppLocalizations.of(context).syncing
+                        : AppLocalizations.of(context).syncedAutomatically,
                     style: const TextStyle(
                       fontSize: 13.5,
                       color: AppColors.textSecondary,
@@ -182,7 +186,7 @@ class _Card extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),

@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -19,13 +20,14 @@ class RecentActivity extends StatefulWidget {
 
 class _RecentActivityState extends State<RecentActivity> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<dynamic>>? _currencySub;
   String? _symbol;
   List<TransactionDetails> _recent = const [];
 
   @override
   void initState() {
     super.initState();
-    _loadSymbol();
+    _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen((txns) {
       // The stream is ordered oldest → newest; take the newest few.
       if (mounted) {
@@ -34,14 +36,23 @@ class _RecentActivityState extends State<RecentActivity> {
     });
   }
 
-  Future<void> _loadSymbol() async {
-    final base = await getIt<CurrencyRepository>().getBase();
-    if (mounted) setState(() => _symbol = base?.currencySymbol);
+  // Reactive base-currency symbol: updates live when the base currency changes
+  // (Home stays alive in an IndexedStack, so a one-shot read would go stale).
+  void _watchBaseSymbol() {
+    _currencySub = getIt<CurrencyRepository>().watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          if (mounted) setState(() => _symbol = c.currencySymbol);
+          return;
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _currencySub?.cancel();
     super.dispose();
   }
 
@@ -51,7 +62,7 @@ class _RecentActivityState extends State<RecentActivity> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -59,7 +70,7 @@ class _RecentActivityState extends State<RecentActivity> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Recent activity',
+            AppLocalizations.of(context).recentActivity,
             style: kTextStyle.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -81,8 +92,9 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final income = t.isIncome;
-    final amountColor = income ? AppColors.positive : AppColors.textPrimary;
-    final sign = income ? '+' : '−';
+    final amountColor = income
+        ? AppColors.positive
+        : Theme.of(context).colorScheme.onSurface;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
@@ -102,17 +114,22 @@ class _Row extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  t.categoryName ?? (income ? 'Income' : 'Expense'),
+                  t.categoryName ??
+                      (income
+                          ? AppLocalizations.of(context).income
+                          : AppLocalizations.of(context).expense),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
-                  DateFormat('d MMM').format(t.date),
+                  DateFormat(
+                    'd MMM',
+                    Localizations.localeOf(context).toString(),
+                  ).format(t.date),
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textTertiary,
@@ -122,8 +139,10 @@ class _Row extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            '$sign${formatMoney(t.amountInBase, symbol)}',
+          AmountText(
+            income ? t.amountInBase : -t.amountInBase,
+            symbol: symbol,
+            signed: true,
             style: TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,

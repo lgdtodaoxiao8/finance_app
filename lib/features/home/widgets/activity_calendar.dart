@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ class _ActivityCalendarState extends State<ActivityCalendar> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -67,7 +68,7 @@ class _ActivityCalendarState extends State<ActivityCalendar> {
           Row(
             children: [
               Text(
-                'Logging streak',
+                AppLocalizations.of(context).loggingStreak,
                 style: kTextStyle.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -75,7 +76,9 @@ class _ActivityCalendarState extends State<ActivityCalendar> {
               ),
               const Spacer(),
               Text(
-                '${_activeDays.length}/$_today days',
+                AppLocalizations.of(
+                  context,
+                ).activeDaysOf(_activeDays.length, _today),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

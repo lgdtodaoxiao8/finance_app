@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/settings/settings_service.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -20,6 +23,7 @@ class DailySpendChart extends StatefulWidget {
 
 class _DailySpendChartState extends State<DailySpendChart> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<dynamic>>? _currencySub;
   String? _symbol;
   List<double> _daily = const [];
   int _today = DateTime.now().day;
@@ -29,18 +33,34 @@ class _DailySpendChartState extends State<DailySpendChart> {
   double get _max =>
       _daily.isEmpty ? 0 : _daily.reduce((a, b) => a > b ? a : b);
 
+  final _settings = getIt<SettingsService>().settings;
+
   @override
   void initState() {
     super.initState();
-    _loadSymbol();
+    _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen(
       _recompute,
     );
+    // Re-render (mask/unmask) when "hide amounts" flips.
+    _settings.addListener(_onSettings);
   }
 
-  Future<void> _loadSymbol() async {
-    final base = await getIt<CurrencyRepository>().getBase();
-    if (mounted) setState(() => _symbol = base?.currencySymbol);
+  void _onSettings() {
+    if (mounted) setState(() {});
+  }
+
+  // Reactive base-currency symbol: updates live when the base currency changes
+  // (Home stays alive in an IndexedStack, so a one-shot read would go stale).
+  void _watchBaseSymbol() {
+    _currencySub = getIt<CurrencyRepository>().watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          if (mounted) setState(() => _symbol = c.currencySymbol);
+          return;
+        }
+      }
+    });
   }
 
   void _recompute(List<TransactionDetails> txns) {
@@ -64,6 +84,8 @@ class _DailySpendChartState extends State<DailySpendChart> {
   @override
   void dispose() {
     _sub?.cancel();
+    _currencySub?.cancel();
+    _settings.removeListener(_onSettings);
     super.dispose();
   }
 
@@ -72,7 +94,7 @@ class _DailySpendChartState extends State<DailySpendChart> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -82,7 +104,7 @@ class _DailySpendChartState extends State<DailySpendChart> {
           Row(
             children: [
               Text(
-                'Daily spending',
+                AppLocalizations.of(context).dailySpending,
                 style: kTextStyle.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -91,8 +113,8 @@ class _DailySpendChartState extends State<DailySpendChart> {
               const Spacer(),
               Text(
                 _selected != null
-                    ? '${_selected! + 1} → ${formatMoney(_daily[_selected!], _symbol)}'
-                    : formatMoney(_total, _symbol),
+                    ? '${_selected! + 1} → ${AmountText.maskString(formatMoney(_daily[_selected!], _symbol))}'
+                    : AmountText.maskString(formatMoney(_total, _symbol)),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -102,18 +124,18 @@ class _DailySpendChartState extends State<DailySpendChart> {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(height: 150, child: _chart()),
+          SizedBox(height: 150, child: _chart(context)),
         ],
       ),
     );
   }
 
-  Widget _chart() {
+  Widget _chart(BuildContext context) {
     if (_daily.isEmpty || _total == 0) {
-      return const Center(
+      return Center(
         child: Text(
-          'No spending this month yet',
-          style: TextStyle(color: AppColors.textTertiary),
+          AppLocalizations.of(context).noSpendingThisMonth,
+          style: const TextStyle(color: AppColors.textTertiary),
         ),
       );
     }
@@ -126,7 +148,7 @@ class _DailySpendChartState extends State<DailySpendChart> {
           touchTooltipData: BarTouchTooltipData(
             getTooltipColor: (_) => AppColors.textPrimary,
             getTooltipItem: (group, _, rod, _) => BarTooltipItem(
-              formatMoney(rod.toY, _symbol),
+              AmountText.maskString(formatMoney(rod.toY, _symbol)),
               const TextStyle(color: Colors.white, fontSize: 11),
             ),
           ),

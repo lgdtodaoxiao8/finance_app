@@ -2,6 +2,7 @@ import 'package:finance_app/core/config/app_config.dart';
 import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/features/subscription/data/premium_feature.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -27,7 +28,9 @@ class PaywallSheet extends StatelessWidget {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the browser.')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).couldNotOpenBrowser),
+        ),
       );
     }
   }
@@ -63,10 +66,10 @@ class PaywallSheet extends StatelessWidget {
                   children: [
                     const Center(child: PremiumBadge()),
                     const SizedBox(height: 18),
-                    const Text(
-                      'Turn tracking into a plan',
+                    Text(
+                      AppLocalizations.of(context).turnTrackingIntoPlan,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
@@ -74,19 +77,20 @@ class PaywallSheet extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Tracking shows the past. Premium changes what happens '
-                      'next — most people find the price back in the first week '
-                      'of catching overspend early.',
+                    Text(
+                      AppLocalizations.of(context).paywallBody,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14.5,
                         color: AppColors.textSecondary,
                         height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    for (final f in premiumFeatures) _FeatureRow(feature: f),
+                    for (final f in premiumFeatures(
+                      AppLocalizations.of(context),
+                    ))
+                      _FeatureRow(feature: f),
                   ],
                 ),
               ),
@@ -178,17 +182,20 @@ class _Footer extends StatelessWidget {
             child: ElevatedButton.icon(
               onPressed: onUpgrade,
               icon: const Icon(Icons.open_in_new_rounded, size: 20),
-              label: const Text(
-                'Continue on the web',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              label: Text(
+                AppLocalizations.of(context).continueOnWeb,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Secure checkout in your browser — no App Store fees.',
+          Text(
+            AppLocalizations.of(context).secureCheckout,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+            style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
           ),
         ],
       ),

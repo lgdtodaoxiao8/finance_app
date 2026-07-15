@@ -1,5 +1,5 @@
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/core/widgets/empty_state.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
@@ -16,6 +16,7 @@ import 'package:finance_app/features/home/widgets/week_compare_card.dart';
 import 'package:finance_app/features/home/widgets/weekday_pattern.dart';
 import 'package:finance_app/features/home/widgets/weekly_digest_teaser.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -35,8 +36,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
-String _money(double value, String? symbol) => formatMoney(value, symbol);
 
 class _AnalyticsView extends StatelessWidget {
   const _AnalyticsView();
@@ -60,13 +59,11 @@ class _AnalyticsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7FA),
       appBar: AppBar(
-        title: Text('Analytics', style: kTextStyle.copyWith()),
-        backgroundColor: const Color(0xFFF7F7FA),
-        centerTitle: true,
-        scrolledUnderElevation: 0,
+        title: Text(l.analyticsTitle, style: kTextStyle.copyWith()),
       ),
       body: BlocBuilder<AnalyticsCubit, AnalyticsState>(
         builder: (context, state) {
@@ -74,7 +71,7 @@ class _AnalyticsView extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (state.status == AnalyticsStatus.error) {
-            return const Center(child: Text('Something went wrong'));
+            return Center(child: Text(l.somethingWentWrong));
           }
 
           return ListView(
@@ -87,7 +84,7 @@ class _AnalyticsView extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                formatAuto(state.range, state.preset),
+                formatAuto(state.range, state.preset, l, locale),
                 style: kTextStyle.copyWith(
                   color: Colors.grey[600],
                   fontSize: 13,
@@ -146,15 +143,18 @@ class _PeriodChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Wrap(
       spacing: 8,
       children: PeriodPreset.values.map((p) {
         final selected = p == preset;
         return ChoiceChip(
           label: Text(
-            periodChipLabels[p]!,
+            periodChipLabel(l, p),
             style: kTextStyle.copyWith(
-              color: selected ? AppColors.primary : AppColors.textPrimary,
+              color: selected
+                  ? AppColors.primary
+                  : Theme.of(context).colorScheme.onSurface,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
@@ -186,14 +186,16 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             child: _StatCard(
-              label: 'Income',
-              value: _money(income, symbol),
+              label: l.income,
+              amount: income,
+              symbol: symbol,
               color: Colors.green[600]!,
               icon: Icons.arrow_downward_rounded,
             ),
@@ -201,8 +203,9 @@ class _SummaryRow extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: _StatCard(
-              label: 'Expense',
-              value: _money(expense, symbol),
+              label: l.expense,
+              amount: expense,
+              symbol: symbol,
               color: Theme.of(context).colorScheme.error,
               icon: Icons.arrow_upward_rounded,
             ),
@@ -219,13 +222,15 @@ class _SummaryRow extends StatelessWidget {
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.label,
-    required this.value,
+    required this.amount,
+    required this.symbol,
     required this.color,
     required this.icon,
   });
 
   final String label;
-  final String value;
+  final double amount;
+  final String? symbol;
   final Color color;
   final IconData icon;
 
@@ -234,9 +239,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black12)],
+        boxShadow: kCardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,8 +256,9 @@ class _StatCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
-              value,
+            child: AmountText(
+              amount,
+              symbol: symbol,
               style: kTextStyle.copyWith(
                 color: color,
                 fontSize: 15,
@@ -279,18 +285,19 @@ class _SpendingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black12)],
+        boxShadow: kCardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Spending by category',
+            l.spendingByCategory,
             style: kTextStyle.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -298,12 +305,12 @@ class _SpendingCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (spends.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 28),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 28),
               child: AppEmptyState(
                 icon: Icons.pie_chart_outline_rounded,
-                title: 'No expenses',
-                subtitle: 'Add a transaction to see the breakdown',
+                title: l.noExpenses,
+                subtitle: l.noExpensesSubtitle,
               ),
             )
           else ...[
@@ -331,14 +338,15 @@ class _SpendingCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Total',
+                        l.total,
                         style: kTextStyle.copyWith(
                           color: Colors.grey[600],
                           fontSize: 12,
                         ),
                       ),
-                      Text(
-                        _money(total, symbol),
+                      AmountText(
+                        total,
+                        symbol: symbol,
                         style: kTextStyle.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -404,8 +412,9 @@ class _LegendRow extends StatelessWidget {
             style: kTextStyle.copyWith(color: Colors.grey[600], fontSize: 12),
           ),
           const SizedBox(width: 10),
-          Text(
-            _money(spend.total, symbol),
+          AmountText(
+            spend.total,
+            symbol: symbol,
             style: kTextStyle.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w600,

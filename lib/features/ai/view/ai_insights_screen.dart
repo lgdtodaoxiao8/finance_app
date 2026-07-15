@@ -5,6 +5,7 @@ import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/ai/data/ai_insight.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Premium AI screen: sends a spending summary to the ai-insights Edge Function
@@ -30,6 +31,9 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
 
   /// Builds a compact base-currency spending summary for the model.
   Future<Map<String, dynamic>> _buildSummary() async {
+    // Read the locale before the awaits — the model must answer in the user's
+    // language, and reading context after an async gap is unsafe.
+    final language = Localizations.localeOf(context).languageCode;
     final txns = await getIt<TransactionRepository>().getAllWithDetails();
     final base = await getIt<CurrencyRepository>().getBase();
 
@@ -65,6 +69,8 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
         .toList();
 
     return {
+      // BCP-47 language the coach must reply in (e.g. 'en', 'ru').
+      'language': language,
       'baseCurrency': base?.currencyCode ?? '',
       'income': _round(income),
       'expense': _round(expense),
@@ -75,6 +81,20 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
   }
 
   double _round(double v) => (v * 100).roundToDouble() / 100;
+
+  /// AiService has no BuildContext, so it reports a [AiFailureKind] and we turn
+  /// it into a message in the user's language here.
+  String _localizedFailure(AiFailure e) {
+    final l = AppLocalizations.of(context);
+    return switch (e.kind) {
+      AiFailureKind.backendOff => l.aiErrorBackendOff,
+      AiFailureKind.noCredit => l.aiErrorNoCredit,
+      AiFailureKind.invalidKey => l.aiErrorInvalidKey,
+      AiFailureKind.keyNotSet => l.aiErrorKeyNotSet,
+      AiFailureKind.badResponse => l.aiErrorBadResponse,
+      AiFailureKind.unknown => l.somethingWentWrongDetail(e.detail ?? ''),
+    };
+  }
 
   Future<void> _load({bool force = false}) async {
     setState(() {
@@ -88,9 +108,15 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
       final result = await _ai.insights(summary, force: force);
       if (mounted) setState(() => _result = result);
     } on AiFailure catch (e) {
-      if (mounted) setState(() => _error = e.message);
+      if (mounted) setState(() => _error = _localizedFailure(e));
     } catch (e) {
-      if (mounted) setState(() => _error = 'Something went wrong. $e');
+      if (mounted) {
+        setState(
+          () => _error = AppLocalizations.of(
+            context,
+          ).somethingWentWrongDetail('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -100,10 +126,10 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Insights'),
+        title: Text(AppLocalizations.of(context).aiInsightsTitle),
         actions: [
           IconButton(
-            tooltip: 'Re-analyze',
+            tooltip: AppLocalizations.of(context).reAnalyze,
             onPressed: _loading ? null : () => _load(force: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -126,7 +152,9 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       children: [
-        const Center(child: PremiumBadge(label: 'AI COACH')),
+        Center(
+          child: PremiumBadge(label: AppLocalizations.of(context).aiCoachBadge),
+        ),
         const SizedBox(height: 20),
         _ScoreHero(score: result.score, label: result.scoreLabel),
         const SizedBox(height: 20),
@@ -202,9 +230,9 @@ class _ScoreHero extends StatelessWidget {
                         height: 1,
                       ),
                     ),
-                    const Text(
-                      'out of 100',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context).outOf100,
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.textTertiary,
                       ),
@@ -215,9 +243,9 @@ class _ScoreHero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Financial health',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).financialHealth,
+            style: const TextStyle(
               fontSize: 12,
               letterSpacing: 0.4,
               fontWeight: FontWeight.w700,
@@ -325,9 +353,9 @@ class _TipCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Coach tip',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context).coachTip,
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
@@ -358,15 +386,15 @@ class _Loading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
           Text(
-            'Reading your spending…',
-            style: TextStyle(color: AppColors.textSecondary),
+            AppLocalizations.of(context).readingYourSpending,
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -400,7 +428,10 @@ class _ErrorView extends StatelessWidget {
               style: const TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Try again')),
+            FilledButton(
+              onPressed: onRetry,
+              child: Text(AppLocalizations.of(context).tryAgain),
+            ),
           ],
         ),
       ),

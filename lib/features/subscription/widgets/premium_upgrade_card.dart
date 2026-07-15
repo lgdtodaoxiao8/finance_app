@@ -3,6 +3,7 @@ import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Settings entry point to premium: a gradient upsell when free, a calm
@@ -45,9 +46,9 @@ class _UpsellCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Go Premium',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context).goPremium,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
@@ -55,7 +56,7 @@ class _UpsellCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'AI insights, forecasts, sync & more',
+                    AppLocalizations.of(context).goPremiumSubtitle,
                     style: TextStyle(
                       fontSize: 13.5,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -71,9 +72,9 @@ class _UpsellCard extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: const Text(
-                'Upgrade',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context).upgrade,
+                style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   color: AppColors.primaryDark,
                 ),
@@ -97,25 +98,24 @@ class _ActiveCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(kRadiusLg),
           boxShadow: kCardShadow,
         ),
-        child: const Row(
+        child: Row(
           children: [
-            PremiumBadge(),
-            SizedBox(width: 12),
+            const PremiumBadge(),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Premium is active — enjoy!',
-                style: TextStyle(
+                AppLocalizations.of(context).premiumActive,
+                style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
                 ),
               ),
             ),
-            Icon(Icons.verified_rounded, color: AppColors.positive),
+            const Icon(Icons.verified_rounded, color: AppColors.positive),
           ],
         ),
       ),

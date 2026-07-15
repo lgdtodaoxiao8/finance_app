@@ -4,6 +4,7 @@ import 'package:finance_app/features/onboarding/data/onboarding_slide.dart';
 import 'package:finance_app/features/onboarding/widgets/onboarding_slide_view.dart';
 import 'package:finance_app/features/onboarding/widgets/setup_base_currency_step.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// First-run experience: a short marketing carousel followed by base-currency
@@ -23,8 +24,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _index = 0;
 
   /// Index of the (final) base-currency setup page.
-  int get _setupIndex => onboardingSlides.length;
-  int get _pageCount => onboardingSlides.length + 1;
+  /// Number of marketing slides before the base-currency setup page.
+  static const _slideCount = 3;
+
+  int get _setupIndex => _slideCount;
+  int get _pageCount => _slideCount + 1;
   bool get _onSetupPage => _index == _setupIndex;
 
   @override
@@ -59,8 +63,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   duration: const Duration(milliseconds: 200),
                   opacity: _onSetupPage ? 0 : 1,
                   child: TextButton(
-                    onPressed: _onSetupPage ? null : () => _animateTo(_setupIndex),
-                    child: const Text('Skip'),
+                    onPressed: _onSetupPage
+                        ? null
+                        : () => _animateTo(_setupIndex),
+                    child: Text(AppLocalizations.of(context).skip),
                   ),
                 ),
               ),
@@ -70,7 +76,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 controller: _controller,
                 onPageChanged: (i) => setState(() => _index = i),
                 children: [
-                  for (final slide in onboardingSlides)
+                  for (final slide in onboardingSlides(
+                    AppLocalizations.of(context),
+                  ))
                     OnboardingSlideView(slide: slide),
                   SetupBaseCurrencyStep(onFinished: _complete),
                 ],
@@ -81,7 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               pageCount: _pageCount,
               // Hide the CTA on the setup page (it has its own button).
               showCta: !_onSetupPage,
-              isLastSlide: _index == onboardingSlides.length - 1,
+              isLastSlide: _index == _slideCount - 1,
               onNext: () => _animateTo(_index + 1),
             ),
           ],
@@ -140,7 +148,9 @@ class _BottomBar extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: showCta ? onNext : null,
                 child: Text(
-                  isLastSlide ? 'Get started' : 'Next',
+                  isLastSlide
+                      ? AppLocalizations.of(context).getStarted
+                      : AppLocalizations.of(context).next,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,

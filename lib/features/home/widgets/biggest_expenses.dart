@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -19,21 +20,30 @@ class BiggestExpenses extends StatefulWidget {
 
 class _BiggestExpensesState extends State<BiggestExpenses> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<dynamic>>? _currencySub;
   String? _symbol;
   List<TransactionDetails> _top = const [];
 
   @override
   void initState() {
     super.initState();
-    _loadSymbol();
+    _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen(
       _recompute,
     );
   }
 
-  Future<void> _loadSymbol() async {
-    final base = await getIt<CurrencyRepository>().getBase();
-    if (mounted) setState(() => _symbol = base?.currencySymbol);
+  // Reactive base-currency symbol: updates live when the base currency changes
+  // (Home stays alive in an IndexedStack, so a one-shot read would go stale).
+  void _watchBaseSymbol() {
+    _currencySub = getIt<CurrencyRepository>().watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          if (mounted) setState(() => _symbol = c.currencySymbol);
+          return;
+        }
+      }
+    });
   }
 
   void _recompute(List<TransactionDetails> txns) {
@@ -48,6 +58,7 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
   @override
   void dispose() {
     _sub?.cancel();
+    _currencySub?.cancel();
     super.dispose();
   }
 
@@ -58,7 +69,7 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -66,7 +77,7 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Biggest this month',
+            AppLocalizations.of(context).biggestThisMonth,
             style: kTextStyle.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -97,13 +108,13 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          t.categoryName ?? 'Expense',
+                          t.categoryName ??
+                              AppLocalizations.of(context).expense,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 5),
@@ -128,12 +139,12 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Text(
-                    formatMoney(t.amountInBase, _symbol),
+                  AmountText(
+                    t.amountInBase,
+                    symbol: _symbol,
                     style: const TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
                     ),
                   ),
                 ],

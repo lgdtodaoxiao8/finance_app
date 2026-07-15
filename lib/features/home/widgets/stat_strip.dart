@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/settings/settings_service.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -19,27 +22,45 @@ class StatStrip extends StatefulWidget {
 
 class _StatStripState extends State<StatStrip> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<dynamic>>? _currencySub;
   String? _symbol;
+  List<TransactionDetails> _txns = const [];
   List<_Stat> _stats = const [];
+
+  final _settings = getIt<SettingsService>().settings;
 
   @override
   void initState() {
     super.initState();
-    _loadSymbol();
+    _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen(
       _recompute,
     );
+    // Recompute masked/unmasked labels when "hide amounts" flips.
+    _settings.addListener(_onSettings);
   }
 
-  Future<void> _loadSymbol() async {
-    final base = await getIt<CurrencyRepository>().getBase();
-    if (mounted) {
-      setState(() => _symbol = base?.currencySymbol);
-      // Recompute labels that embed the symbol once it's known.
-    }
+  void _onSettings() => _recompute(_txns);
+
+  // Reactive base-currency symbol. This strip bakes the symbol into its stat
+  // labels, so a change must re-run _recompute over the last transactions
+  // (Home stays alive in an IndexedStack — a one-shot read would go stale).
+  void _watchBaseSymbol() {
+    _currencySub = getIt<CurrencyRepository>().watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          if (mounted && c.currencySymbol != _symbol) {
+            _symbol = c.currencySymbol;
+            _recompute(_txns);
+          }
+          return;
+        }
+      }
+    });
   }
 
   void _recompute(List<TransactionDetails> txns) {
+    _txns = txns;
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month);
 
@@ -66,33 +87,33 @@ class _StatStripState extends State<StatStrip> {
         _Stat(
           Icons.savings_rounded,
           savingsRate == null ? '—' : '$savingsRate%',
-          'saved',
+          _StatKind.saved,
           savingsRate != null && savingsRate >= 0
               ? AppColors.positive
               : AppColors.negative,
         ),
         _Stat(
           Icons.today_rounded,
-          formatMoney(avgPerDay, _symbol),
-          'per day',
+          AmountText.maskString(formatMoney(avgPerDay, _symbol)),
+          _StatKind.perDay,
           AppColors.primary,
         ),
         _Stat(
           Icons.local_fire_department_rounded,
-          formatMoney(biggest, _symbol),
-          'biggest',
+          AmountText.maskString(formatMoney(biggest, _symbol)),
+          _StatKind.biggest,
           const Color(0xFFF5A623),
         ),
         _Stat(
           Icons.receipt_long_rounded,
           '$count',
-          'this month',
+          _StatKind.thisMonth,
           const Color(0xFF7C3AED),
         ),
         _Stat(
           Icons.event_available_rounded,
           '${activeDays.length}',
-          'active days',
+          _StatKind.activeDays,
           AppColors.positive,
         ),
       ];
@@ -102,6 +123,8 @@ class _StatStripState extends State<StatStrip> {
   @override
   void dispose() {
     _sub?.cancel();
+    _currencySub?.cancel();
+    _settings.removeListener(_onSettings);
     super.dispose();
   }
 
@@ -121,11 +144,15 @@ class _StatStripState extends State<StatStrip> {
   }
 }
 
+/// Which stat a chip shows — the label is resolved at build time so it follows
+/// the app language (the values are computed off-context in the stream).
+enum _StatKind { saved, perDay, biggest, thisMonth, activeDays }
+
 class _Stat {
-  const _Stat(this.icon, this.value, this.label, this.color);
+  const _Stat(this.icon, this.value, this.kind, this.color);
   final IconData icon;
   final String value;
-  final String label;
+  final _StatKind kind;
   final Color color;
 }
 
@@ -133,13 +160,24 @@ class _Chip extends StatelessWidget {
   const _Chip({required this.stat});
   final _Stat stat;
 
+  String _label(BuildContext context, _StatKind kind) {
+    final l = AppLocalizations.of(context);
+    return switch (kind) {
+      _StatKind.saved => l.statSaved,
+      _StatKind.perDay => l.statPerDay,
+      _StatKind.biggest => l.statBiggest,
+      _StatKind.thisMonth => l.statThisMonth,
+      _StatKind.activeDays => l.statActiveDays,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 118,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusMd),
         boxShadow: kCardShadow,
       ),
@@ -156,12 +194,11 @@ class _Chip extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
               ),
             ),
           ),
           Text(
-            stat.label,
+            _label(context, stat.kind),
             style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
           ),
         ],

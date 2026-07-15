@@ -101,7 +101,7 @@ void main() {
     cubit.setType('transfer', 2);
     expect(
       cubit.state.validationError,
-      'You have no second account to transfer',
+      TransactionBlocker.noSecondAccount,
     );
 
     // Add a second account and refresh.
@@ -118,7 +118,7 @@ void main() {
     cubit.setAccountDestination(cubit.state.accountId!);
     expect(
       cubit.state.validationError,
-      'Account departure and destination must be different',
+      TransactionBlocker.sameAccounts,
     );
     await cubit.close();
   });
@@ -127,7 +127,8 @@ void main() {
     final accountId = await setupBaseAndAccount();
     final categoryId =
         (await getIt<CategoryRepository>().getAll()).first.categoryId;
-    final currencyId = (await getIt<CurrencyRepository>().getBase())!.currencyId;
+    final currencyId =
+        (await getIt<CurrencyRepository>().getBase())!.currencyId;
     final txRepo = getIt<TransactionRepository>();
     await txRepo.add(
       accountId: accountId,
@@ -175,7 +176,8 @@ void main() {
     final accountId = await setupBaseAndAccount();
     final categoryId =
         (await getIt<CategoryRepository>().getAll()).first.categoryId;
-    final currencyId = (await getIt<CurrencyRepository>().getBase())!.currencyId;
+    final currencyId =
+        (await getIt<CurrencyRepository>().getBase())!.currencyId;
     final txRepo = getIt<TransactionRepository>();
     await txRepo.add(
       accountId: accountId,

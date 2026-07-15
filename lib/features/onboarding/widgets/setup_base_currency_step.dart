@@ -3,6 +3,7 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/settings/cubit/base_currency_cubit.dart';
 import 'package:finance_app/features/settings/widgets/set_base_currency.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,9 +27,9 @@ class SetupBaseCurrencyStep extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12),
-              const Text(
-                'Set your base currency',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).setupBaseCurrencyTitle,
+                style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
@@ -36,10 +37,9 @@ class SetupBaseCurrencyStep extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'This is the currency your totals and charts are shown in. '
-                'You can add more currencies later.',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).onboardCurrencyBody,
+                style: const TextStyle(
                   fontSize: 15,
                   height: 1.5,
                   color: AppColors.textSecondary,
@@ -67,7 +67,11 @@ class SetupBaseCurrencyStep extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       child: Text(
-                        ready ? 'Enter the app' : 'Pick a currency to continue',
+                        ready
+                            ? AppLocalizations.of(context).enterTheApp
+                            : AppLocalizations.of(
+                                context,
+                              ).pickCurrencyToContinue,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

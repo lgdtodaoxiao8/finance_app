@@ -1,4 +1,5 @@
 import 'package:finance_app/features/add_transaction/widgets/widgets.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class AddIncome extends StatelessWidget {
@@ -36,7 +37,7 @@ class AddIncome extends StatelessWidget {
           onAddNew: addNewCategory,
           tableType: Tables.category,
           currentValue: initialCategoryId,
-          label: 'From category',
+          label: AppLocalizations.of(context).fromCategory,
           values: categoriesList,
           onSelect: onSelectCategory,
         ),
@@ -52,7 +53,7 @@ class AddIncome extends StatelessWidget {
           tableType: Tables.account,
           currentValue: initialAccountId,
           values: accountsList,
-          label: 'To account',
+          label: AppLocalizations.of(context).toAccount,
           onSelect: onSelectAccount,
         ),
       ],

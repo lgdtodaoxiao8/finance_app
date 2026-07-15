@@ -6,9 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 /// Raised for user-facing auth problems (bad credentials, backend off, …).
+///
+/// [message] is the provider's own text (already human-readable, but always in
+/// English — it comes from the server). [isNotConfigured] marks our own
+/// "backend isn't wired up" case, which the UI shows localised instead.
 class AuthFailure implements Exception {
-  AuthFailure(this.message);
+  AuthFailure(this.message, {this.isNotConfigured = false});
+
   final String message;
+  final bool isNotConfigured;
+
   @override
   String toString() => message;
 }
@@ -57,6 +64,7 @@ class AuthService {
       throw AuthFailure(
         'Sync isn\'t set up yet. Add your Supabase keys in AppConfig to '
         'enable accounts.',
+        isNotConfigured: true,
       );
     }
     return client.auth;

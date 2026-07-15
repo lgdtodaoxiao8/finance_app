@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -19,21 +20,30 @@ class WeekCompareCard extends StatefulWidget {
 
 class _WeekCompareCardState extends State<WeekCompareCard> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<dynamic>>? _currencySub;
   String? _symbol;
   double _thisWeek = 0, _lastWeek = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadSymbol();
+    _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen(
       _recompute,
     );
   }
 
-  Future<void> _loadSymbol() async {
-    final base = await getIt<CurrencyRepository>().getBase();
-    if (mounted) setState(() => _symbol = base?.currencySymbol);
+  // Reactive base-currency symbol: updates live when the base currency changes
+  // (Home stays alive in an IndexedStack, so a one-shot read would go stale).
+  void _watchBaseSymbol() {
+    _currencySub = getIt<CurrencyRepository>().watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          if (mounted) setState(() => _symbol = c.currencySymbol);
+          return;
+        }
+      }
+    });
   }
 
   void _recompute(List<TransactionDetails> txns) {
@@ -60,6 +70,7 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
   @override
   void dispose() {
     _sub?.cancel();
+    _currencySub?.cancel();
     super.dispose();
   }
 
@@ -74,7 +85,7 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -84,7 +95,7 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
           Row(
             children: [
               Text(
-                'This week vs last',
+                AppLocalizations.of(context).thisWeekVsLast,
                 style: kTextStyle.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -114,9 +125,19 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
             ],
           ),
           const SizedBox(height: 16),
-          _bar('This week', _thisWeek, max, AppColors.primary),
+          _bar(
+            AppLocalizations.of(context).thisWeek,
+            _thisWeek,
+            max,
+            AppColors.primary,
+          ),
           const SizedBox(height: 10),
-          _bar('Last week', _lastWeek, max, AppColors.textTertiary),
+          _bar(
+            AppLocalizations.of(context).lastWeek,
+            _lastWeek,
+            max,
+            AppColors.textTertiary,
+          ),
         ],
       ),
     );
@@ -152,13 +173,13 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
         const SizedBox(width: 10),
         SizedBox(
           width: 66,
-          child: Text(
-            formatMoney(value, _symbol),
+          child: AmountText(
+            value,
+            symbol: _symbol,
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
             ),
           ),
         ),

@@ -1,4 +1,5 @@
 import 'package:finance_app/features/add_transaction/widgets/widgets.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class AddTransfer extends StatelessWidget {
@@ -33,7 +34,7 @@ class AddTransfer extends StatelessWidget {
           tableType: Tables.account,
           currentValue: initialAccountId,
           values: accountsList,
-          label: 'From account',
+          label: AppLocalizations.of(context).fromAccount,
           onSelect: onSelectAccount,
         ),
 
@@ -47,7 +48,7 @@ class AddTransfer extends StatelessWidget {
           onAddNew: addNewAccount,
           tableType: Tables.account,
           currentValue: initialAccountDestinationId,
-          label: 'To account',
+          label: AppLocalizations.of(context).toAccount,
           values: accountsList,
           onSelect: onSelectAccountDestination,
         ),

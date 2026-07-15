@@ -1,4 +1,5 @@
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// A white card with a titled header, an "add" action, and a list of rows
@@ -26,9 +27,9 @@ class ManageSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black12)],
+        boxShadow: kCardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +45,7 @@ class ManageSection extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                tooltip: 'Add',
+                tooltip: AppLocalizations.of(context).add,
                 onPressed: onAdd,
                 icon: Icon(
                   Icons.add_circle_outline_rounded,
@@ -110,7 +111,7 @@ class ManageTile extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Delete',
+            tooltip: AppLocalizations.of(context).delete,
             visualDensity: VisualDensity.compact,
             onPressed: onDelete,
             icon: Icon(
@@ -134,19 +135,28 @@ Future<void> confirmDelete(
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text('Delete "$what"?', style: kTextStyle.copyWith()),
+      title: Text(
+        AppLocalizations.of(context).deleteItemQuestion(what),
+        style: kTextStyle.copyWith(),
+      ),
       content: Text(
-        'This action cannot be undone.',
+        AppLocalizations.of(context).actionCannotBeUndone,
         style: kTextStyle.copyWith(),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
-          child: Text('Cancel', style: kTextStyle.copyWith()),
+          child: Text(
+            AppLocalizations.of(context).cancel,
+            style: kTextStyle.copyWith(),
+          ),
         ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text('Delete', style: kTextStyle.copyWith(color: Colors.red)),
+          child: Text(
+            AppLocalizations.of(context).delete,
+            style: kTextStyle.copyWith(color: Colors.red),
+          ),
         ),
       ],
     ),

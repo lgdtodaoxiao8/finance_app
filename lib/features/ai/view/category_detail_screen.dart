@@ -1,9 +1,10 @@
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/view/insight_widgets.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Detail for the free "Top category" card: the full spending breakdown this
@@ -70,14 +71,16 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Spending breakdown')),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).spendingBreakdown),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _categories.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'No expenses this month yet.',
-                style: TextStyle(color: AppColors.textSecondary),
+                AppLocalizations.of(context).noExpensesThisMonthYet,
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             )
           : ListView(
@@ -95,16 +98,17 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                   ),
                   child: Column(
                     children: [
-                      const Text(
-                        'Total spent this month',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context).totalSpentThisMonth,
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textTertiary,
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        formatMoney(_total, _symbol),
+                      AmountText(
+                        _total,
+                        symbol: _symbol,
                         style: const TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w800,
@@ -113,8 +117,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'across ${_categories.length} '
-                        '${_categories.length == 1 ? 'category' : 'categories'}',
+                        AppLocalizations.of(
+                          context,
+                        ).acrossNCategories(_categories.length),
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,

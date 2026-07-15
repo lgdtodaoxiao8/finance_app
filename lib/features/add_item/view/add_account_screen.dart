@@ -5,6 +5,7 @@ import 'package:finance_app/features/add_item/cubit/add_account_cubit.dart';
 import 'package:finance_app/features/add_item/widgets/widgets.dart';
 import 'package:finance_app/features/add_transaction/widgets/widgets.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -34,8 +35,8 @@ class _AddAccountViewState extends State<_AddAccountView> {
   final _nameKey = GlobalKey<CustomTextFieldState>();
 
   String? _nameValidator(String value) {
-    if (value.length < 4) return 'Must be at least 4 characters long.';
-    if (value.length > 30) return 'Maximum 30 characters long.';
+    if (value.length < 4) return AppLocalizations.of(context).mustBeAtLeast4;
+    if (value.length > 30) return AppLocalizations.of(context).maximum30;
     return null;
   }
 
@@ -66,7 +67,9 @@ class _AddAccountViewState extends State<_AddAccountView> {
         } else if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Something went wrong: ${state.error}'),
+              content: Text(
+                '${AppLocalizations.of(context).somethingWentWrong}: ${state.error}',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -81,7 +84,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
             backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
             title: Text(
-              'New Account',
+              AppLocalizations.of(context).newAccountTitle,
               style: kTextStyle.copyWith(
                 fontSize: 22,
                 color: const Color(0xFF242528),
@@ -109,7 +112,10 @@ class _AddAccountViewState extends State<_AddAccountView> {
                             color: Colors.white,
                           ),
                         )
-                      : Text('Add', style: kTextStyle.copyWith()),
+                      : Text(
+                          AppLocalizations.of(context).add,
+                          style: kTextStyle.copyWith(),
+                        ),
                 ),
               ),
             ],
@@ -117,10 +123,12 @@ class _AddAccountViewState extends State<_AddAccountView> {
           body: state.status == AddAccountStatus.loading
               ? const Center(child: CircularProgressIndicator())
               : state.status == AddAccountStatus.error
-              ? const Center(
+              ? Center(
                   child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Text('Something went wrong'),
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                      AppLocalizations.of(context).somethingWentWrong,
+                    ),
                   ),
                 )
               : ConstrainedBox(
@@ -148,7 +156,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
                               prefixPadding: EdgeInsets.zero,
                               prefixIconColor: const Color(0xFF202020),
                               validate: _nameValidator,
-                              hint: 'Name',
+                              hint: AppLocalizations.of(context).name,
                             ),
                           ),
                           Divider(
@@ -170,7 +178,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
                             values: [
                               for (final c in state.currencies) c.toMap(),
                             ],
-                            label: 'Account currency',
+                            label: AppLocalizations.of(context).accountCurrency,
                           ),
                           const SizedBox(height: 15),
                           IconPicker(onSelectIcon: cubit.setIcon),

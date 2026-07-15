@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/settings/settings_service.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
@@ -14,6 +16,7 @@ import 'package:finance_app/features/ai/view/month_detail_screen.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Home "Insights" section: a grid of at-a-glance cards. Everything numeric is
@@ -29,6 +32,7 @@ class AiDashboard extends StatefulWidget {
 
 class _AiDashboardState extends State<AiDashboard> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<dynamic>>? _currencySub;
 
   String? _symbol;
   double _income = 0, _expense = 0;
@@ -39,18 +43,33 @@ class _AiDashboardState extends State<AiDashboard> {
 
   double get _net => _income - _expense;
 
+  final _settings = getIt<SettingsService>().settings;
+
   @override
   void initState() {
     super.initState();
-    _loadSymbol();
+    _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen(
       _recompute,
     );
+    _settings.addListener(_onSettings);
   }
 
-  Future<void> _loadSymbol() async {
-    final base = await getIt<CurrencyRepository>().getBase();
-    if (mounted) setState(() => _symbol = base?.currencySymbol);
+  void _onSettings() {
+    if (mounted) setState(() {});
+  }
+
+  // Reactive base-currency symbol: updates live when the base currency changes
+  // (Home stays alive in an IndexedStack, so a one-shot read would go stale).
+  void _watchBaseSymbol() {
+    _currencySub = getIt<CurrencyRepository>().watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          if (mounted) setState(() => _symbol = c.currencySymbol);
+          return;
+        }
+      }
+    });
   }
 
   void _recompute(List<TransactionDetails> txns) {
@@ -100,6 +119,8 @@ class _AiDashboardState extends State<AiDashboard> {
   @override
   void dispose() {
     _sub?.cancel();
+    _currencySub?.cancel();
+    _settings.removeListener(_onSettings);
     super.dispose();
   }
 
@@ -122,7 +143,7 @@ class _AiDashboardState extends State<AiDashboard> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Insights',
+                  AppLocalizations.of(context).insights,
                   style: kTextStyle.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -203,7 +224,7 @@ class _CardShell extends StatelessWidget {
         height: 152,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(kRadiusLg),
           boxShadow: kCardShadow,
         ),
@@ -245,7 +266,6 @@ class _CardHead extends StatelessWidget {
             style: const TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -288,14 +308,14 @@ class _ThisMonthCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _CardHead(
+          _CardHead(
             icon: Icons.calendar_today_rounded,
             accent: AppColors.primary,
-            title: 'This month',
+            title: AppLocalizations.of(context).thisMonthTitle,
           ),
           const Spacer(),
           Text(
-            formatMoney(net, symbol),
+            AmountText.maskString(formatMoney(net, symbol)),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -304,9 +324,12 @@ class _ThisMonthCard extends StatelessWidget {
               color: net < 0 ? AppColors.negative : AppColors.positive,
             ),
           ),
-          const Text(
-            'net this month',
-            style: TextStyle(fontSize: 11.5, color: AppColors.textTertiary),
+          Text(
+            AppLocalizations.of(context).netThisMonth,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: AppColors.textTertiary,
+            ),
           ),
           const SizedBox(height: 8),
           ClipRRect(
@@ -327,7 +350,10 @@ class _ThisMonthCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'in ${formatMoney(income, symbol)} · out ${formatMoney(expense, symbol)}',
+            AppLocalizations.of(context).inOutSummary(
+              AmountText.maskString(formatMoney(income, symbol)),
+              AmountText.maskString(formatMoney(expense, symbol)),
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -367,7 +393,7 @@ class _TopCategoryCard extends StatelessWidget {
           _CardHead(
             icon: Icons.donut_large_rounded,
             accent: color,
-            title: 'Top category',
+            title: AppLocalizations.of(context).topCategory,
           ),
           const Spacer(),
           Text(
@@ -377,11 +403,12 @@ class _TopCategoryCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
             ),
           ),
           Text(
-            name != null ? formatMoney(amount, symbol) : 'no spend yet',
+            name != null
+                ? AmountText.maskString(formatMoney(amount, symbol))
+                : AppLocalizations.of(context).noSpendYet,
             style: const TextStyle(
               fontSize: 11.5,
               color: AppColors.textTertiary,
@@ -391,7 +418,9 @@ class _TopCategoryCard extends StatelessWidget {
           _ProgressBar(value: share, color: color),
           const SizedBox(height: 6),
           Text(
-            '${(share * 100).round()}% of spending',
+            AppLocalizations.of(
+              context,
+            ).percentOfSpending((share * 100).round()),
             style: const TextStyle(
               fontSize: 10.5,
               color: AppColors.textTertiary,
@@ -420,7 +449,8 @@ class _AiCoachCard extends StatelessWidget {
     // Locked → enticing mock; premium+cached → real score; premium+no cache →
     // prompt to run.
     final showScore = premium ? score : 78;
-    final showLabel = premium ? (label ?? 'Tap to analyze') : 'Overspending';
+    final l = AppLocalizations.of(context);
+    final showLabel = premium ? (label ?? l.tapToAnalyze) : l.overspending;
     return _CardShell(
       onTap: onOpen,
       child: Column(
@@ -429,7 +459,7 @@ class _AiCoachCard extends StatelessWidget {
           _CardHead(
             icon: Icons.psychology_rounded,
             accent: AppColors.primary,
-            title: 'AI Coach',
+            title: AppLocalizations.of(context).aiCoach,
             locked: !premium,
           ),
           const Spacer(),
@@ -452,13 +482,13 @@ class _AiCoachCard extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: premium
-                            ? AppColors.textPrimary
+                            ? Theme.of(context).colorScheme.onSurface
                             : AppColors.textTertiary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      premium ? 'health score' : 'Preview · unlock',
+                      premium ? l.healthScore : l.previewUnlock,
                       style: const TextStyle(
                         fontSize: 10.5,
                         color: AppColors.textTertiary,
@@ -470,11 +500,14 @@ class _AiCoachCard extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          const Text(
-            'AI read on your spending + a tip',
+          Text(
+            l.aiReadOnSpending,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -509,7 +542,7 @@ class _ForecastCard extends StatelessWidget {
           _CardHead(
             icon: Icons.trending_up_rounded,
             accent: AppColors.positive,
-            title: 'Forecast',
+            title: AppLocalizations.of(context).forecast,
             locked: !premium,
           ),
           const Spacer(),
@@ -523,7 +556,7 @@ class _ForecastCard extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  formatMoney(value, symbol),
+                  AmountText.maskString(formatMoney(value, symbol)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -535,15 +568,20 @@ class _ForecastCard extends StatelessWidget {
               ),
             ],
           ),
-          const Text(
-            'projected month-end',
-            style: TextStyle(fontSize: 11.5, color: AppColors.textTertiary),
+          Text(
+            AppLocalizations.of(context).projectedMonthEnd,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: AppColors.textTertiary,
+            ),
           ),
           const Spacer(),
           Text(
             premium
-                ? (positive ? 'On pace to stay positive' : 'Heading negative')
-                : 'Preview · unlock',
+                ? (positive
+                      ? AppLocalizations.of(context).onPaceToStayPositive
+                      : AppLocalizations.of(context).headingNegative)
+                : AppLocalizations.of(context).previewUnlock,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(

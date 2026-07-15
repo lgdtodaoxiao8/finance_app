@@ -91,8 +91,30 @@ class Tombstones extends Table {
       integer().named('deleted_at').clientDefault(nowMs)();
 }
 
+/// App-level user preferences as a synced key-value store. [key] is the stable
+/// per-user identity (no uuid needed); sync is keyed on (user_id, key) with
+/// last-write-wins on [updatedAt]. Values are text — JSON for structured
+/// settings. Adding a new preference is just a new key, nothing schema-level.
+@DataClassName('SettingRow')
+class Settings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text().nullable()();
+  IntColumn get updatedAt =>
+      integer().named('updated_at').clientDefault(nowMs)();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 @DriftDatabase(
-  tables: [Currencies, Accounts, Categories, Transactions, Tombstones],
+  tables: [
+    Currencies,
+    Accounts,
+    Categories,
+    Transactions,
+    Tombstones,
+    Settings,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
@@ -101,7 +123,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -121,6 +143,10 @@ class AppDatabase extends _$AppDatabase {
         await _backfillSyncMetadata(accounts);
         await _backfillSyncMetadata(categories);
         await _backfillSyncMetadata(transactions);
+      }
+      if (from < 3) {
+        // Synced app preferences (theme, language, week start, …).
+        await m.createTable(settings);
       }
     },
   );

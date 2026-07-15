@@ -1,3 +1,4 @@
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
 
@@ -176,7 +177,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Add one',
+                AppLocalizations.of(context).addOne,
                 style: kTextStyle.copyWith(
                   fontSize: 16,
                   color: Theme.of(context).colorScheme.primary,
@@ -295,7 +296,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                     Expanded(
                       child: Text(
                         isNull
-                            ? 'Have no items'
+                            ? AppLocalizations.of(context).haveNoItems
                             : selected[tablesValues[widget.tableType]![1]],
                         style: kTextStyle.copyWith(
                           fontSize: 16,

@@ -1,9 +1,11 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/view/insight_widgets.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Detail for the free "This month" card: income/expense/net, how it compares
@@ -83,7 +85,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('This month')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).thisMonthTitle)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -95,16 +97,20 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                   children: [
                     Expanded(
                       child: MiniStat(
-                        label: 'Income',
-                        value: formatMoney(_income, _symbol),
+                        label: AppLocalizations.of(context).income,
+                        value: AmountText.maskString(
+                          formatMoney(_income, _symbol),
+                        ),
                         color: AppColors.positive,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: MiniStat(
-                        label: 'Expense',
-                        value: formatMoney(_expense, _symbol),
+                        label: AppLocalizations.of(context).expense,
+                        value: AmountText.maskString(
+                          formatMoney(_expense, _symbol),
+                        ),
                         color: AppColors.negative,
                       ),
                     ),
@@ -114,7 +120,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                 _comparison(),
                 const SizedBox(height: 20),
                 Text(
-                  'Where it went',
+                  AppLocalizations.of(context).whereItWent,
                   style: kTextStyle.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -122,11 +128,11 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                 ),
                 const SizedBox(height: 8),
                 if (_categories.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
-                      'No expenses this month yet.',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      AppLocalizations.of(context).noExpensesThisMonthYet,
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   )
                 else
@@ -148,13 +154,14 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
       ),
       child: Column(
         children: [
-          const Text(
-            'Net this month',
-            style: TextStyle(fontSize: 13, color: AppColors.textTertiary),
+          Text(
+            AppLocalizations.of(context).netThisMonthTitle,
+            style: const TextStyle(fontSize: 13, color: AppColors.textTertiary),
           ),
           const SizedBox(height: 6),
-          Text(
-            formatMoney(_net, _symbol),
+          AmountText(
+            _net,
+            symbol: _symbol,
             style: TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w800,
@@ -165,8 +172,12 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
             const SizedBox(height: 6),
             Text(
               savingsRate >= 0
-                  ? 'You kept ${(savingsRate * 100).round()}% of your income.'
-                  : 'You spent ${(-savingsRate * 100).round()}% more than you earned.',
+                  ? AppLocalizations.of(
+                      context,
+                    ).youKeptPercent((savingsRate * 100).round())
+                  : AppLocalizations.of(
+                      context,
+                    ).youSpentMorePercent((-savingsRate * 100).round()),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 13.5,
@@ -203,8 +214,8 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
           Expanded(
             child: Text(
               up
-                  ? 'Spending is up ${pct.abs()}% vs last month'
-                  : 'Spending is down ${pct.abs()}% vs last month',
+                  ? AppLocalizations.of(context).spendingUpVsLast(pct.abs())
+                  : AppLocalizations.of(context).spendingDownVsLast(pct.abs()),
               style: const TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
@@ -213,7 +224,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
             ),
           ),
           Text(
-            '${up ? '+' : '−'}${formatMoney(diff.abs(), _symbol)}',
+            '${up ? '+' : '−'}${AmountText.maskString(formatMoney(diff.abs(), _symbol))}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,

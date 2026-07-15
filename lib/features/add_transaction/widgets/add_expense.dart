@@ -1,4 +1,5 @@
 import 'package:finance_app/features/add_transaction/widgets/widgets.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class AddExpense extends StatelessWidget {
@@ -37,7 +38,7 @@ class AddExpense extends StatelessWidget {
           tableType: Tables.account,
           currentValue: initialAccountId,
           values: accountsList,
-          label: 'From account',
+          label: AppLocalizations.of(context).fromAccount,
           onSelect: onSelectAccount,
         ),
 
@@ -51,7 +52,7 @@ class AddExpense extends StatelessWidget {
           onAddNew: addNewCategory,
           tableType: Tables.category,
           currentValue: initialCategoryId,
-          label: 'To category',
+          label: AppLocalizations.of(context).toCategory,
           values: categoriesList,
           onSelect: onSelectCategory,
         ),

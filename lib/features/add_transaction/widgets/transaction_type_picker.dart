@@ -1,3 +1,4 @@
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -13,20 +14,21 @@ class TransactionTypePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final tabs = <Map<String, dynamic>>[
       {
         'value': ['expense', 0],
-        'label': 'Expense',
+        'label': l.expense,
         'icon': Icons.arrow_upward_rounded,
       },
       {
         'value': ['income', 1],
-        'label': 'Income',
+        'label': l.income,
         'icon': Icons.arrow_downward_rounded,
       },
       {
         'value': ['transfer', 2],
-        'label': 'Transfer',
+        'label': l.transfer,
         'icon': Icons.swap_vert_rounded,
       },
     ];

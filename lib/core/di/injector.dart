@@ -1,5 +1,6 @@
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/preferences/app_preferences.dart';
+import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
@@ -28,6 +29,12 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<AppPreferences>()) {
     final prefs = await SharedPreferences.getInstance();
     getIt.registerSingleton<AppPreferences>(AppPreferences(prefs));
+  }
+
+  if (!getIt.isRegistered<SettingsService>()) {
+    getIt.registerSingleton<SettingsService>(
+      SettingsService(getIt<AppDatabase>()),
+    );
   }
 
   if (!getIt.isRegistered<SubscriptionService>()) {

@@ -1,4 +1,5 @@
 import 'package:finance_app/features/add_item/widgets/widgets.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 import 'package:finance_app/theme/theme.dart';
@@ -289,7 +290,7 @@ class _IconPickerState extends State<IconPicker> {
             child: Row(
               children: [
                 Text(
-                  'Icon Picker',
+                  AppLocalizations.of(context).iconPicker,
                   style: kTextStyle.copyWith(
                     fontSize: 16,
                     color: const Color(0xFF242528),
@@ -317,7 +318,7 @@ class _IconPickerState extends State<IconPicker> {
                         setState(() => _selectedCategory = value);
                       },
                       values: ['All', ...categorizedIcons.keys],
-                      label: 'Icons categories',
+                      label: AppLocalizations.of(context).iconCategories,
                     ),
                   ],
                 ),

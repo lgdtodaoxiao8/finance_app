@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -20,11 +22,29 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
   // Index 0 = Monday .. 6 = Sunday.
   List<double> _byDay = List.filled(7, 0);
 
-  static const _labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  static const _names = [
-    'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', //
-    'Fridays', 'Saturdays', 'Sundays',
+  /// Short weekday initials, index 0 = Monday.
+  List<String> _labels(AppLocalizations l) => [
+    l.weekdayShortMon,
+    l.weekdayShortTue,
+    l.weekdayShortWed,
+    l.weekdayShortThu,
+    l.weekdayShortFri,
+    l.weekdayShortSat,
+    l.weekdayShortSun,
   ];
+
+  /// Plural weekday phrases for the summary line ("on Mondays"), index 0 = Mon.
+  List<String> _names(AppLocalizations l) => [
+    l.weekdayMondays,
+    l.weekdayTuesdays,
+    l.weekdayWednesdays,
+    l.weekdayThursdays,
+    l.weekdayFridays,
+    l.weekdaySaturdays,
+    l.weekdaySundays,
+  ];
+
+  final _settings = getIt<SettingsService>().settings;
 
   @override
   void initState() {
@@ -32,7 +52,18 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen(
       _recompute,
     );
+    // Reorder live when the "start of week" preference changes.
+    _settings.addListener(_onSettings);
   }
+
+  void _onSettings() {
+    if (mounted) setState(() {});
+  }
+
+  /// Display order of day indices (0=Mon..6=Sun) honouring the week-start pref.
+  List<int> get _order => _settings.value.weekStartsMonday
+      ? const [0, 1, 2, 3, 4, 5, 6]
+      : const [6, 0, 1, 2, 3, 4, 5];
 
   void _recompute(List<TransactionDetails> txns) {
     final now = DateTime.now();
@@ -48,6 +79,7 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
   @override
   void dispose() {
     _sub?.cancel();
+    _settings.removeListener(_onSettings);
     super.dispose();
   }
 
@@ -61,12 +93,14 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final labels = _labels(l);
     final max = _byDay.reduce((a, b) => a > b ? a : b);
     final total = _byDay.fold<double>(0, (a, b) => a + b);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -74,7 +108,7 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'When you spend',
+            l.whenYouSpend,
             style: kTextStyle.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -83,8 +117,8 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
           const SizedBox(height: 4),
           Text(
             total == 0
-                ? 'No spending this month yet'
-                : 'You spend the most on ${_names[_peak]}',
+                ? l.noSpendingThisMonth
+                : l.youSpendMostOn(_names(l)[_peak]),
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,
@@ -96,7 +130,7 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                for (var i = 0; i < 7; i++)
+                for (final i in _order)
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -113,7 +147,7 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          _labels[i],
+                          labels[i],
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: i == _peak

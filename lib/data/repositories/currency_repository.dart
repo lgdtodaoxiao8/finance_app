@@ -24,6 +24,46 @@ abstract class CurrencyRepository {
   Future<void> makeBase(int id);
 
   Stream<List<Currency>> watchAll();
+
+  /// Snapshot of the base-currency code + every currency's rate-to-base, for
+  /// cross-device sync (matched by currency code, which is deterministic seed).
+  Future<CurrencyConfig> configSnapshot();
+
+  /// Applies a synced [config] by writing each rate + the base flag directly.
+  /// No rebasing math — the rates are already normalized — so it's idempotent
+  /// and safe to re-apply.
+  Future<void> applyConfig(CurrencyConfig config);
+}
+
+/// The synced currency state: which code is base + absolute rate-to-base by
+/// code. Serialized into the `currency_config` preference.
+class CurrencyConfig {
+  const CurrencyConfig({required this.baseCode, required this.rates});
+
+  final String? baseCode;
+  final Map<String, double> rates;
+
+  Map<String, dynamic> toJson() => {'base': baseCode, 'rates': rates};
+
+  factory CurrencyConfig.fromJson(Map<String, dynamic> json) => CurrencyConfig(
+    baseCode: json['base'] as String?,
+    rates: {
+      for (final e in (json['rates'] as Map? ?? {}).entries)
+        e.key as String: (e.value as num).toDouble(),
+    },
+  );
+
+  /// Equal ignoring float noise (rates compared to 6 decimals).
+  bool matches(CurrencyConfig other) {
+    if (baseCode != other.baseCode) return false;
+    if (rates.length != other.rates.length) return false;
+    for (final e in rates.entries) {
+      final o = other.rates[e.key];
+      if (o == null) return false;
+      if ((e.value - o).abs() > 1e-6) return false;
+    }
+    return true;
+  }
 }
 
 class DriftCurrencyRepository implements CurrencyRepository {
@@ -110,9 +150,11 @@ class DriftCurrencyRepository implements CurrencyRepository {
         );
       }
 
-      await _db.update(_db.currencies).write(
-        const CurrenciesCompanion(isBase: Value(false)),
-      );
+      await _db
+          .update(_db.currencies)
+          .write(
+            const CurrenciesCompanion(isBase: Value(false)),
+          );
       await (_db.update(_db.currencies)..where((c) => c.id.equals(id))).write(
         const CurrenciesCompanion(isBase: Value(true)),
       );
@@ -121,8 +163,52 @@ class DriftCurrencyRepository implements CurrencyRepository {
 
   @override
   Stream<List<Currency>> watchAll() {
-    return _db.select(_db.currencies).watch().map(
-      (rows) => rows.map(_toDomain).toList(),
-    );
+    return _db
+        .select(_db.currencies)
+        .watch()
+        .map(
+          (rows) => rows.map(_toDomain).toList(),
+        );
+  }
+
+  @override
+  Future<CurrencyConfig> configSnapshot() async {
+    final rows = await _db.select(_db.currencies).get();
+    String? baseCode;
+    final rates = <String, double>{};
+    for (final r in rows) {
+      if (r.isBase) baseCode = r.code;
+      if (r.rateToBase != null && r.code != null) {
+        rates[r.code!] = r.rateToBase!;
+      }
+    }
+    return CurrencyConfig(baseCode: baseCode, rates: rates);
+  }
+
+  @override
+  Future<void> applyConfig(CurrencyConfig config) async {
+    await _db.transaction(() async {
+      for (final entry in config.rates.entries) {
+        await (_db.update(
+          _db.currencies,
+        )..where((c) => c.code.equals(entry.key))).write(
+          CurrenciesCompanion(rateToBase: Value(entry.value)),
+        );
+      }
+      // Reset every base flag, then set the one from the synced config.
+      await _db
+          .update(
+            _db.currencies,
+          )
+          .write(const CurrenciesCompanion(isBase: Value(false)));
+      final baseCode = config.baseCode;
+      if (baseCode != null) {
+        await (_db.update(
+          _db.currencies,
+        )..where((c) => c.code.equals(baseCode))).write(
+          const CurrenciesCompanion(isBase: Value(true)),
+        );
+      }
+    });
   }
 }

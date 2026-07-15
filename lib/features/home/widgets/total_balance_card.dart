@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/accounts/view/account_balances_screen.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -20,13 +21,14 @@ class TotalBalanceCard extends StatefulWidget {
 
 class _TotalBalanceCardState extends State<TotalBalanceCard> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<dynamic>>? _currencySub;
   String? _symbol;
   double _total = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadSymbol();
+    _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen((txns) {
       // Net worth = all-time income − expense (transfers net to zero).
       var total = 0.0;
@@ -38,14 +40,25 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
     });
   }
 
-  Future<void> _loadSymbol() async {
-    final base = await getIt<CurrencyRepository>().getBase();
-    if (mounted) setState(() => _symbol = base?.currencySymbol);
+  // Reactive base-currency symbol: updates live when the user changes their
+  // base currency. Home stays alive in an IndexedStack, so a one-shot read in
+  // initState would go stale (amounts re-convert via the tx stream, but the
+  // symbol wouldn't).
+  void _watchBaseSymbol() {
+    _currencySub = getIt<CurrencyRepository>().watchAll().listen((currencies) {
+      for (final c in currencies) {
+        if (c.isBaseCurrency) {
+          if (mounted) setState(() => _symbol = c.currencySymbol);
+          return;
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _currencySub?.cancel();
     super.dispose();
   }
 
@@ -61,7 +74,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         decoration: BoxDecoration(
           // White like the other tiles; a thin border still hints it's tappable.
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
         ),
@@ -92,7 +105,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Total balance',
+              AppLocalizations.of(context).totalBalance,
               style: kTextStyle.copyWith(
                 color: AppColors.textSecondary,
                 fontSize: 12,
@@ -102,8 +115,9 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
-              child: Text(
-                formatMoney(_total, _symbol),
+              child: AmountText(
+                _total,
+                symbol: _symbol,
                 style: kTextStyle.copyWith(
                   color: valueColor,
                   fontSize: 15,

@@ -3,6 +3,7 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/add_item/cubit/add_currency_cubit.dart';
 import 'package:finance_app/features/add_item/widgets/widgets.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,8 +33,8 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
 
   String? _validateRate(String text) {
     final value = _parseRate(text);
-    if (value == null) return 'Must be a number';
-    if (value <= 0) return 'Must be more than 0';
+    if (value == null) return AppLocalizations.of(context).mustBeNumber;
+    if (value <= 0) return AppLocalizations.of(context).mustBeMoreThanZero;
     return null;
   }
 
@@ -46,7 +47,7 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
   }
 
   String _counterText(AddCurrencyState state) {
-    if (state.rate <= 0) return 'Exchange rate to base cur.';
+    if (state.rate <= 0) return AppLocalizations.of(context).exchangeRateToBase;
     final rateText = state.rate % 1 == 0
         ? state.rate.toInt().toString()
         : state.rate.toString();
@@ -65,7 +66,7 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Something went wrong with the adding new currency: '
+                '${AppLocalizations.of(context).somethingWentWrong}: '
                 '${state.error}',
                 style: kTextStyle.copyWith(overflow: TextOverflow.visible),
               ),
@@ -83,7 +84,9 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
             backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
             title: Text(
-              state.baseIsNotSet ? 'Set Base Currency' : 'New Currency',
+              state.baseIsNotSet
+                  ? AppLocalizations.of(context).setBaseCurrencyTitle
+                  : AppLocalizations.of(context).newCurrencyTitle,
               style: kTextStyle.copyWith(
                 fontSize: 22,
                 color: const Color(0xFF242528),
@@ -99,10 +102,12 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
               child: state.status == AddCurrencyStatus.loading
                   ? const Center(child: CircularProgressIndicator())
                   : state.status == AddCurrencyStatus.error
-                  ? const Center(
+                  ? Center(
                       child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Text('Something went wrong'),
+                        padding: const EdgeInsets.all(10),
+                        child: Text(
+                          AppLocalizations.of(context).somethingWentWrong,
+                        ),
                       ),
                     )
                   : Column(
@@ -112,14 +117,14 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
                           currentId: state.selectedId,
                           onSelect: cubit.selectCurrency,
                           values: [for (final c in state.currencies) c.toMap()],
-                          label: 'All currencies',
+                          label: AppLocalizations.of(context).allCurrencies,
                         ),
                         const SizedBox(height: 15),
                         if (!state.baseIsNotSet) ...[
                           CustomTextField(
                             key: _rateKey,
-                            hint: 'e.g. 1.25 or 0.73',
-                            label: 'Rate to base',
+                            hint: AppLocalizations.of(context).rateHint,
+                            label: AppLocalizations.of(context).rateToBase,
                             textPadding: const EdgeInsets.symmetric(
                               horizontal: 10,
                             ),
@@ -151,7 +156,10 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
                               onPressed: state.sending
                                   ? null
                                   : () => Navigator.of(context).pop(),
-                              child: Text('Cancel', style: kTextStyle.copyWith()),
+                              child: Text(
+                                AppLocalizations.of(context).cancel,
+                                style: kTextStyle.copyWith(),
+                              ),
                             ),
                             const SizedBox(width: 10),
                             ElevatedButton(
@@ -175,7 +183,10 @@ class _AddCurrencyViewState extends State<_AddCurrencyView> {
                                         color: Colors.white,
                                       ),
                                     )
-                                  : Text('Add', style: kTextStyle.copyWith()),
+                                  : Text(
+                                      AppLocalizations.of(context).add,
+                                      style: kTextStyle.copyWith(),
+                                    ),
                             ),
                           ],
                         ),

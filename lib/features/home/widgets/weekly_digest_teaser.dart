@@ -3,6 +3,7 @@ import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/features/ai/view/ai_insights_screen.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -49,23 +50,22 @@ class WeeklyDigestTeaser extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your weekly AI digest',
-                    style: TextStyle(
+                    AppLocalizations.of(context).weeklyDigestTitle,
+                    style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 3),
+                  const SizedBox(height: 3),
                   Text(
-                    'Where your money went, what to change, and your health '
-                    'score — in plain language.',
-                    style: TextStyle(
+                    AppLocalizations.of(context).weeklyDigestSubtitle,
+                    style: const TextStyle(
                       fontSize: 12.5,
                       height: 1.35,
                       color: Colors.white70,

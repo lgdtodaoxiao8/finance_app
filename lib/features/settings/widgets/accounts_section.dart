@@ -3,6 +3,7 @@ import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/features/settings/cubit/accounts_cubit.dart';
 import 'package:finance_app/features/settings/cubit/manage_status.dart';
 import 'package:finance_app/features/settings/widgets/manage_section.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,10 +34,10 @@ class _AccountsView extends StatelessWidget {
       },
       builder: (context, state) {
         return ManageSection(
-          title: 'Accounts',
+          title: AppLocalizations.of(context).accounts,
           onAdd: () => Navigator.of(context).pushNamed('/add-account'),
           loading: state.status == ManageStatus.loading,
-          emptyLabel: 'No accounts yet',
+          emptyLabel: AppLocalizations.of(context).noAccountsYet,
           isEmpty: state.accounts.isEmpty,
           children: [
             for (final account in state.accounts)

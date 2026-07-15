@@ -1,6 +1,7 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Email + password sign in / sign up. On success it pops back to wherever it
@@ -33,11 +34,11 @@ class _AuthScreenState extends State<AuthScreen> {
     final email = _email.text.trim();
     final password = _password.text;
     if (email.isEmpty || !email.contains('@')) {
-      setState(() => _error = 'Enter a valid email.');
+      setState(() => _error = AppLocalizations.of(context).enterValidEmail);
       return;
     }
     if (password.length < 6) {
-      setState(() => _error = 'Password must be at least 6 characters.');
+      setState(() => _error = AppLocalizations.of(context).passwordMin6);
       return;
     }
 
@@ -54,9 +55,19 @@ class _AuthScreenState extends State<AuthScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } on AuthFailure catch (e) {
-      setState(() => _error = e.message);
+      // Provider messages come from the server in English; only our own
+      // "not configured" case has a translation.
+      setState(
+        () => _error = e.isNotConfigured
+            ? AppLocalizations.of(context).authNotConfigured
+            : e.message,
+      );
     } catch (e) {
-      setState(() => _error = 'Something went wrong. $e');
+      setState(
+        () => _error = AppLocalizations.of(
+          context,
+        ).somethingWentWrongDetail('$e'),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -65,12 +76,20 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isSignUp ? 'Create account' : 'Sign in')),
+      appBar: AppBar(
+        title: Text(
+          _isSignUp
+              ? AppLocalizations.of(context).createAccount
+              : AppLocalizations.of(context).signIn,
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
         children: [
           Text(
-            _isSignUp ? 'Create your account' : 'Welcome back',
+            _isSignUp
+                ? AppLocalizations.of(context).createYourAccount
+                : AppLocalizations.of(context).welcomeBack,
             style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
@@ -78,9 +97,9 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Sync your data across phone and web, and keep it safely backed up.',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context).authSubtitle,
+            style: const TextStyle(
               fontSize: 14,
               height: 1.4,
               color: AppColors.textSecondary,
@@ -89,15 +108,15 @@ class _AuthScreenState extends State<AuthScreen> {
           const SizedBox(height: 24),
           _Field(
             controller: _email,
-            hint: 'you@email.com',
-            label: 'Email',
+            hint: AppLocalizations.of(context).emailHint,
+            label: AppLocalizations.of(context).email,
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 14),
           _Field(
             controller: _password,
             hint: '••••••••',
-            label: 'Password',
+            label: AppLocalizations.of(context).password,
             obscure: true,
           ),
           if (_error != null) ...[
@@ -122,7 +141,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     )
                   : Text(
-                      _isSignUp ? 'Create account' : 'Sign in',
+                      _isSignUp
+                          ? AppLocalizations.of(context).createAccount
+                          : AppLocalizations.of(context).signIn,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -141,8 +162,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     }),
               child: Text(
                 _isSignUp
-                    ? 'Already have an account? Sign in'
-                    : 'New here? Create an account',
+                    ? AppLocalizations.of(context).alreadyHaveAccount
+                    : AppLocalizations.of(context).newHereCreate,
               ),
             ),
           ),

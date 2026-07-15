@@ -1,11 +1,12 @@
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/core/widgets/empty_state.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Net worth broken down per account, reached by tapping the Total balance
@@ -76,15 +77,15 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Accounts')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).accounts)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _accounts.isEmpty
-          ? const Center(
+          ? Center(
               child: AppEmptyState(
                 icon: Icons.account_balance_wallet_outlined,
-                title: 'No accounts yet',
-                subtitle: 'Add an account in Settings to track balances',
+                title: AppLocalizations.of(context).noAccountsYet,
+                subtitle: AppLocalizations.of(context).addAccountInSettings,
               ),
             )
           : ListView(
@@ -93,7 +94,7 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
                 _hero(),
                 const SizedBox(height: 20),
                 Text(
-                  'Your accounts',
+                  AppLocalizations.of(context).yourAccounts,
                   style: kTextStyle.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -121,13 +122,14 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
       ),
       child: Column(
         children: [
-          const Text(
-            'Total balance',
-            style: TextStyle(fontSize: 13, color: Colors.white70),
+          Text(
+            AppLocalizations.of(context).totalBalance,
+            style: const TextStyle(fontSize: 13, color: Colors.white70),
           ),
           const SizedBox(height: 6),
-          Text(
-            formatMoney(_total, _symbol),
+          AmountText(
+            _total,
+            symbol: _symbol,
             style: const TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w800,
@@ -136,8 +138,7 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'across ${_accounts.length} '
-            '${_accounts.length == 1 ? 'account' : 'accounts'}',
+            AppLocalizations.of(context).acrossNAccounts(_accounts.length),
             style: const TextStyle(fontSize: 13, color: Colors.white70),
           ),
         ],
@@ -155,7 +156,7 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -181,16 +182,18 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
                   style: const TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              Text(
-                formatMoney(a.balance, _symbol),
+              AmountText(
+                a.balance,
+                symbol: _symbol,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: negative ? AppColors.negative : AppColors.textPrimary,
+                  color: negative
+                      ? AppColors.negative
+                      : Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],

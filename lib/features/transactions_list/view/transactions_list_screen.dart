@@ -1,11 +1,12 @@
 import 'package:finance_app/core/di/injector.dart';
-import 'package:finance_app/core/format.dart';
+import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/core/widgets/empty_state.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/transactions_list/cubit/transactions_list_cubit.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,13 +48,11 @@ class _TransactionsListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Transactions', style: kTextStyle.copyWith()),
-        backgroundColor: AppColors.background,
-        centerTitle: true,
-        scrolledUnderElevation: 0,
+        title: Text(l.transactionsTitle, style: kTextStyle.copyWith()),
         actions: [
           IconButton(
             // The list refreshes automatically (reactive stream) once the add
@@ -70,10 +69,10 @@ class _TransactionsListView extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (state.status == TransactionsStatus.error) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(10),
-                child: Text('Something went wrong'),
+                padding: const EdgeInsets.all(10),
+                child: Text(l.somethingWentWrong),
               ),
             );
           }
@@ -97,7 +96,7 @@ class _TransactionsListView extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       _PeriodSummary(
-                        label: formatAuto(state.range, state.preset),
+                        label: formatAuto(state.range, state.preset, l, locale),
                         income: state.totals['income'] ?? 0,
                         expense: state.totals['expense'] ?? 0,
                         baseSymbol: state.baseSymbol ?? '',
@@ -107,12 +106,12 @@ class _TransactionsListView extends StatelessWidget {
                 ),
               ),
               if (groups.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   hasScrollBody: false,
                   child: AppEmptyState(
                     icon: Icons.receipt_long_rounded,
-                    title: 'No transactions',
-                    subtitle: 'Nothing in this period yet',
+                    title: l.noTransactions,
+                    subtitle: l.nothingInPeriod,
                   ),
                 )
               else
@@ -143,15 +142,18 @@ class _PresetChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Wrap(
       spacing: 8,
       children: PeriodPreset.values.map((p) {
         final selected = p == preset;
         return ChoiceChip(
           label: Text(
-            periodChipLabels[p]!,
+            periodChipLabel(l, p),
             style: kTextStyle.copyWith(
-              color: selected ? AppColors.primary : AppColors.textPrimary,
+              color: selected
+                  ? AppColors.primary
+                  : Theme.of(context).colorScheme.onSurface,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
@@ -200,16 +202,20 @@ class _PeriodSummary extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              '+${formatMoney(income, baseSymbol)}',
+            AmountText(
+              income,
+              symbol: baseSymbol,
+              signed: true,
               style: kTextStyle.copyWith(
                 color: AppColors.positive,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            Text(
-              '-${formatMoney(expense, baseSymbol)}',
+            AmountText(
+              -expense,
+              symbol: baseSymbol,
+              signed: true,
               style: kTextStyle.copyWith(
                 color: AppColors.negative,
                 fontSize: 14,
@@ -234,7 +240,7 @@ class _GroupCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(kRadiusLg),
           boxShadow: kCardShadow,
         ),
@@ -281,12 +287,7 @@ class _TransactionTile extends StatelessWidget {
         ? AppColors.negative
         : t.isIncome
         ? AppColors.positive
-        : AppColors.textPrimary;
-    final String amountStr = t.isExpense
-        ? '-${formatMoney(t.amount, code)}'
-        : t.isIncome
-        ? '+${formatMoney(t.amount, code)}'
-        : formatMoney(t.amount, code);
+        : Theme.of(context).colorScheme.onSurface;
     final time =
         '${t.date.hour.toString().padLeft(2, '0')}:'
         '${t.date.minute.toString().padLeft(2, '0')}';
@@ -342,8 +343,10 @@ class _TransactionTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  amountStr,
+                AmountText(
+                  t.isExpense ? -t.amount : t.amount,
+                  symbol: code,
+                  signed: !t.isTransfer,
                   style: kTextStyle.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,

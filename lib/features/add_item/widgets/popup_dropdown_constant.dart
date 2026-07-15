@@ -1,3 +1,4 @@
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
 
@@ -232,7 +233,7 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                       const Spacer(), //make centering by stack (ask how do it)
                       if (isNullValues)
                         Text(
-                          'Have no items',
+                          AppLocalizations.of(context).haveNoItems,
                           style: kTextStyle.copyWith(
                             fontSize: 16,
                             color: const Color(0xFF242528),
@@ -243,7 +244,7 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                         )
                       else if (isNullCurrentValue)
                         Text(
-                          'Choose the base currency',
+                          AppLocalizations.of(context).chooseBaseCurrency,
                           style: kTextStyle.copyWith(
                             fontSize: 16,
                             color: const Color(0xFF242528),

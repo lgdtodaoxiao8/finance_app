@@ -1,4 +1,6 @@
 import 'package:finance_app/features/root_node/widgets/navigation_bar_button.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
+import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
 class NavigationBar extends StatelessWidget {
@@ -14,7 +16,14 @@ class NavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    // The pill stays dark in both themes (its buttons use fixed light-on-dark
+    // colours). In dark mode use an elevated dark so it lifts off the near-black
+    // background.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pillColor = isDark
+        ? AppColorsDark.surfaceHigh
+        : AppColors.textPrimary;
+    final l = AppLocalizations.of(context);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -25,15 +34,15 @@ class NavigationBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: colorScheme.onSurface,
+          color: pillColor,
           borderRadius: BorderRadius.circular(30),
-        ), //secondary
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             NavigationBarButton(
               isActive: currentIndex == 0,
-              label: 'Home',
+              label: l.navHome,
               icon: Icons.home_rounded,
               onTap: () {
                 onChanged(0);
@@ -41,7 +50,7 @@ class NavigationBar extends StatelessWidget {
             ),
             NavigationBarButton(
               isActive: currentIndex == 1,
-              label: 'Transactions',
+              label: l.navTransactions,
               icon: Icons.swap_vert_rounded,
               onTap: () {
                 onChanged(1);
@@ -49,7 +58,7 @@ class NavigationBar extends StatelessWidget {
             ),
             NavigationBarButton(
               isActive: currentIndex == 2,
-              label: 'Settings',
+              label: l.navSettings,
               icon: Icons.settings_rounded,
               onTap: () {
                 onChanged(2);

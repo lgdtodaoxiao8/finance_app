@@ -121,8 +121,118 @@ final ThemeData themeFromSeed = ThemeData(
 );
 
 /// Base text style kept for backwards compatibility with existing widgets.
-/// Now backed by Manrope + the primary text colour.
+/// Manrope with NO baked-in colour, so text inherits the ambient theme colour
+/// (dark-on-light in light mode, light-on-dark in dark mode). Widgets that need
+/// a specific colour still override via `.copyWith(color: …)`.
 final TextStyle kTextStyle = GoogleFonts.manrope(
-  color: AppColors.textPrimary,
   textStyle: const TextStyle(overflow: TextOverflow.ellipsis),
+);
+
+// --------------------------------------------------------------------- dark --
+// Dark colour tokens. Widgets that already read Theme.of(context) / Material
+// component themes adapt automatically; ones with hardcoded light colours are
+// migrated to these tokens incrementally.
+class AppColorsDark {
+  AppColorsDark._();
+
+  static const background = Color(0xFF0E1116);
+  static const surface = Color(0xFF181C22);
+  static const surfaceHigh = Color(0xFF20252E);
+
+  static const textPrimary = Color(0xFFF2F4F7);
+  static const textSecondary = Color(0xFF9BA3AF);
+  static const textTertiary = Color(0xFF6B7480);
+
+  static const divider = Color(0xFF262B33);
+}
+
+final ColorScheme _schemeDark =
+    ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.dark,
+    ).copyWith(
+      primary: AppColors.primary,
+      onPrimary: AppColors.onPrimary,
+      primaryFixedDim: AppColors.primaryDark,
+      surface: AppColorsDark.surface,
+      onSurface: AppColorsDark.textPrimary,
+      error: AppColors.negative,
+    );
+
+final TextTheme _textThemeDark = GoogleFonts.manropeTextTheme().apply(
+  bodyColor: AppColorsDark.textPrimary,
+  displayColor: AppColorsDark.textPrimary,
+);
+
+final ThemeData darkThemeFromSeed = ThemeData(
+  useMaterial3: true,
+  brightness: Brightness.dark,
+  colorScheme: _schemeDark,
+  scaffoldBackgroundColor: AppColorsDark.background,
+  textTheme: _textThemeDark,
+  dividerColor: AppColorsDark.divider,
+  splashFactory: InkSparkle.splashFactory,
+  appBarTheme: const AppBarTheme(
+    backgroundColor: AppColorsDark.background,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    centerTitle: true,
+    titleTextStyle: TextStyle(
+      color: AppColorsDark.textPrimary,
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+    ),
+    iconTheme: IconThemeData(color: AppColorsDark.textPrimary),
+  ),
+  cardColor: AppColorsDark.surface,
+  chipTheme: ChipThemeData(
+    backgroundColor: AppColorsDark.surfaceHigh,
+    selectedColor: const Color(0x333B82F6),
+    disabledColor: AppColorsDark.surface,
+    side: const BorderSide(color: AppColorsDark.divider),
+    showCheckmark: false,
+    labelStyle: _textThemeDark.labelLarge,
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(kRadiusSm),
+    ),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.onPrimary,
+      elevation: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      textStyle: _textThemeDark.labelLarge?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kRadiusSm),
+      ),
+    ),
+  ),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(
+      foregroundColor: AppColorsDark.textSecondary,
+      textStyle: _textThemeDark.labelLarge,
+    ),
+  ),
+  snackBarTheme: SnackBarThemeData(
+    behavior: SnackBarBehavior.floating,
+    backgroundColor: AppColorsDark.surfaceHigh,
+    contentTextStyle: _textThemeDark.bodyMedium?.copyWith(
+      color: AppColorsDark.textPrimary,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(kRadiusSm),
+    ),
+  ),
+  dialogTheme: DialogThemeData(
+    backgroundColor: AppColorsDark.surface,
+    surfaceTintColor: Colors.transparent,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(kRadiusMd),
+    ),
+  ),
 );

@@ -105,6 +105,23 @@ class SyncService {
     }
 
     await _pushTombstones();
+    await _pushSettings();
+  }
+
+  /// Pushes app preferences (theme, language, base currency, …). Keyed on
+  /// (user_id, key) so it upserts idempotently; LWW on `updated_at`.
+  Future<void> _pushSettings() async {
+    final rows = await _db.select(_db.settings).get();
+    if (rows.isEmpty) return;
+    await _client.from('settings').upsert([
+      for (final s in rows)
+        {
+          'user_id': _userId,
+          'key': s.key,
+          'value': s.value,
+          'updated_at': s.updatedAt,
+        },
+    ], onConflict: 'user_id,key');
   }
 
   /// Marks deleted rows `deleted=true` remotely (so other devices learn of the
@@ -130,6 +147,31 @@ class SyncService {
     await _pullCategories();
     await _pullAccounts();
     await _pullTransactions();
+    await _pullSettings();
+  }
+
+  /// Pulls app preferences, last-write-wins on `updated_at`. Writing them back
+  /// into the local `settings` table makes [SettingsService] emit, so theme /
+  /// language / etc. update live when another device changed them.
+  Future<void> _pullSettings() async {
+    final rows = await _client.from('settings').select();
+    for (final r in rows) {
+      final key = r['key'] as String;
+      final remoteUpdated = (r['updated_at'] as num?)?.toInt() ?? 0;
+      final existing = await (_db.select(
+        _db.settings,
+      )..where((s) => s.key.equals(key))).getSingleOrNull();
+      if (existing != null && existing.updatedAt >= remoteUpdated) continue;
+      await _db
+          .into(_db.settings)
+          .insertOnConflictUpdate(
+            SettingsCompanion.insert(
+              key: key,
+              value: Value(r['value'] as String?),
+              updatedAt: Value(remoteUpdated),
+            ),
+          );
+    }
   }
 
   Future<void> _pullCategories() async {

@@ -5,12 +5,38 @@ import 'package:finance_app/core/preferences/app_preferences.dart';
 import 'package:finance_app/features/ai/data/ai_insight.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// User-facing AI problem (backend off, network, model error).
+/// What went wrong, so the UI can show a localised message. [AiFailure.detail]
+/// carries the raw provider text for [AiFailureKind.unknown].
+enum AiFailureKind {
+  /// Supabase/AI isn't configured in [AppConfig] yet.
+  backendOff,
+
+  /// The OpenAI account has no credit (429 / insufficient_quota).
+  noCredit,
+
+  /// The server's OpenAI key is rejected (401).
+  invalidKey,
+
+  /// OPENAI_API_KEY isn't set in Supabase secrets.
+  keyNotSet,
+
+  /// The function returned something we couldn't parse.
+  badResponse,
+
+  /// Anything else — show [AiFailure.detail].
+  unknown,
+}
+
+/// User-facing AI problem (backend off, network, model error). Localised at the
+/// display site: the service has no BuildContext.
 class AiFailure implements Exception {
-  AiFailure(this.message);
-  final String message;
+  AiFailure(this.kind, [this.detail]);
+
+  final AiFailureKind kind;
+  final String? detail;
+
   @override
-  String toString() => message;
+  String toString() => detail ?? kind.name;
 }
 
 /// Calls the `ai-insights` Supabase Edge Function (which holds the OpenAI key
@@ -45,6 +71,9 @@ class AiService {
   /// A stable fingerprint of the spending that matters for insights — income,
   /// expense and per-category totals (rounded). Recent-list order/dates are
   /// deliberately excluded so trivial changes don't invalidate the cache.
+  ///
+  /// The language is part of it: the coach answers in the user's language, so
+  /// switching language must fetch fresh text rather than reuse the cached one.
   String _signature(Map<String, dynamic> s) {
     final cats = (s['byCategory'] as List?) ?? const [];
     final catSig =
@@ -52,7 +81,7 @@ class AiService {
             .map((c) => '${c['name']}:${(c['amount'] as num?)?.round()}')
             .toList()
           ..sort();
-    return '${(s['income'] as num?)?.round()}|'
+    return '${s['language']}|${(s['income'] as num?)?.round()}|'
         '${(s['expense'] as num?)?.round()}|${catSig.join(',')}';
   }
 
@@ -60,9 +89,7 @@ class AiService {
     Map<String, dynamic> summary, {
     bool force = false,
   }) async {
-    if (!isAvailable) {
-      throw AiFailure('AI needs the backend configured (Supabase + key).');
-    }
+    if (!isAvailable) throw AiFailure(AiFailureKind.backendOff);
 
     final signature = _signature(summary);
     if (!force && signature == _prefs.aiInsightsSignature) {
@@ -77,10 +104,13 @@ class AiService {
       );
       final data = res.data;
       if (data is Map && data['error'] != null) {
-        throw AiFailure(_friendly(data['error'].toString()));
+        throw AiFailure(
+          _classify(data['error'].toString()),
+          '${data['error']}',
+        );
       }
       if (data is! Map<String, dynamic>) {
-        throw AiFailure('Unexpected AI response.');
+        throw AiFailure(AiFailureKind.badResponse);
       }
       await _prefs.setAiInsightsCache(signature, jsonEncode(data));
       return AiInsightsResult.fromJson(data);
@@ -88,25 +118,21 @@ class AiService {
       final details = e.details;
       final raw = (details is Map && details['error'] != null)
           ? details['error'].toString()
-          : 'AI request failed (${e.status}).';
-      throw AiFailure(_friendly(raw));
+          : 'status ${e.status}';
+      throw AiFailure(_classify(raw), raw);
     }
   }
 
-  /// Maps common backend errors to plain, actionable messages.
-  String _friendly(String raw) {
+  /// Maps common provider errors onto a [AiFailureKind] the UI can localise.
+  AiFailureKind _classify(String raw) {
     final lower = raw.toLowerCase();
     if (lower.contains('insufficient_quota') || lower.contains('429')) {
-      return 'The AI provider is out of credit. Add billing at '
-          'platform.openai.com → Billing, then try again.';
+      return AiFailureKind.noCredit;
     }
     if (lower.contains('401') || lower.contains('invalid api key')) {
-      return 'The AI key on the server is invalid. Re-set it with '
-          '`supabase secrets set OPENAI_API_KEY=...`.';
+      return AiFailureKind.invalidKey;
     }
-    if (lower.contains('not set on the server')) {
-      return 'AI isn\'t set up yet: set OPENAI_API_KEY in Supabase secrets.';
-    }
-    return raw;
+    if (lower.contains('not set on the server')) return AiFailureKind.keyNotSet;
+    return AiFailureKind.unknown;
   }
 }

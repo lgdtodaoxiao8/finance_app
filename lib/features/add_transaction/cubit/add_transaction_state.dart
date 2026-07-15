@@ -2,6 +2,15 @@ part of 'add_transaction_cubit.dart';
 
 enum AddTransactionStatus { loading, ready, error }
 
+/// Why the current selection can't be saved yet. Localised at the display site.
+enum TransactionBlocker {
+  noAccount,
+  noCategory,
+  noCurrency,
+  noSecondAccount,
+  sameAccounts,
+}
+
 class AddTransactionState extends Equatable {
   const AddTransactionState({
     this.status = AddTransactionStatus.loading,
@@ -56,16 +65,17 @@ class AddTransactionState extends Equatable {
   bool get needsCategory => categories.isEmpty;
   bool get isReady => !needsBaseCurrency && !needsAccount && !needsCategory;
 
-  /// A blocking validation message for the current selection, or null if the
-  /// transaction can be saved. Recomputed from state (never sticky).
-  String? get validationError {
-    if (accounts.isEmpty) return 'You have not added any account';
-    if (categories.isEmpty) return 'You have not added any category';
-    if (currencies.isEmpty) return 'You have not added any currency';
+  /// What blocks saving the current selection, or null if it can be saved.
+  /// Recomputed from state (never sticky). The UI turns it into a localised
+  /// message — the state layer has no BuildContext.
+  TransactionBlocker? get validationError {
+    if (accounts.isEmpty) return TransactionBlocker.noAccount;
+    if (categories.isEmpty) return TransactionBlocker.noCategory;
+    if (currencies.isEmpty) return TransactionBlocker.noCurrency;
     if (isTransfer) {
-      if (accounts.length < 2) return 'You have no second account to transfer';
+      if (accounts.length < 2) return TransactionBlocker.noSecondAccount;
       if (accountId == accountDestinationId) {
-        return 'Account departure and destination must be different';
+        return TransactionBlocker.sameAccounts;
       }
     }
     return null;

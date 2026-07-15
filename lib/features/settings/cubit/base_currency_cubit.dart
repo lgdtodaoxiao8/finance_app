@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:flutter/foundation.dart';
@@ -43,18 +45,22 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
     // (so it can also be re-entered/corrected). No rate for the first setup or
     // when re-picking the current base.
     final base = await _repository.getBase();
+    final firstSetup = state.isFirstSetup;
     emit(
       state.copyWith(
-        needToEnterRate: !state.isFirstSetup && base?.currencyId != id,
+        needToEnterRate: !firstSetup && base?.currencyId != id,
       ),
     );
+    // First-time setup needs no rate, so committing on selection removes a
+    // redundant tap: picking the currency instantly makes it the base.
+    if (firstSetup) await submit();
   }
 
   void setRate(double? rate) => emit(state.copyWith(rateToBase: rate ?? 0));
 
   Future<void> submit() async {
     final id = state.selectedId;
-    if (id == null) return;
+    if (id == null || state.sending) return;
 
     emit(state.copyWith(sending: true, success: false));
     try {
@@ -72,6 +78,12 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
         await _repository.setRate(id, 1 / rate);
       }
       await _repository.makeBase(id);
+
+      // Persist the new base + rates as a synced preference so the choice
+      // travels to the user's other devices.
+      if (getIt.isRegistered<SettingsService>()) {
+        await getIt<SettingsService>().recordCurrencyConfig();
+      }
 
       await minimumWait;
 

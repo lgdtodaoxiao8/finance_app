@@ -3,6 +3,7 @@ import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Gate an action behind premium. If the user is premium, returns true
@@ -91,7 +92,7 @@ class _LockedTeaser extends StatelessWidget {
             const SizedBox(height: 14),
             FilledButton.tonal(
               onPressed: () => PaywallSheet.show(context),
-              child: const Text('Unlock with Premium'),
+              child: Text(AppLocalizations.of(context).unlockWithPremium),
             ),
           ],
         ),
