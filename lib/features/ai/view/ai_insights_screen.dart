@@ -23,10 +23,18 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
   String? _error;
   AiInsightsResult? _result;
 
+  bool _didLoad = false;
+
   @override
-  void initState() {
-    super.initState();
-    _load();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The summary needs the locale (the coach answers in the user's language),
+    // and Localizations is only reachable once dependencies are ready — so the
+    // first load happens here rather than in initState.
+    if (!_didLoad) {
+      _didLoad = true;
+      _load();
+    }
   }
 
   /// Builds a compact base-currency spending summary for the model.
