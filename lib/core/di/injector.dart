@@ -86,6 +86,8 @@ Future<void> configureDependencies() async {
       () => WidgetService(
         getIt<TransactionRepository>(),
         getIt<CurrencyRepository>(),
+        getIt<CategoryRepository>(),
+        getIt<AppPreferences>(),
       ),
     );
   }

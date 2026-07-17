@@ -4,8 +4,10 @@
 //
 
 import AppIntents
-import WidgetKit
+import CoreText
 import SwiftUI
+import UIKit
+import WidgetKit
 
 // Must match WidgetService.appGroupId in the Flutter app and the App Group
 // capability added to both the Runner and this extension target.
@@ -139,38 +141,18 @@ struct FinanceWidgetEntryView: View {
             Text(money(category.value, entry.symbol)).font(.caption).bold()
           }
         }
-        Spacer(minLength: 4)
-        // Interactive quick-add: logs an expense without opening the app.
-        if #available(iOS 17.0, *) {
-          HStack(spacing: 8) {
-            quickAddButton(5)
-            quickAddButton(10)
-            quickAddButton(20)
-          }
-        }
       }
       Spacer(minLength: 0)
     }
     .padding(14)
-    .widgetURL(URL(string: "financeapp://add"))
-  }
-
-  @available(iOS 17.0, *)
-  private func quickAddButton(_ amount: Int) -> some View {
-    Button(intent: QuickAddIntent(amount: amount)) {
-      Text("+\(amount)")
-        .font(.caption).bold()
-        .foregroundColor(accent)
-        .padding(.vertical, 6)
-        .padding(.horizontal, 12)
-        .background(accent.opacity(0.12))
-        .clipShape(Capsule())
-    }
-    .buttonStyle(.plain)
+    // This is the informational summary widget; the dedicated QuickAddWidget
+    // now owns interactive one-tap logging. Tapping here opens the add screen.
+    // The `homeWidget` query param is REQUIRED: the home_widget plugin only
+    // forwards URLs that carry it (isWidgetUrl in SwiftHomeWidgetPlugin).
+    .widgetURL(URL(string: "financeapp://add?homeWidget"))
   }
 }
 
-@main
 struct FinanceWidget: Widget {
   let kind = "FinanceWidget"
 
@@ -190,34 +172,49 @@ struct FinanceWidget: Widget {
   }
 }
 
+// MARK: - Widget bundle
+
+@main
+struct FinanceWidgets: WidgetBundle {
+  var body: some Widget {
+    FinanceWidget()
+    QuickAddWidget()
+  }
+}
+
 // MARK: - Interactive quick-add (iOS 17+)
 
-/// Pure-Swift App Intent (no Flutter dependency): queues the amount in the
-/// shared App Group store and optimistically updates the widget totals. The
-/// Flutter app drains the queue and writes the real transaction on next launch
-/// / resume (see drainPendingQuickAdds in Dart).
+/// Pure-Swift App Intent (no Flutter dependency): queues `{categoryId, amount}`
+/// in the shared App Group store and optimistically updates the widget totals.
+/// The Flutter app drains the queue and writes the real transaction into that
+/// category on next launch / resume (see drainPendingQuickAdds in Dart).
 @available(iOS 17.0, *)
 struct QuickAddIntent: AppIntent {
   static var title: LocalizedStringResource = "Quick add expense"
 
-  @Parameter(title: "Amount")
-  var amount: Int
+  @Parameter(title: "Category") var categoryId: Int
+  @Parameter(title: "Amount") var amount: Double
+  @Parameter(title: "Shortcut") var shortcutId: String
 
   init() {}
-  init(amount: Int) { self.amount = amount }
+  init(categoryId: Int, amount: Double, shortcutId: String) {
+    self.categoryId = categoryId
+    self.amount = amount
+    self.shortcutId = shortcutId
+  }
 
   func perform() async throws -> some IntentResult {
     let defaults = UserDefaults(suiteName: appGroupId)
 
-    var amounts: [Double] = []
+    var queue: [[String: Any]] = []
     if let json = defaults?.string(forKey: "pending_quickadd"),
       let data = json.data(using: .utf8),
-      let arr = try? JSONSerialization.jsonObject(with: data) as? [Double]
+      let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
     {
-      amounts = arr
+      queue = arr
     }
-    amounts.append(Double(amount))
-    if let out = try? JSONSerialization.data(withJSONObject: amounts),
+    queue.append(["categoryId": categoryId, "amount": amount])
+    if let out = try? JSONSerialization.data(withJSONObject: queue),
       let outStr = String(data: out, encoding: .utf8)
     {
       defaults?.set(outStr, forKey: "pending_quickadd")
@@ -225,11 +222,420 @@ struct QuickAddIntent: AppIntent {
 
     // Optimistic update so the widget reflects the spend immediately.
     let expense = defaults?.double(forKey: "expense") ?? 0
-    defaults?.set(expense + Double(amount), forKey: "expense")
+    defaults?.set(expense + amount, forKey: "expense")
     let balance = defaults?.double(forKey: "balance") ?? 0
-    defaults?.set(balance - Double(amount), forKey: "balance")
+    defaults?.set(balance - amount, forKey: "balance")
+
+    // Drive the brief logged-state fade on the tapped button.
+    defaults?.set(shortcutId, forKey: "last_added_id")
+    defaults?.set(Date().timeIntervalSince1970, forKey: "last_added_at")
 
     WidgetCenter.shared.reloadTimelines(ofKind: "FinanceWidget")
+    WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
     return .result()
+  }
+}
+
+// NOTE: interactive widget buttons cannot open the app — iOS 17 ignores
+// `openAppWhenRun` for widget intents (they always run in the background).
+// "Ask each time" shortcuts therefore go through deep links instead:
+// `Link` in the medium widget, `widgetURL` in the small one.
+
+// MARK: - Quick-add widget (configurable category shortcuts)
+
+/// One configured shortcut, mirrored from the Flutter app's `shortcuts` JSON.
+struct Shortcut: Identifiable {
+  let id: String
+  let categoryId: Int
+  let name: String
+  let color: Color
+  /// Legible foreground on top of [color] (white on dark fills, near-black on
+  /// light ones) — computed from the fill, NOT the category's icon colour,
+  /// which is free-form and often clashes (e.g. black on saturated blue).
+  let onColor: Color
+  /// MaterialIcons codepoint of the category icon.
+  let iconCode: Int
+  let mode: String  // "fixed" | "presets" | "open"
+  let amount: Double?
+  let presets: [Double]
+
+  /// The amount a single tap should log (fixed value, or the first preset).
+  var primaryAmount: Double? {
+    switch mode {
+    case "fixed": return amount
+    case "presets": return presets.first
+    default: return nil
+    }
+  }
+}
+
+/// White or near-black, whichever is legible on the given ARGB fill.
+private func contrastingOn(_ argb: Int) -> Color {
+  let r = Double((argb >> 16) & 0xFF) / 255.0
+  let g = Double((argb >> 8) & 0xFF) / 255.0
+  let b = Double(argb & 0xFF) / 255.0
+  let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+  return luminance > 0.62 ? Color.black.opacity(0.82) : .white
+}
+
+private func loadShortcuts() -> [Shortcut] {
+  let defaults = UserDefaults(suiteName: appGroupId)
+  guard let json = defaults?.string(forKey: "shortcuts"),
+    let data = json.data(using: .utf8),
+    let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+  else { return [] }
+
+  return array.map { item in
+    let presets = (item["presets"] as? [Any] ?? []).compactMap {
+      ($0 as? NSNumber)?.doubleValue
+    }
+    let argb = (item["color"] as? NSNumber)?.intValue ?? 0xFF9E9E_9E
+    return Shortcut(
+      id: item["id"] as? String ?? UUID().uuidString,
+      categoryId: (item["categoryId"] as? NSNumber)?.intValue ?? 0,
+      name: item["name"] as? String ?? "",
+      color: colorFromARGB(argb),
+      onColor: contrastingOn(argb),
+      iconCode: (item["iconCode"] as? NSNumber)?.intValue ?? 0,
+      mode: item["mode"] as? String ?? "open",
+      amount: (item["amount"] as? NSNumber)?.doubleValue,
+      presets: presets)
+  }
+}
+
+private func shortAmount(_ value: Double) -> String {
+  if value == value.rounded() {
+    return String(Int(value))
+  }
+  let formatter = NumberFormatter()
+  formatter.numberStyle = .decimal
+  formatter.maximumFractionDigits = 2
+  return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+}
+
+struct QuickAddEntry: TimelineEntry {
+  let date: Date
+  let symbol: String
+  let shortcuts: [Shortcut]
+  let lastAddedId: String
+  let lastAddedAt: Date
+
+  /// True while the just-tapped button should show its quiet logged state
+  /// (dimmed fill + hairline ring; no icons, no checkmarks).
+  func isJustAdded(_ shortcut: Shortcut) -> Bool {
+    return shortcut.id == lastAddedId
+      && date.timeIntervalSince(lastAddedAt) < 2.5
+  }
+}
+
+private func loadQuickAddEntry(at date: Date = Date()) -> QuickAddEntry {
+  let defaults = UserDefaults(suiteName: appGroupId)
+  let lastAt = defaults?.double(forKey: "last_added_at") ?? 0
+  return QuickAddEntry(
+    date: date,
+    symbol: defaults?.string(forKey: "symbol") ?? "",
+    shortcuts: loadShortcuts(),
+    lastAddedId: defaults?.string(forKey: "last_added_id") ?? "",
+    lastAddedAt: Date(timeIntervalSince1970: lastAt))
+}
+
+struct QuickAddProvider: TimelineProvider {
+  func placeholder(in context: Context) -> QuickAddEntry {
+    QuickAddEntry(
+      date: Date(), symbol: "$", shortcuts: [], lastAddedId: "",
+      lastAddedAt: Date(timeIntervalSince1970: 0))
+  }
+
+  func getSnapshot(
+    in context: Context, completion: @escaping (QuickAddEntry) -> Void
+  ) {
+    completion(loadQuickAddEntry())
+  }
+
+  func getTimeline(
+    in context: Context, completion: @escaping (Timeline<QuickAddEntry>) -> Void
+  ) {
+    // A second entry a few seconds out crossfades the logged state away.
+    let now = loadQuickAddEntry()
+    let clear = loadQuickAddEntry(at: Date().addingTimeInterval(2.6))
+    completion(Timeline(entries: [now, clear], policy: .never))
+  }
+}
+
+// MARK: Quick-add UI
+
+/// Registers the bundled MaterialIcons font once (UIAppFonts is unreliable in
+/// widget extensions, so fall back to manual CoreText registration).
+private let materialIconsAvailable: Bool = {
+  if UIFont(name: "MaterialIcons-Regular", size: 12) != nil { return true }
+  guard
+    let url = Bundle.main.url(
+      forResource: "MaterialIcons-Regular", withExtension: "otf")
+  else { return false }
+  CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+  return UIFont(name: "MaterialIcons-Regular", size: 12) != nil
+}()
+
+/// The category's Material icon glyph; falls back to the category's initial
+/// letter when the font or codepoint is unavailable.
+private struct CategoryGlyph: View {
+  let shortcut: Shortcut
+  let size: CGFloat
+
+  var body: some View {
+    if materialIconsAvailable, let scalar = UnicodeScalar(shortcut.iconCode),
+      shortcut.iconCode > 0
+    {
+      Text(String(Character(scalar)))
+        .font(.custom("MaterialIcons-Regular", size: size))
+    } else {
+      Text(String(shortcut.name.prefix(1)).uppercased())
+        .font(.system(size: size * 0.78, weight: .semibold, design: .rounded))
+    }
+  }
+}
+
+@available(iOS 17.0, *)
+struct QuickAddEntryView: View {
+  var entry: QuickAddEntry
+  @Environment(\.widgetFamily) var family
+
+  /// "500 $" — mirrors the app's money formatting (symbol after the number).
+  private func amountCaption(_ value: Double) -> String {
+    let number = shortAmount(value)
+    return entry.symbol.isEmpty ? number : "\(number) \(entry.symbol)"
+  }
+
+  var body: some View {
+    if family == .systemSmall {
+      smallGrid
+    } else {
+      mediumList
+    }
+  }
+
+  // MARK: small — a strict 2×2 grid; unused cells stay as quiet placeholders
+  // so a single shortcut still reads as part of the grid.
+
+  /// Where a tap outside the instant-log buttons lands: the quick-add sheet
+  /// for the first "ask each time" shortcut (its circles aren't buttons —
+  /// small widgets can't open the app from a Button, only via widgetURL),
+  /// or the plain add screen when there is none.
+  private var smallURL: URL? {
+    // `homeWidget` marks the URL for the home_widget plugin — without it the
+    // plugin ignores the launch and widgetClicked never fires.
+    if let open = entry.shortcuts.prefix(4).first(where: { $0.mode == "open" })
+    {
+      return URL(
+        string: "financeapp://quickadd?category=\(open.categoryId)&homeWidget")
+    }
+    return URL(string: "financeapp://add?homeWidget")
+  }
+
+  // Cell metrics shared by real cells and placeholders so the grid never
+  // shifts. Sized to fill the small widget generously (circle-first design).
+  private var circleSize: CGFloat { 52 }
+  private var glyphSize: CGFloat { 24 }
+  private var captionSize: CGFloat { 11 }
+
+  private var smallGrid: some View {
+    VStack(spacing: 6) {
+      gridRowView(0)
+      gridRowView(1)
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 10)
+    .widgetURL(smallURL)
+  }
+
+  private func gridRowView(_ row: Int) -> some View {
+    HStack(spacing: 6) {
+      gridCell(row * 2)
+      gridCell(row * 2 + 1)
+    }
+  }
+
+  @ViewBuilder
+  private func gridCell(_ index: Int) -> some View {
+    if index < entry.shortcuts.count {
+      circleButton(entry.shortcuts[index])
+    } else {
+      VStack(spacing: 3) {
+        Circle()
+          .fill(Color.primary.opacity(0.05))
+          .frame(width: circleSize, height: circleSize)
+        Text(" ")
+          .font(.system(size: captionSize))
+      }
+      .frame(maxWidth: .infinity)
+    }
+  }
+
+  @ViewBuilder
+  private func circleButton(_ shortcut: Shortcut) -> some View {
+    if let amount = shortcut.primaryAmount {
+      Button(intent: QuickAddIntent(
+        categoryId: shortcut.categoryId, amount: amount, shortcutId: shortcut.id)
+      ) {
+        circleCell(shortcut, caption: amountCaption(amount))
+      }
+      .buttonStyle(.plain)
+    } else {
+      // "open" mode — a plain cell, so the tap falls through to widgetURL
+      // (Buttons can't open the app from a widget; see smallURL).
+      circleCell(shortcut, caption: shortcut.name)
+    }
+  }
+
+  /// Icon in a coloured circle, caption below. The just-logged state is a
+  /// quiet fade: fill drops to a tint, the glyph takes the category colour and
+  /// a hairline ring appears — then everything crossfades back.
+  private func circleCell(_ shortcut: Shortcut, caption: String) -> some View {
+    let logged = entry.isJustAdded(shortcut)
+    return VStack(spacing: 3) {
+      ZStack {
+        Circle().fill(shortcut.color.opacity(logged ? 0.18 : 1))
+        if logged {
+          Circle().strokeBorder(shortcut.color.opacity(0.6), lineWidth: 1)
+        }
+        CategoryGlyph(shortcut: shortcut, size: glyphSize)
+          .foregroundColor(logged ? shortcut.color : shortcut.onColor)
+      }
+      .frame(width: circleSize, height: circleSize)
+      Text(caption)
+        .font(.system(size: captionSize, weight: .semibold, design: .rounded))
+        .foregroundColor(.secondary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+    }
+    .frame(maxWidth: .infinity)
+  }
+
+  // MARK: medium — three fixed row slots (same grid discipline as small).
+
+  private var mediumList: some View {
+    VStack(spacing: 10) {
+      ForEach(0..<3, id: \.self) { index in
+        if index < entry.shortcuts.count {
+          rowView(entry.shortcuts[index])
+        } else {
+          placeholderRow
+        }
+      }
+    }
+    .padding(14)
+  }
+
+  private var rowCircleSize: CGFloat { 34 }
+
+  private var placeholderRow: some View {
+    HStack(spacing: 10) {
+      Circle()
+        .fill(Color.primary.opacity(0.05))
+        .frame(width: rowCircleSize, height: rowCircleSize)
+      RoundedRectangle(cornerRadius: 4)
+        .fill(Color.primary.opacity(0.05))
+        .frame(width: 72, height: 9)
+      Spacer(minLength: 0)
+    }
+    .frame(maxHeight: .infinity)
+  }
+
+  private func rowView(_ shortcut: Shortcut) -> some View {
+    let logged = entry.isJustAdded(shortcut)
+    return HStack(spacing: 10) {
+      ZStack {
+        Circle().fill(shortcut.color.opacity(logged ? 0.18 : 1))
+        if logged {
+          Circle().strokeBorder(shortcut.color.opacity(0.6), lineWidth: 1)
+        }
+        CategoryGlyph(shortcut: shortcut, size: 17)
+          .foregroundColor(logged ? shortcut.color : shortcut.onColor)
+      }
+      .frame(width: rowCircleSize, height: rowCircleSize)
+      Text(shortcut.name)
+        .font(.system(size: 15, weight: .medium))
+        .foregroundColor(.primary)
+        .lineLimit(1)
+      Spacer(minLength: 6)
+      rowActions(shortcut)
+        .opacity(logged ? 0.35 : 1)
+    }
+    .frame(maxHeight: .infinity)
+  }
+
+  @ViewBuilder
+  private func rowActions(_ shortcut: Shortcut) -> some View {
+    switch shortcut.mode {
+    case "fixed":
+      if let amount = shortcut.amount {
+        amountChip(shortcut, amount)
+      }
+    case "presets":
+      HStack(spacing: 6) {
+        ForEach(Array(shortcut.presets.prefix(3)), id: \.self) { preset in
+          amountChip(shortcut, preset)
+        }
+        // Custom amount → open the app prefilled (Link works in medium).
+        linkChip(shortcut, systemName: "ellipsis")
+      }
+    default:
+      linkChip(shortcut, systemName: "plus")
+    }
+  }
+
+  /// Quiet tinted capsule that logs the amount instantly.
+  private func amountChip(_ shortcut: Shortcut, _ amount: Double) -> some View {
+    Button(intent: QuickAddIntent(
+      categoryId: shortcut.categoryId, amount: amount, shortcutId: shortcut.id)
+    ) {
+      Text(amountCaption(amount))
+        .font(.system(size: 13, weight: .semibold, design: .rounded))
+        .foregroundColor(shortcut.color)
+        .padding(.vertical, 7)
+        .padding(.horizontal, 12)
+        .background(shortcut.color.opacity(0.13))
+        .clipShape(Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func linkChip(_ shortcut: Shortcut, systemName: String) -> some View {
+    Link(
+      destination: URL(
+        string:
+          "financeapp://quickadd?category=\(shortcut.categoryId)&homeWidget")!
+    ) {
+      Image(systemName: systemName)
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundColor(shortcut.color)
+        .padding(.vertical, 9)
+        .padding(.horizontal, 10)
+        .background(shortcut.color.opacity(0.13))
+        .clipShape(Capsule())
+    }
+  }
+}
+
+struct QuickAddWidget: Widget {
+  let kind = "QuickAddWidget"
+
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: kind, provider: QuickAddProvider()) { entry in
+      if #available(iOS 17.0, *) {
+        QuickAddEntryView(entry: entry)
+          .containerBackground(Color(UIColor.systemBackground), for: .widget)
+      } else {
+        // Interactive quick-add needs iOS 17; older systems see a hint.
+        VStack {
+          Image(systemName: "plus.circle.fill")
+          Text("Requires iOS 17").font(.caption2)
+        }
+        .background(Color(UIColor.systemBackground))
+      }
+    }
+    .configurationDisplayName("Quick Add")
+    .description("Log a spend in one tap. Configure categories in the app.")
+    .supportedFamilies([.systemSmall, .systemMedium])
   }
 }

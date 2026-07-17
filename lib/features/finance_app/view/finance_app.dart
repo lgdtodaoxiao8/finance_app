@@ -11,6 +11,7 @@ import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_interactivity.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
+import 'package:finance_app/features/widget_config/view/quick_add_sheet.dart';
 import 'package:finance_app/router/router.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -96,10 +97,22 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
     getIt<SyncService>().sync().catchError((_) {});
   }
 
-  /// Routes a home-widget deep link. `*://add` opens the quick add-transaction
-  /// screen so a spend can be logged in a couple of taps.
+  /// Routes a home-widget deep link.
+  /// - `*://quickadd?category=ID` opens the fast quick-add sheet, prefilled.
+  /// - `*://add` opens the full add-transaction screen.
   void _handleWidgetLaunch(Uri? uri) {
     if (uri == null) return;
+    final isQuickAdd = uri.host == 'quickadd' || uri.path.contains('quickadd');
+    if (isQuickAdd) {
+      final categoryId = int.tryParse(uri.queryParameters['category'] ?? '');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = _navigatorKey.currentContext;
+        if (context != null) {
+          QuickAddSheet.show(context, categoryId: categoryId);
+        }
+      });
+      return;
+    }
     final wantsAdd = uri.host == 'add' || uri.path.contains('add');
     if (!wantsAdd) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {

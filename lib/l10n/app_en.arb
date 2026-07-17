@@ -308,5 +308,25 @@
   "acrossNAccounts": "across {count} accounts",
   "@acrossNAccounts": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "widgetsTitle": "Home widgets",
+  "widgetsSubtitle": "Log a spend in one tap from your home screen",
+  "widgetConfigIntro": "Pin categories to your quick-add widget. A fixed-amount tap logs instantly; presets let you pick a common amount; or open the app to type any amount.",
+  "widgetOnYourWidget": "On your widget",
+  "widgetNoShortcuts": "No categories pinned yet",
+  "widgetAddCategory": "Add a category",
+  "widgetAllPinned": "All categories are already pinned",
+  "widgetPreviewEmpty": "Add categories to see them here",
+  "widgetShortcutModeFixed": "Fixed",
+  "widgetShortcutModePresets": "Presets",
+  "widgetShortcutModeOpen": "Ask each time",
+  "widgetFixedAmountHint": "One tap logs this exact amount.",
+  "widgetPresetsHint": "Tap a preset to log it instantly.",
+  "widgetOpenHint": "Tap opens the app to type any amount.",
+  "widgetAddPreset": "Add amount",
+  "selectCategory": "Select a category",
+  "quickAddTitle": "Quick add",
+  "quickAddSaved": "Saved",
+  "quickAddIncompleteSetup": "Add a category, an account and a base currency first."
 }

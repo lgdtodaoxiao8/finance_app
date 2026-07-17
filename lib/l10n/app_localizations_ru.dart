@@ -791,4 +791,67 @@ class AppLocalizationsRu extends AppLocalizations {
   String acrossNAccounts(int count) {
     return 'по $count счетам';
   }
+
+  @override
+  String get widgetsTitle => 'Виджеты на экране';
+
+  @override
+  String get widgetsSubtitle =>
+      'Записывайте трату в одно касание с домашнего экрана';
+
+  @override
+  String get widgetConfigIntro =>
+      'Закрепите категории в виджете быстрого добавления. Кнопка с фиксированной суммой пишет трату мгновенно; пресеты дают выбрать частую сумму; либо откройте приложение, чтобы ввести любую сумму.';
+
+  @override
+  String get widgetOnYourWidget => 'В вашем виджете';
+
+  @override
+  String get widgetNoShortcuts => 'Пока не закреплено ни одной категории';
+
+  @override
+  String get widgetAddCategory => 'Добавить категорию';
+
+  @override
+  String get widgetAllPinned => 'Все категории уже закреплены';
+
+  @override
+  String get widgetPreviewEmpty => 'Добавьте категории, чтобы увидеть их здесь';
+
+  @override
+  String get widgetShortcutModeFixed => 'Фиксир.';
+
+  @override
+  String get widgetShortcutModePresets => 'Пресеты';
+
+  @override
+  String get widgetShortcutModeOpen => 'Каждый раз';
+
+  @override
+  String get widgetFixedAmountHint =>
+      'Одно касание записывает ровно эту сумму.';
+
+  @override
+  String get widgetPresetsHint =>
+      'Нажмите пресет, чтобы записать трату мгновенно.';
+
+  @override
+  String get widgetOpenHint =>
+      'Касание открывает приложение для ввода любой суммы.';
+
+  @override
+  String get widgetAddPreset => 'Добавить сумму';
+
+  @override
+  String get selectCategory => 'Выберите категорию';
+
+  @override
+  String get quickAddTitle => 'Быстрое добавление';
+
+  @override
+  String get quickAddSaved => 'Сохранено';
+
+  @override
+  String get quickAddIncompleteSetup =>
+      'Сначала добавьте категорию, счёт и базовую валюту.';
 }

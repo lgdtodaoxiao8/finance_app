@@ -308,5 +308,25 @@
   "acrossNAccounts": "по {count} счетам",
   "@acrossNAccounts": {
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "widgetsTitle": "Виджеты на экране",
+  "widgetsSubtitle": "Записывайте трату в одно касание с домашнего экрана",
+  "widgetConfigIntro": "Закрепите категории в виджете быстрого добавления. Кнопка с фиксированной суммой пишет трату мгновенно; пресеты дают выбрать частую сумму; либо откройте приложение, чтобы ввести любую сумму.",
+  "widgetOnYourWidget": "В вашем виджете",
+  "widgetNoShortcuts": "Пока не закреплено ни одной категории",
+  "widgetAddCategory": "Добавить категорию",
+  "widgetAllPinned": "Все категории уже закреплены",
+  "widgetPreviewEmpty": "Добавьте категории, чтобы увидеть их здесь",
+  "widgetShortcutModeFixed": "Фиксир.",
+  "widgetShortcutModePresets": "Пресеты",
+  "widgetShortcutModeOpen": "Каждый раз",
+  "widgetFixedAmountHint": "Одно касание записывает ровно эту сумму.",
+  "widgetPresetsHint": "Нажмите пресет, чтобы записать трату мгновенно.",
+  "widgetOpenHint": "Касание открывает приложение для ввода любой суммы.",
+  "widgetAddPreset": "Добавить сумму",
+  "selectCategory": "Выберите категорию",
+  "quickAddTitle": "Быстрое добавление",
+  "quickAddSaved": "Сохранено",
+  "quickAddIncompleteSetup": "Сначала добавьте категорию, счёт и базовую валюту."
 }

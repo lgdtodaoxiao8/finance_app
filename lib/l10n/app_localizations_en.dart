@@ -790,4 +790,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String acrossNAccounts(int count) {
     return 'across $count accounts';
   }
+
+  @override
+  String get widgetsTitle => 'Home widgets';
+
+  @override
+  String get widgetsSubtitle => 'Log a spend in one tap from your home screen';
+
+  @override
+  String get widgetConfigIntro =>
+      'Pin categories to your quick-add widget. A fixed-amount tap logs instantly; presets let you pick a common amount; or open the app to type any amount.';
+
+  @override
+  String get widgetOnYourWidget => 'On your widget';
+
+  @override
+  String get widgetNoShortcuts => 'No categories pinned yet';
+
+  @override
+  String get widgetAddCategory => 'Add a category';
+
+  @override
+  String get widgetAllPinned => 'All categories are already pinned';
+
+  @override
+  String get widgetPreviewEmpty => 'Add categories to see them here';
+
+  @override
+  String get widgetShortcutModeFixed => 'Fixed';
+
+  @override
+  String get widgetShortcutModePresets => 'Presets';
+
+  @override
+  String get widgetShortcutModeOpen => 'Ask each time';
+
+  @override
+  String get widgetFixedAmountHint => 'One tap logs this exact amount.';
+
+  @override
+  String get widgetPresetsHint => 'Tap a preset to log it instantly.';
+
+  @override
+  String get widgetOpenHint => 'Tap opens the app to type any amount.';
+
+  @override
+  String get widgetAddPreset => 'Add amount';
+
+  @override
+  String get selectCategory => 'Select a category';
+
+  @override
+  String get quickAddTitle => 'Quick add';
+
+  @override
+  String get quickAddSaved => 'Saved';
+
+  @override
+  String get quickAddIncompleteSetup =>
+      'Add a category, an account and a base currency first.';
 }

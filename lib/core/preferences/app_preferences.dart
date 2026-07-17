@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Thin, typed wrapper over [SharedPreferences] for app-level flags.
@@ -14,6 +17,7 @@ class AppPreferences {
   static const _kPremium = 'is_premium';
   static const _kAiSig = 'ai_insights_sig';
   static const _kAiJson = 'ai_insights_json';
+  static const _kWidgetShortcuts = 'widget_shortcuts';
 
   /// Whether the user has completed the first-run onboarding (marketing
   /// carousel + base-currency setup). Gates the launch flow.
@@ -37,5 +41,27 @@ class AppPreferences {
   Future<void> setAiInsightsCache(String signature, String json) async {
     await _prefs.setString(_kAiSig, signature);
     await _prefs.setString(_kAiJson, json);
+  }
+
+  // --- Home-screen widget shortcuts (per-device; the widget layout is not
+  // synced across devices). Stored as a JSON array of [WidgetShortcut]. ---
+  List<WidgetShortcut> getWidgetShortcuts() {
+    final raw = _prefs.getString(_kWidgetShortcuts);
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      final shortcuts = [
+        for (final e in list)
+          WidgetShortcut.fromJson(e as Map<String, dynamic>),
+      ]..sort((a, b) => a.order.compareTo(b.order));
+      return shortcuts;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> setWidgetShortcuts(List<WidgetShortcut> shortcuts) {
+    final json = jsonEncode([for (final s in shortcuts) s.toJson()]);
+    return _prefs.setString(_kWidgetShortcuts, json);
   }
 }

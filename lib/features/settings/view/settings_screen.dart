@@ -29,6 +29,13 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const PreferencesSection(),
           const SizedBox(height: 16),
+          _NavCard(
+            icon: Icons.widgets_outlined,
+            title: l.widgetsTitle,
+            subtitle: l.widgetsSubtitle,
+            onTap: () => Navigator.of(context).pushNamed('/widget-config'),
+          ),
+          const SizedBox(height: 16),
           _Card(
             title: l.baseCurrency,
             child: BlocProvider(
@@ -41,6 +48,68 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const CategoriesSection(),
         ],
+      ),
+    );
+  }
+}
+
+class _NavCard extends StatelessWidget {
+  const _NavCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: kCardShadow,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: kTextStyle.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: kTextStyle.copyWith(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textTertiary),
+            ],
+          ),
+        ),
       ),
     );
   }

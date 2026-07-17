@@ -1561,6 +1561,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'across {count} accounts'**
   String acrossNAccounts(int count);
+
+  /// No description provided for @widgetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home widgets'**
+  String get widgetsTitle;
+
+  /// No description provided for @widgetsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a spend in one tap from your home screen'**
+  String get widgetsSubtitle;
+
+  /// No description provided for @widgetConfigIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin categories to your quick-add widget. A fixed-amount tap logs instantly; presets let you pick a common amount; or open the app to type any amount.'**
+  String get widgetConfigIntro;
+
+  /// No description provided for @widgetOnYourWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'On your widget'**
+  String get widgetOnYourWidget;
+
+  /// No description provided for @widgetNoShortcuts.
+  ///
+  /// In en, this message translates to:
+  /// **'No categories pinned yet'**
+  String get widgetNoShortcuts;
+
+  /// No description provided for @widgetAddCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a category'**
+  String get widgetAddCategory;
+
+  /// No description provided for @widgetAllPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories are already pinned'**
+  String get widgetAllPinned;
+
+  /// No description provided for @widgetPreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add categories to see them here'**
+  String get widgetPreviewEmpty;
+
+  /// No description provided for @widgetShortcutModeFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get widgetShortcutModeFixed;
+
+  /// No description provided for @widgetShortcutModePresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get widgetShortcutModePresets;
+
+  /// No description provided for @widgetShortcutModeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask each time'**
+  String get widgetShortcutModeOpen;
+
+  /// No description provided for @widgetFixedAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One tap logs this exact amount.'**
+  String get widgetFixedAmountHint;
+
+  /// No description provided for @widgetPresetsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a preset to log it instantly.'**
+  String get widgetPresetsHint;
+
+  /// No description provided for @widgetOpenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap opens the app to type any amount.'**
+  String get widgetOpenHint;
+
+  /// No description provided for @widgetAddPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Add amount'**
+  String get widgetAddPreset;
+
+  /// No description provided for @selectCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a category'**
+  String get selectCategory;
+
+  /// No description provided for @quickAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick add'**
+  String get quickAddTitle;
+
+  /// No description provided for @quickAddSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get quickAddSaved;
+
+  /// No description provided for @quickAddIncompleteSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a category, an account and a base currency first.'**
+  String get quickAddIncompleteSetup;
 }
 
 class _AppLocalizationsDelegate
