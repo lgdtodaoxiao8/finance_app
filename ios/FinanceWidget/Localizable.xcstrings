@@ -1,0 +1,76 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Finance" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Финансы"
+          }
+        }
+      }
+    },
+    "Your spending at a glance. Tap to add a transaction." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Траты под рукой. Нажмите, чтобы добавить операцию."
+          }
+        }
+      }
+    },
+    "This month" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В этом месяце"
+          }
+        }
+      }
+    },
+    "Spent" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрачено"
+          }
+        }
+      }
+    },
+    "Quick Add" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Быстрое добавление"
+          }
+        }
+      }
+    },
+    "Log a spend in one tap. Configure categories in the app." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записывайте трату в одно касание. Категории настраиваются в приложении."
+          }
+        }
+      }
+    },
+    "Requires iOS 17" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Требуется iOS 17"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
