@@ -840,6 +840,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Касание открывает приложение для ввода любой суммы.';
 
   @override
+  String get widgetPreviewSmall => 'Маленький';
+
+  @override
+  String get widgetPreviewMedium => 'Средний';
+
+  @override
   String get widgetAddPreset => 'Добавить сумму';
 
   @override

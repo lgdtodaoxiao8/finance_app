@@ -835,6 +835,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetOpenHint => 'Tap opens the app to type any amount.';
 
   @override
+  String get widgetPreviewSmall => 'Small';
+
+  @override
+  String get widgetPreviewMedium => 'Medium';
+
+  @override
   String get widgetAddPreset => 'Add amount';
 
   @override

@@ -487,28 +487,61 @@ struct QuickAddEntryView: View {
     }
   }
 
-  /// Icon in a coloured circle, caption below. The just-logged state is a
-  /// quiet fade: fill drops to a tint, the glyph takes the category colour and
-  /// a hairline ring appears — then everything crossfades back.
+  /// Icon in a coloured circle, caption below.
+  ///
+  /// The tap outcome is readable at a glance: instant-log buttons (fixed /
+  /// presets) are SOLID circles captioned with the amount; "ask each time"
+  /// cells are quiet TINTED circles wearing a small "+" badge and captioned
+  /// with the category name — tinted + badge narrates "opens input".
+  /// The just-logged state is a quiet fade: fill drops to a tint, the glyph
+  /// takes the category colour and a hairline ring appears, then crossfades
+  /// back.
   private func circleCell(_ shortcut: Shortcut, caption: String) -> some View {
-    let logged = entry.isJustAdded(shortcut)
-    return VStack(spacing: 3) {
-      ZStack {
-        Circle().fill(shortcut.color.opacity(logged ? 0.18 : 1))
-        if logged {
-          Circle().strokeBorder(shortcut.color.opacity(0.6), lineWidth: 1)
-        }
-        CategoryGlyph(shortcut: shortcut, size: glyphSize)
-          .foregroundColor(logged ? shortcut.color : shortcut.onColor)
-      }
-      .frame(width: circleSize, height: circleSize)
+    let isOpen = shortcut.primaryAmount == nil
+    return VStack(spacing: 4) {
+      modeCircle(shortcut, diameter: circleSize, glyph: glyphSize)
       Text(caption)
-        .font(.system(size: captionSize, weight: .semibold, design: .rounded))
+        .font(
+          isOpen
+            ? .system(size: captionSize)
+            : .system(size: captionSize, weight: .semibold, design: .rounded)
+        )
         .foregroundColor(.secondary)
         .lineLimit(1)
         .minimumScaleFactor(0.75)
     }
     .frame(maxWidth: .infinity)
+  }
+
+  /// The mode-aware circle shared by both families.
+  private func modeCircle(
+    _ shortcut: Shortcut, diameter: CGFloat, glyph: CGFloat
+  ) -> some View {
+    let logged = entry.isJustAdded(shortcut)
+    let isOpen = shortcut.primaryAmount == nil
+    let tinted = isOpen || logged
+    return ZStack(alignment: .bottomTrailing) {
+      ZStack {
+        Circle().fill(shortcut.color.opacity(tinted ? 0.16 : 1))
+        if logged {
+          Circle().strokeBorder(shortcut.color.opacity(0.6), lineWidth: 1)
+        }
+        CategoryGlyph(shortcut: shortcut, size: glyph)
+          .foregroundColor(tinted ? shortcut.color : shortcut.onColor)
+      }
+      .frame(width: diameter, height: diameter)
+      if isOpen {
+        ZStack {
+          Circle().fill(Color(UIColor.systemBackground))
+          Circle().fill(shortcut.color).padding(1.5)
+          Image(systemName: "plus")
+            .font(.system(size: diameter * 0.16, weight: .bold))
+            .foregroundColor(.white)
+        }
+        .frame(width: diameter * 0.36, height: diameter * 0.36)
+        .offset(x: 3, y: 3)
+      }
+    }
   }
 
   // MARK: medium — three fixed row slots (same grid discipline as small).
@@ -544,22 +577,16 @@ struct QuickAddEntryView: View {
   private func rowView(_ shortcut: Shortcut) -> some View {
     let logged = entry.isJustAdded(shortcut)
     return HStack(spacing: 10) {
-      ZStack {
-        Circle().fill(shortcut.color.opacity(logged ? 0.18 : 1))
-        if logged {
-          Circle().strokeBorder(shortcut.color.opacity(0.6), lineWidth: 1)
-        }
-        CategoryGlyph(shortcut: shortcut, size: 17)
-          .foregroundColor(logged ? shortcut.color : shortcut.onColor)
-      }
-      .frame(width: rowCircleSize, height: rowCircleSize)
+      modeCircle(shortcut, diameter: rowCircleSize, glyph: 17)
       Text(shortcut.name)
-        .font(.system(size: 15, weight: .medium))
+        .font(.subheadline.weight(.medium))
         .foregroundColor(.primary)
         .lineLimit(1)
-      Spacer(minLength: 6)
+        .layoutPriority(-1)
+      Spacer(minLength: 8)
       rowActions(shortcut)
         .opacity(logged ? 0.35 : 1)
+        .fixedSize()
     }
     .frame(maxHeight: .infinity)
   }
@@ -572,8 +599,9 @@ struct QuickAddEntryView: View {
         amountChip(shortcut, amount)
       }
     case "presets":
+      // Two presets at most — chips must never crowd the category name.
       HStack(spacing: 6) {
-        ForEach(Array(shortcut.presets.prefix(3)), id: \.self) { preset in
+        ForEach(Array(shortcut.presets.prefix(2)), id: \.self) { preset in
           amountChip(shortcut, preset)
         }
         // Custom amount → open the app prefilled (Link works in medium).

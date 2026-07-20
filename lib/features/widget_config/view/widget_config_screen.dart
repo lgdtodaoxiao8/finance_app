@@ -5,18 +5,11 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:finance_app/features/widget_config/view/shortcut_editor_sheet.dart';
+import 'package:finance_app/features/widget_config/view/widget_visuals.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-
-/// White or near-black — whichever is legible on [fill]. The native widget
-/// uses the same rule (see contrastingOn in FinanceWidget.swift), so the
-/// in-app preview matches the home screen exactly.
-Color widgetOnColor(Color fill) {
-  final luminance = 0.299 * fill.r + 0.587 * fill.g + 0.114 * fill.b;
-  return luminance > 0.62 ? Colors.black.withValues(alpha: 0.82) : Colors.white;
-}
 
 String _shortAmount(double v) =>
     v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
@@ -234,15 +227,11 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
       ),
       child: ListTile(
         onTap: () => _editShortcut(shortcut, isNew: false),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: fill),
-          child: Icon(
-            category?.categoryIcon ?? Icons.category,
-            size: 20,
-            color: widgetOnColor(fill),
-          ),
+        leading: ModeCircle(
+          fill: fill,
+          icon: category?.categoryIcon ?? Icons.category,
+          diameter: 40,
+          isOpen: shortcut.mode == WidgetShortcutMode.open,
         ),
         title: Text(
           category?.categoryName ?? '',
@@ -287,10 +276,11 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
   }
 }
 
-/// A 1:1 mock of the small home-screen widget: a strict 2×2 grid where empty
-/// cells stay as quiet placeholders — exactly what WidgetKit renders (see
-/// QuickAddEntryView.smallGrid in FinanceWidget.swift).
-class _WidgetPreview extends StatelessWidget {
+/// Live preview of the real home-screen widget, switchable between the two
+/// families. Mirrors FinanceWidget.swift exactly: strict 2×2 grid (small) and
+/// three row slots with amount chips (medium); instant buttons are solid
+/// circles, "ask each time" buttons are tinted with a "+" badge.
+class _WidgetPreview extends StatefulWidget {
   const _WidgetPreview({
     required this.shortcuts,
     required this.categoryFor,
@@ -301,45 +291,86 @@ class _WidgetPreview extends StatelessWidget {
   final Category? Function(int) categoryFor;
   final String Function(double) amountCaption;
 
+  @override
+  State<_WidgetPreview> createState() => _WidgetPreviewState();
+}
+
+class _WidgetPreviewState extends State<_WidgetPreview> {
+  bool _medium = false;
+
   // Mirror of the native widget's cell metrics (see QuickAddEntryView in
   // FinanceWidget.swift) so the preview matches the home screen exactly.
   static const double _circle = 52;
-  static const double _glyph = 24;
   static const double _caption = 11;
+
+  /// The amount one tap logs, or null for "ask each time" (mirrors
+  /// Shortcut.primaryAmount in Swift).
+  double? _primaryAmount(WidgetShortcut s) {
+    return switch (s.mode) {
+      WidgetShortcutMode.fixed => s.amount,
+      WidgetShortcutMode.presets => s.presets.isEmpty ? null : s.presets.first,
+      WidgetShortcutMode.open => null,
+    };
+  }
+
+  BoxDecoration _card(BuildContext context) {
+    return BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(28),
+      boxShadow: kCardShadow,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 158,
-        height: 158,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: kCardShadow,
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Row(
-                children: [_cell(context, 0), _cell(context, 1)],
-              ),
+    final l = AppLocalizations.of(context);
+    return Column(
+      children: [
+        Center(
+          child: SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(value: false, label: Text(l.widgetPreviewSmall)),
+              ButtonSegment(value: true, label: Text(l.widgetPreviewMedium)),
+            ],
+            selected: {_medium},
+            showSelectedIcon: false,
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
             ),
-            const SizedBox(height: 6),
-            Expanded(
-              child: Row(
-                children: [_cell(context, 2), _cell(context, 3)],
-              ),
-            ),
-          ],
+            onSelectionChanged: (s) => setState(() => _medium = s.first),
+          ),
         ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 170,
+          child: Center(child: _medium ? _mediumCard() : _smallCard()),
+        ),
+      ],
+    );
+  }
+
+  Widget _smallCard() {
+    return Container(
+      width: 170,
+      height: 170,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: _card(context),
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(children: [_cell(0), _cell(1)]),
+          ),
+          const SizedBox(height: 6),
+          Expanded(
+            child: Row(children: [_cell(2), _cell(3)]),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _cell(BuildContext context, int index) {
-    if (index >= shortcuts.length) {
+  Widget _cell(int index) {
+    if (index >= widget.shortcuts.length) {
       return Expanded(
         child: Center(
           child: Container(
@@ -355,46 +386,127 @@ class _WidgetPreview extends StatelessWidget {
         ),
       );
     }
-    final s = shortcuts[index];
-    final category = categoryFor(s.categoryId);
+    final s = widget.shortcuts[index];
+    final category = widget.categoryFor(s.categoryId);
     final fill = category?.categoryColor ?? Colors.grey;
-    final caption = switch (s.mode) {
-      WidgetShortcutMode.fixed when s.amount != null => amountCaption(
-        s.amount!,
-      ),
-      WidgetShortcutMode.presets when s.presets.isNotEmpty => amountCaption(
-        s.presets.first,
-      ),
-      _ => category?.categoryName ?? '',
-    };
+    final amount = _primaryAmount(s);
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: _circle,
-            height: _circle,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: fill),
-            child: Icon(
-              category?.categoryIcon ?? Icons.category,
-              size: _glyph,
-              color: widgetOnColor(fill),
-            ),
+          ModeCircle(
+            fill: fill,
+            icon: category?.categoryIcon ?? Icons.category,
+            diameter: _circle,
+            isOpen: amount == null,
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
-            caption,
+            amount == null
+                ? (category?.categoryName ?? '')
+                : widget.amountCaption(amount),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: kTextStyle.copyWith(
               fontSize: _caption,
-              fontWeight: FontWeight.w600,
+              fontWeight: amount == null ? FontWeight.w400 : FontWeight.w600,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _mediumCard() {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 360),
+      height: 170,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: _card(context),
+      child: Column(
+        children: [
+          for (var i = 0; i < 3; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            Expanded(child: _row(i)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _row(int index) {
+    if (index >= widget.shortcuts.length) {
+      return Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            width: 72,
+            height: 9,
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      );
+    }
+    final s = widget.shortcuts[index];
+    final category = widget.categoryFor(s.categoryId);
+    final fill = category?.categoryColor ?? Colors.grey;
+    return Row(
+      children: [
+        ModeCircle(
+          fill: fill,
+          icon: category?.categoryIcon ?? Icons.category,
+          diameter: 34,
+          isOpen: _primaryAmount(s) == null,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            category?.categoryName ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: kTextStyle.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ..._rowChips(s, fill),
+      ],
+    );
+  }
+
+  List<Widget> _rowChips(WidgetShortcut s, Color fill) {
+    String short(double v) => _shortAmount(v);
+    return switch (s.mode) {
+      WidgetShortcutMode.fixed when s.amount != null => [
+        AmountChip(label: widget.amountCaption(s.amount!), color: fill),
+      ],
+      WidgetShortcutMode.presets when s.presets.isNotEmpty => [
+        for (final p in s.presets.take(2)) ...[
+          AmountChip(label: short(p), color: fill),
+          const SizedBox(width: 5),
+        ],
+        AmountChip(label: '…', color: fill),
+      ],
+      _ => [AmountChip(label: '+', color: fill)],
+    };
   }
 }
 

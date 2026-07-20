@@ -1646,6 +1646,18 @@ abstract class AppLocalizations {
   /// **'Tap opens the app to type any amount.'**
   String get widgetOpenHint;
 
+  /// No description provided for @widgetPreviewSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get widgetPreviewSmall;
+
+  /// No description provided for @widgetPreviewMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get widgetPreviewMedium;
+
   /// No description provided for @widgetAddPreset.
   ///
   /// In en, this message translates to:

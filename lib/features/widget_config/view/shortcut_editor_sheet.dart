@@ -1,4 +1,5 @@
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
+import 'package:finance_app/features/widget_config/view/widget_visuals.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -142,7 +143,7 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
                       child: Icon(
                         widget.category.categoryIcon,
                         size: 20,
-                        color: widget.category.categoryIconColor,
+                        color: widgetOnColor(widget.category.categoryColor),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -156,19 +157,16 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                _ModeSelector(
-                  mode: _mode,
-                  onChanged: (m) => setState(() => _mode = m),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _modeHint(l),
-                  style: kTextStyle.copyWith(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
+                for (final m in WidgetShortcutMode.values) ...[
+                  _ModeCard(
+                    mode: m,
+                    selected: _mode == m,
+                    category: widget.category,
+                    onTap: () => setState(() => _mode = m),
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                ],
+                const SizedBox(height: 8),
                 if (_mode == WidgetShortcutMode.fixed) _fixedField(l),
                 if (_mode == WidgetShortcutMode.presets) _presetsField(l),
                 const SizedBox(height: 20),
@@ -185,14 +183,6 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
         ),
       ),
     );
-  }
-
-  String _modeHint(AppLocalizations l) {
-    return switch (_mode) {
-      WidgetShortcutMode.fixed => l.widgetFixedAmountHint,
-      WidgetShortcutMode.presets => l.widgetPresetsHint,
-      WidgetShortcutMode.open => l.widgetOpenHint,
-    };
   }
 
   Widget _fixedField(AppLocalizations l) {
@@ -253,33 +243,145 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
   }
 }
 
-class _ModeSelector extends StatelessWidget {
-  const _ModeSelector({required this.mode, required this.onChanged});
+/// One selectable behavior option: a miniature of how the button will look on
+/// the widget (same visual language: solid = instant, tinted + badge = opens
+/// input) next to a title and a one-line explanation.
+class _ModeCard extends StatelessWidget {
+  const _ModeCard({
+    required this.mode,
+    required this.selected,
+    required this.category,
+    required this.onTap,
+  });
 
   final WidgetShortcutMode mode;
-  final ValueChanged<WidgetShortcutMode> onChanged;
+  final bool selected;
+  final Category category;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return SegmentedButton<WidgetShortcutMode>(
-      segments: [
-        ButtonSegment(
-          value: WidgetShortcutMode.fixed,
-          label: Text(l.widgetShortcutModeFixed),
+    final theme = Theme.of(context);
+    final (title, hint) = switch (mode) {
+      WidgetShortcutMode.fixed => (
+        l.widgetShortcutModeFixed,
+        l.widgetFixedAmountHint,
+      ),
+      WidgetShortcutMode.presets => (
+        l.widgetShortcutModePresets,
+        l.widgetPresetsHint,
+      ),
+      WidgetShortcutMode.open => (
+        l.widgetShortcutModeOpen,
+        l.widgetOpenHint,
+      ),
+    };
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      decoration: BoxDecoration(
+        color: selected
+            ? theme.colorScheme.primary.withValues(alpha: 0.06)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          width: selected ? 1.5 : 1,
         ),
-        ButtonSegment(
-          value: WidgetShortcutMode.presets,
-          label: Text(l.widgetShortcutModePresets),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: _illustration(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: kTextStyle.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hint,
+                      maxLines: 2,
+                      style: kTextStyle.copyWith(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+                size: 20,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outlineVariant,
+              ),
+            ],
+          ),
         ),
-        ButtonSegment(
-          value: WidgetShortcutMode.open,
-          label: Text(l.widgetShortcutModeOpen),
-        ),
-      ],
-      selected: {mode},
-      showSelectedIcon: false,
-      onSelectionChanged: (s) => onChanged(s.first),
+      ),
     );
+  }
+
+  /// A miniature of the actual widget button in this mode.
+  Widget _illustration() {
+    final fill = category.categoryColor;
+    final icon = category.categoryIcon;
+    return switch (mode) {
+      // Solid circle + one amount caption: "tap = this exact sum".
+      WidgetShortcutMode.fixed => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ModeCircle(fill: fill, icon: icon, diameter: 30, isOpen: false),
+          const SizedBox(height: 3),
+          AmountChip(label: '100', color: fill, fontSize: 8),
+        ],
+      ),
+      // Solid circle + a pair of chips: "your usual sums to pick from".
+      WidgetShortcutMode.presets => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ModeCircle(fill: fill, icon: icon, diameter: 30, isOpen: false),
+          const SizedBox(height: 3),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AmountChip(label: '100', color: fill, fontSize: 8),
+              const SizedBox(width: 3),
+              AmountChip(label: '500', color: fill, fontSize: 8),
+            ],
+          ),
+        ],
+      ),
+      // Tinted circle with the "+" badge: "opens input".
+      WidgetShortcutMode.open => ModeCircle(
+        fill: fill,
+        icon: icon,
+        diameter: 36,
+        isOpen: true,
+      ),
+    };
   }
 }
