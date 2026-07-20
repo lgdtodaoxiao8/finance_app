@@ -83,10 +83,13 @@ class DriftTransactionRepository implements TransactionRepository {
 
   @override
   Stream<List<TransactionDetails>> watchAllWithDetails() {
-    return _db.customSelect(_detailsSql, readsFrom: _readsFrom).watch().map(
-      (rows) =>
-          rows.map((row) => TransactionDetails.fromMap(row.data)).toList(),
-    );
+    return _db
+        .customSelect(_detailsSql, readsFrom: _readsFrom)
+        .watch()
+        .map(
+          (rows) =>
+              rows.map((row) => TransactionDetails.fromMap(row.data)).toList(),
+        );
   }
 
   @override
@@ -100,21 +103,23 @@ class DriftTransactionRepository implements TransactionRepository {
     String? note,
     required String type,
   }) {
-    return _db.into(_db.transactions).insert(
-      TransactionsCompanion.insert(
-        accountId: Value(accountId),
-        accountDestinationId: accountDestinationId == null
-            ? const Value.absent()
-            : Value(accountDestinationId),
-        categoryId: Value(categoryId),
-        currencyId: Value(currencyId),
-        amount: Value(amount),
-        date: Value(date.toUtc().toIso8601String()),
-        note: Value(note),
-        type: Value(type),
-        isCanceled: const Value(false),
-      ),
-    );
+    return _db
+        .into(_db.transactions)
+        .insert(
+          TransactionsCompanion.insert(
+            accountId: Value(accountId),
+            accountDestinationId: accountDestinationId == null
+                ? const Value.absent()
+                : Value(accountDestinationId),
+            categoryId: Value(categoryId),
+            currencyId: Value(currencyId),
+            amount: Value(amount),
+            date: Value(date.toUtc().toIso8601String()),
+            note: Value(note),
+            type: Value(type),
+            isCanceled: const Value(false),
+          ),
+        );
   }
 
   @override

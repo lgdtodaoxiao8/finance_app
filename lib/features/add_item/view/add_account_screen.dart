@@ -6,36 +6,44 @@ import 'package:finance_app/features/add_item/cubit/add_account_cubit.dart';
 import 'package:finance_app/features/add_item/widgets/icon_picker.dart';
 import 'package:finance_app/features/add_transaction/widgets/widgets.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
+import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Creates an account: live preview header (avatar + name), currency, icon —
-/// the same flow language as the category screen.
+/// Creates an account — or edits one when it's passed as the route argument.
+/// Live preview header (avatar + name), currency, icon — the same flow
+/// language as the category screen.
 class AddAccountScreen extends StatelessWidget {
   const AddAccountScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final initial = ModalRoute.of(context)?.settings.arguments as Account?;
     return BlocProvider(
       create: (_) => AddAccountCubit(
         getIt<AccountRepository>(),
         getIt<CurrencyRepository>(),
+        initial: initial,
       ),
-      child: const _AddAccountView(),
+      child: _AddAccountView(initial: initial),
     );
   }
 }
 
 class _AddAccountView extends StatefulWidget {
-  const _AddAccountView();
+  const _AddAccountView({this.initial});
+
+  final Account? initial;
 
   @override
   State<_AddAccountView> createState() => _AddAccountViewState();
 }
 
 class _AddAccountViewState extends State<_AddAccountView> {
-  final _name = TextEditingController();
+  late final _name = TextEditingController(
+    text: widget.initial?.accountName ?? '',
+  );
 
   @override
   void initState() {
@@ -86,10 +94,11 @@ class _AddAccountViewState extends State<_AddAccountView> {
         final cubit = context.read<AddAccountCubit>();
         final accent = Theme.of(context).colorScheme.primary;
         final icon = state.icon ?? Icons.account_balance_wallet_rounded;
+        final editing = widget.initial != null;
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              l.newAccountTitle,
+              editing ? l.editAccountTitle : l.newAccountTitle,
               style: kTextStyle.copyWith(fontSize: 20),
             ),
           ),
@@ -162,8 +171,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
                             IconPicker(
                               onSelectIcon: cubit.setIcon,
                               initialIcon: icon,
-                              backgroundColor: ItemAvatar.tint(accent),
-                              iconColor: accent,
+                              accent: accent,
                             ),
                           ],
                         ),
@@ -184,7 +192,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : Text(l.add),
+                                : Text(editing ? l.save : l.add),
                           ),
                         ),
                       ),

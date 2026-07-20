@@ -1646,6 +1646,66 @@ abstract class AppLocalizations {
   /// **'Tap opens the app to type any amount.'**
   String get widgetOpenHint;
 
+  /// No description provided for @editCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get editCategoryTitle;
+
+  /// No description provided for @editAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit account'**
+  String get editAccountTitle;
+
+  /// No description provided for @iconGroupAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get iconGroupAll;
+
+  /// No description provided for @iconGroupFinance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get iconGroupFinance;
+
+  /// No description provided for @iconGroupMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get iconGroupMovement;
+
+  /// No description provided for @iconGroupFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get iconGroupFood;
+
+  /// No description provided for @iconGroupRetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get iconGroupRetail;
+
+  /// No description provided for @iconGroupHousing.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get iconGroupHousing;
+
+  /// No description provided for @iconGroupHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get iconGroupHealth;
+
+  /// No description provided for @iconGroupOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get iconGroupOther;
+
   /// No description provided for @widgetPreviewSmall.
   ///
   /// In en, this message translates to:

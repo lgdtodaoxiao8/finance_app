@@ -835,6 +835,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetOpenHint => 'Tap opens the app to type any amount.';
 
   @override
+  String get editCategoryTitle => 'Edit category';
+
+  @override
+  String get editAccountTitle => 'Edit account';
+
+  @override
+  String get iconGroupAll => 'All';
+
+  @override
+  String get iconGroupFinance => 'Finance';
+
+  @override
+  String get iconGroupMovement => 'Transport';
+
+  @override
+  String get iconGroupFood => 'Food';
+
+  @override
+  String get iconGroupRetail => 'Shopping';
+
+  @override
+  String get iconGroupHousing => 'Home';
+
+  @override
+  String get iconGroupHealth => 'Health';
+
+  @override
+  String get iconGroupOther => 'Other';
+
+  @override
   String get widgetPreviewSmall => 'Small';
 
   @override

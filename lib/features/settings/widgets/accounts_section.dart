@@ -1,4 +1,5 @@
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/features/settings/cubit/accounts_cubit.dart';
 import 'package:finance_app/features/settings/cubit/manage_status.dart';
@@ -42,11 +43,16 @@ class _AccountsView extends StatelessWidget {
           children: [
             for (final account in state.accounts)
               ManageTile(
-                leading: Icon(
-                  account.accountIcon,
-                  color: const Color(0xFF40434A),
+                leading: ItemAvatar(
+                  color: Theme.of(context).colorScheme.primary,
+                  icon: account.accountIcon,
+                  diameter: 34,
                 ),
                 title: account.accountName,
+                // The reactive list picks the edit up on its own.
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed('/add-account', arguments: account),
                 onDelete: () => confirmDelete(
                   context,
                   what: account.accountName,

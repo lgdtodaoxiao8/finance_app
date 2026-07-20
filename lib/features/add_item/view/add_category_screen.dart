@@ -5,34 +5,42 @@ import 'package:finance_app/features/add_item/cubit/add_category_cubit.dart';
 import 'package:finance_app/features/add_item/widgets/icon_picker.dart';
 import 'package:finance_app/features/add_item/widgets/tint_color_picker.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
+import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Creates a category. One colour drives the whole look: the icon takes it
-/// saturated, the circle behind is the same colour tinted (no alpha control) —
-/// the live preview at the top shows exactly what every list will render.
+/// Creates a category — or edits one when it's passed as the route argument.
+/// One colour drives the whole look: the icon takes it saturated, the circle
+/// behind is the same colour tinted (no alpha control) — the live preview at
+/// the top shows exactly what every list will render.
 class AddCategoryScreen extends StatelessWidget {
   const AddCategoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final initial = ModalRoute.of(context)?.settings.arguments as Category?;
     return BlocProvider(
-      create: (_) => AddCategoryCubit(getIt<CategoryRepository>()),
-      child: const _AddCategoryView(),
+      create: (_) =>
+          AddCategoryCubit(getIt<CategoryRepository>(), initial: initial),
+      child: _AddCategoryView(initial: initial),
     );
   }
 }
 
 class _AddCategoryView extends StatefulWidget {
-  const _AddCategoryView();
+  const _AddCategoryView({this.initial});
+
+  final Category? initial;
 
   @override
   State<_AddCategoryView> createState() => _AddCategoryViewState();
 }
 
 class _AddCategoryViewState extends State<_AddCategoryView> {
-  final _name = TextEditingController();
+  late final _name = TextEditingController(
+    text: widget.initial?.categoryName ?? '',
+  );
 
   @override
   void initState() {
@@ -71,10 +79,11 @@ class _AddCategoryViewState extends State<_AddCategoryView> {
       },
       builder: (context, state) {
         final cubit = context.read<AddCategoryCubit>();
+        final editing = widget.initial != null;
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              l.newCategoryTitle,
+              editing ? l.editCategoryTitle : l.newCategoryTitle,
               style: kTextStyle.copyWith(fontSize: 20),
             ),
           ),
@@ -105,8 +114,7 @@ class _AddCategoryViewState extends State<_AddCategoryView> {
                       IconPicker(
                         onSelectIcon: cubit.setIcon,
                         initialIcon: state.icon,
-                        backgroundColor: ItemAvatar.tint(state.color),
-                        iconColor: state.color,
+                        accent: state.color,
                       ),
                     ],
                   ),
@@ -125,7 +133,7 @@ class _AddCategoryViewState extends State<_AddCategoryView> {
                               width: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(l.add),
+                          : Text(editing ? l.save : l.add),
                     ),
                   ),
                 ),

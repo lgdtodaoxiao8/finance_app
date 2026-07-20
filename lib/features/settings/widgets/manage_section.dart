@@ -82,45 +82,52 @@ class ManageSection extends StatelessWidget {
 }
 
 /// A single manageable row: leading widget, title, and a delete button.
+/// Tapping the row itself opens editing when [onTap] is given.
 class ManageTile extends StatelessWidget {
   const ManageTile({
     super.key,
     required this.leading,
     required this.title,
     required this.onDelete,
+    this.onTap,
   });
 
   final Widget leading;
   final String title;
   final VoidCallback onDelete;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(width: 34, height: 34, child: Center(child: leading)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: kTextStyle.copyWith(fontSize: 15),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            SizedBox(width: 34, height: 34, child: Center(child: leading)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: kTextStyle.copyWith(fontSize: 15),
+              ),
             ),
-          ),
-          IconButton(
-            tooltip: AppLocalizations.of(context).delete,
-            visualDensity: VisualDensity.compact,
-            onPressed: onDelete,
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: 22,
-              color: Colors.grey[500],
+            IconButton(
+              tooltip: AppLocalizations.of(context).delete,
+              visualDensity: VisualDensity.compact,
+              onPressed: onDelete,
+              icon: Icon(
+                Icons.delete_outline_rounded,
+                size: 22,
+                color: Colors.grey[500],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -16,6 +16,14 @@ abstract class CategoryRepository {
 
   /// Number of transactions using this category — used to block deletion of a
   /// category still in use.
+  Future<void> update({
+    required int id,
+    required String name,
+    required int color,
+    required int iconColor,
+    required int iconCodePoint,
+  });
+
   Future<int> transactionCount(int categoryId);
 
   Future<void> delete(int id);
@@ -52,12 +60,34 @@ class DriftCategoryRepository implements CategoryRepository {
     required int iconColor,
     required int iconCodePoint,
   }) {
-    return _db.into(_db.categories).insert(
-      CategoriesCompanion.insert(
+    return _db
+        .into(_db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: Value(name),
+            color: Value(color),
+            iconColor: Value(iconColor),
+            iconCodePoint: Value(iconCodePoint),
+          ),
+        );
+  }
+
+  @override
+  Future<void> update({
+    required int id,
+    required String name,
+    required int color,
+    required int iconColor,
+    required int iconCodePoint,
+  }) async {
+    await (_db.update(_db.categories)..where((c) => c.id.equals(id))).write(
+      CategoriesCompanion(
         name: Value(name),
         color: Value(color),
         iconColor: Value(iconColor),
         iconCodePoint: Value(iconCodePoint),
+        // Stamped so cloud sync (LWW on updated_at) picks the edit up.
+        updatedAt: Value(nowMs()),
       ),
     );
   }
@@ -87,8 +117,11 @@ class DriftCategoryRepository implements CategoryRepository {
 
   @override
   Stream<List<Category>> watchAll() {
-    return _db.select(_db.categories).watch().map(
-      (rows) => rows.map(_toDomain).toList(),
-    );
+    return _db
+        .select(_db.categories)
+        .watch()
+        .map(
+          (rows) => rows.map(_toDomain).toList(),
+        );
   }
 }

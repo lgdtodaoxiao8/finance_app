@@ -840,6 +840,36 @@ class AppLocalizationsRu extends AppLocalizations {
       'Касание открывает приложение для ввода любой суммы.';
 
   @override
+  String get editCategoryTitle => 'Изменить категорию';
+
+  @override
+  String get editAccountTitle => 'Изменить счёт';
+
+  @override
+  String get iconGroupAll => 'Все';
+
+  @override
+  String get iconGroupFinance => 'Финансы';
+
+  @override
+  String get iconGroupMovement => 'Транспорт';
+
+  @override
+  String get iconGroupFood => 'Еда';
+
+  @override
+  String get iconGroupRetail => 'Покупки';
+
+  @override
+  String get iconGroupHousing => 'Дом';
+
+  @override
+  String get iconGroupHealth => 'Здоровье';
+
+  @override
+  String get iconGroupOther => 'Прочее';
+
+  @override
   String get widgetPreviewSmall => 'Маленький';
 
   @override

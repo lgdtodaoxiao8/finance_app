@@ -49,6 +49,10 @@ class _CategoriesView extends StatelessWidget {
                   diameter: 34,
                 ),
                 title: category.categoryName,
+                // The reactive list picks the edit up on its own.
+                onTap: () => Navigator.of(
+                  context,
+                ).pushNamed('/add-category', arguments: category),
                 onDelete: () => confirmDelete(
                   context,
                   what: category.categoryName,

@@ -15,6 +15,13 @@ abstract class AccountRepository {
 
   /// Number of transactions referencing this account (as source or
   /// destination) — used to block deletion of an account still in use.
+  Future<void> update({
+    required int id,
+    required String name,
+    required int currencyId,
+    required int iconCodePoint,
+  });
+
   Future<int> transactionCount(int accountId);
 
   Future<void> delete(int id);
@@ -49,11 +56,31 @@ class DriftAccountRepository implements AccountRepository {
     required int currencyId,
     required int iconCodePoint,
   }) {
-    return _db.into(_db.accounts).insert(
-      AccountsCompanion.insert(
+    return _db
+        .into(_db.accounts)
+        .insert(
+          AccountsCompanion.insert(
+            name: Value(name),
+            currencyId: Value(currencyId),
+            iconCodePoint: Value(iconCodePoint),
+          ),
+        );
+  }
+
+  @override
+  Future<void> update({
+    required int id,
+    required String name,
+    required int currencyId,
+    required int iconCodePoint,
+  }) async {
+    await (_db.update(_db.accounts)..where((a) => a.id.equals(id))).write(
+      AccountsCompanion(
         name: Value(name),
         currencyId: Value(currencyId),
         iconCodePoint: Value(iconCodePoint),
+        // Stamped so cloud sync (LWW on updated_at) picks the edit up.
+        updatedAt: Value(nowMs()),
       ),
     );
   }
@@ -84,8 +111,11 @@ class DriftAccountRepository implements AccountRepository {
 
   @override
   Stream<List<Account>> watchAll() {
-    return _db.select(_db.accounts).watch().map(
-      (rows) => rows.map(_toDomain).toList(),
-    );
+    return _db
+        .select(_db.accounts)
+        .watch()
+        .map(
+          (rows) => rows.map(_toDomain).toList(),
+        );
   }
 }

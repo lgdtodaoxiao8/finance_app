@@ -1,23 +1,24 @@
-import 'package:finance_app/features/add_item/widgets/widgets.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
+import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
-import 'package:finance_app/theme/theme.dart';
-
+/// Icon selection: quick group-filter chips over a scrollable grid. The
+/// selected icon renders exactly as the item will everywhere else — a tinted
+/// circle with the accent-coloured glyph (see ItemAvatar).
 class IconPicker extends StatefulWidget {
   const IconPicker({
     super.key,
     required this.onSelectIcon,
-    this.backgroundColor,
-    this.iconColor,
+    required this.accent,
     this.initialIcon,
   });
 
   final void Function(IconData) onSelectIcon;
-  final Color? backgroundColor;
-  final Color? iconColor;
 
-  /// Pre-selected icon (keeps the picker in sync with the caller's default).
+  /// The item's colour — selection is shown as its tint + this colour.
+  final Color accent;
+
+  /// Pre-selected icon (keeps the picker in sync with the caller's state).
   final IconData? initialIcon;
 
   @override
@@ -256,158 +257,118 @@ class _IconPickerState extends State<IconPicker> {
     ],
   };
 
-  bool isOpened = true;
-
-  IconData? _selectedIcon;
-  String _selectedCategory = 'All';
+  /// null = all groups.
+  String? _group;
+  late IconData _selectedIcon;
 
   @override
   void initState() {
     super.initState();
-
-    _selectedIcon =
-        widget.initialIcon ?? categorizedIcons.values.toList()[0][0];
+    _selectedIcon = widget.initialIcon ?? categorizedIcons.values.first.first;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.onSelectIcon(_selectedIcon!);
+      if (mounted) widget.onSelectIcon(_selectedIcon);
     });
   }
 
+  String _groupLabel(AppLocalizations l, String? key) {
+    return switch (key) {
+      null => l.iconGroupAll,
+      'Finance' => l.iconGroupFinance,
+      'Movement' => l.iconGroupMovement,
+      'Food' => l.iconGroupFood,
+      'Retail' => l.iconGroupRetail,
+      'Housing' => l.iconGroupHousing,
+      'Health' => l.iconGroupHealth,
+      _ => l.iconGroupOther,
+    };
+  }
+
+  List<IconData> get _icons => _group == null
+      ? categorizedIcons.values.expand((i) => i).toList()
+      : categorizedIcons[_group]!;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: AppColors.field,
-      ),
-      child: AnimatedPadding(
-        duration: const Duration(milliseconds: 200),
-        padding: isOpened
-            ? EdgeInsets.zero
-            : const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        child: AnimatedCrossFade(
-          duration: const Duration(milliseconds: 200),
-          crossFadeState: isOpened
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
-          firstChild: InkWell(
-            onTap: () => setState(() => isOpened = !isOpened),
-            child: Row(
-              children: [
-                Text(
-                  AppLocalizations.of(context).iconPicker,
-                  style: kTextStyle.copyWith(
-                    fontSize: 16,
-                    color: const Color(0xFF242528),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                const Icon(Icons.keyboard_arrow_down_rounded),
-              ],
-            ),
-          ),
-          secondChild: Column(
-            mainAxisSize: MainAxisSize.min,
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.iconPicker,
+          style: kTextStyle.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 36,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    PopupDropdownSimple(
-                      height: 40,
-                      width: 200,
-                      currentValue: _selectedCategory,
-                      onSelect: (value) {
-                        setState(() => _selectedCategory = value);
-                      },
-                      values: ['All', ...categorizedIcons.keys],
-                      label: AppLocalizations.of(context).iconCategories,
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.28,
-                child: GridView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    childAspectRatio: 1 / 1,
-                    crossAxisSpacing: 6,
-                    mainAxisSpacing: 6,
-                  ),
-                  itemBuilder: (ctx, index) {
-                    late final IconData icon;
-                    if (_selectedCategory == 'All') {
-                      icon = categorizedIcons.values
-                          .expand((i) => i)
-                          .toList()[index];
-                    } else {
-                      icon = categorizedIcons[_selectedCategory]![index];
-                    }
-
-                    final isSelect = _selectedIcon == icon;
-                    return GestureDetector(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isSelect
-                              ?
-                                // ? Colors.blue.withValues(alpha: 0.1)
-                                widget.backgroundColor ??
-                                    const Color(
-                                      0xFF6084CC,
-                                    ).withValues(alpha: 0.2)
-                              : null,
-                          shape: BoxShape.circle,
-
-                          // border: isSelect
-                          //     ? Border.all(
-                          //         color: Colors.blue,
-                          //         width: 2,
-                          //       )
-                          //     : null,
-                          border: isSelect && widget.backgroundColor == null
-                              ? Border.all(
-                                  color: const Color(
-                                    0xFF6084CC,
-                                  ).withValues(alpha: .7),
-                                  width: 3,
-                                )
-                              : null,
-                        ),
-                        child: Icon(
-                          icon,
-                          size: isSelect ? 33 : 30,
-                          color: isSelect ? widget.iconColor : null,
-                        ),
+              for (final group in <String?>[null, ...categorizedIcons.keys])
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(
+                      _groupLabel(l, group),
+                      style: kTextStyle.copyWith(
+                        fontSize: 13,
+                        fontWeight: _group == group
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
-                      onTap: () {
-                        setState(() {
-                          _selectedIcon = icon;
-                        });
-                        widget.onSelectIcon(icon);
-                      },
-                    );
-                  },
-                  itemCount: _selectedCategory == 'All'
-                      ? categorizedIcons.values.expand((i) => i).length
-                      : categorizedIcons[_selectedCategory]!.length,
+                    ),
+                    selected: _group == group,
+                    showCheckmark: false,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) => setState(() => _group = group),
+                  ),
                 ),
-              ),
-
-              IconButton(
-                onPressed: () => setState(() => isOpened = !isOpened),
-                icon: const Icon(Icons.keyboard_arrow_up_rounded),
-              ),
             ],
           ),
         ),
-      ),
+        const SizedBox(height: 12),
+        Container(
+          height: 244,
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: kCardShadow,
+          ),
+          child: GridView.builder(
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 6,
+              crossAxisSpacing: 6,
+              mainAxisSpacing: 6,
+            ),
+            itemCount: _icons.length,
+            itemBuilder: (ctx, index) {
+              final icon = _icons[index];
+              final selected = icon == _selectedIcon;
+              return GestureDetector(
+                onTap: () {
+                  setState(() => _selectedIcon = icon);
+                  widget.onSelectIcon(icon);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 120),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected
+                        ? widget.accent.withValues(alpha: 0.15)
+                        : null,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 24,
+                    color: selected ? widget.accent : scheme.onSurfaceVariant,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

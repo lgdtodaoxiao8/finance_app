@@ -8,13 +8,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 part 'add_account_state.dart';
 
 class AddAccountCubit extends Cubit<AddAccountState> {
-  AddAccountCubit(this._accountRepository, this._currencyRepository)
-    : super(const AddAccountState()) {
+  AddAccountCubit(
+    this._accountRepository,
+    this._currencyRepository, {
+    Account? initial,
+  }) : _editingId = initial?.accountId,
+       super(
+         initial == null
+             ? const AddAccountState()
+             : AddAccountState(
+                 icon: initial.accountIcon,
+                 selectedCurrencyId: initial.currencyId,
+               ),
+       ) {
     loadCurrencies();
   }
 
   final AccountRepository _accountRepository;
   final CurrencyRepository _currencyRepository;
+  final int? _editingId;
+
+  bool get isEditing => _editingId != null;
 
   Future<void> loadCurrencies() async {
     try {
@@ -44,11 +58,22 @@ class AddAccountCubit extends Cubit<AddAccountState> {
 
     emit(state.copyWith(sending: true));
     try {
-      final id = await _accountRepository.add(
-        name: name,
-        currencyId: currencyId,
-        iconCodePoint: icon.codePoint,
-      );
+      final int id;
+      if (_editingId case final editingId?) {
+        await _accountRepository.update(
+          id: editingId,
+          name: name,
+          currencyId: currencyId,
+          iconCodePoint: icon.codePoint,
+        );
+        id = editingId;
+      } else {
+        id = await _accountRepository.add(
+          name: name,
+          currencyId: currencyId,
+          iconCodePoint: icon.codePoint,
+        );
+      }
       emit(state.copyWith(sending: false, savedId: id));
     } catch (e, st) {
       debugPrint('AddAccountCubit.save error: $e\n$st');
