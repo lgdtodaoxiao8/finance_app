@@ -2,17 +2,17 @@ part of 'add_category_cubit.dart';
 
 class AddCategoryState extends Equatable {
   const AddCategoryState({
-    this.color,
-    this.iconColor,
-    this.icon,
+    this.color = const Color(0xFF1E88E5),
+    this.icon = Icons.shopping_bag_rounded,
     this.sending = false,
     this.savedId,
     this.error,
   });
 
-  final Color? color;
-  final Color? iconColor;
-  final IconData? icon;
+  /// The one colour the user picks: icon colour; the circle fill is derived
+  /// from it (see ItemAvatar.tint). Defaults let the user save immediately.
+  final Color color;
+  final IconData icon;
   final bool sending;
 
   /// Set to the new row id once saved — the screen pops with it.
@@ -21,7 +21,6 @@ class AddCategoryState extends Equatable {
 
   AddCategoryState copyWith({
     Color? color,
-    Color? iconColor,
     IconData? icon,
     bool? sending,
     int? savedId,
@@ -29,7 +28,6 @@ class AddCategoryState extends Equatable {
   }) {
     return AddCategoryState(
       color: color ?? this.color,
-      iconColor: iconColor ?? this.iconColor,
       icon: icon ?? this.icon,
       sending: sending ?? this.sending,
       savedId: savedId ?? this.savedId,
@@ -38,5 +36,5 @@ class AddCategoryState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [color, iconColor, icon, sending, savedId, error];
+  List<Object?> get props => [color, icon, sending, savedId, error];
 }

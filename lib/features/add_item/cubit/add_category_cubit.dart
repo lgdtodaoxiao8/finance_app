@@ -11,21 +11,19 @@ class AddCategoryCubit extends Cubit<AddCategoryState> {
   final CategoryRepository _repository;
 
   void setColor(Color color) => emit(state.copyWith(color: color));
-  void setIconColor(Color color) => emit(state.copyWith(iconColor: color));
   void setIcon(IconData icon) => emit(state.copyWith(icon: icon));
 
   Future<void> save(String name) async {
-    final color = state.color;
-    final icon = state.icon;
-    if (color == null || icon == null) return;
-
     emit(state.copyWith(sending: true));
     try {
+      final argb = state.color.toARGB32();
       final id = await _repository.add(
         name: name,
-        color: color.toARGB32(),
-        iconColor: (state.iconColor ?? Colors.black).toARGB32(),
-        iconCodePoint: icon.codePoint,
+        color: argb,
+        // One colour drives the whole look (icon saturated, circle tinted at
+        // render time). icon_color mirrors it for backward compatibility.
+        iconColor: argb,
+        iconCodePoint: state.icon.codePoint,
       );
       emit(state.copyWith(sending: false, savedId: id));
     } catch (e, st) {

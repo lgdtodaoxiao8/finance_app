@@ -1,6 +1,7 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/core/widgets/empty_state.dart';
+import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
@@ -301,14 +302,10 @@ class _TransactionTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: t.categoryColor,
-              ),
-              child: Icon(t.categoryIcon, color: t.categoryIconColor, size: 22),
+            ItemAvatar(
+              color: t.categoryColor,
+              icon: t.categoryIcon,
+              diameter: 44,
             ),
             const SizedBox(width: 12),
             Expanded(

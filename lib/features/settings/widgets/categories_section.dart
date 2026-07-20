@@ -1,4 +1,5 @@
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/features/settings/cubit/categories_cubit.dart';
 import 'package:finance_app/features/settings/cubit/manage_status.dart';
@@ -42,18 +43,10 @@ class _CategoriesView extends StatelessWidget {
           children: [
             for (final category in state.categories)
               ManageTile(
-                leading: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: category.categoryColor,
-                  ),
-                  child: Icon(
-                    category.categoryIcon,
-                    size: 18,
-                    color: category.categoryIconColor,
-                  ),
+                leading: ItemAvatar(
+                  color: category.categoryColor,
+                  icon: category.categoryIcon,
+                  diameter: 34,
                 ),
                 title: category.categoryName,
                 onDelete: () => confirmDelete(

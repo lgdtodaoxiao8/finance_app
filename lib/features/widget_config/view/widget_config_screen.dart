@@ -1,5 +1,6 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/preferences/app_preferences.dart';
+import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
@@ -580,18 +581,10 @@ class _CategoryPickerSheet extends StatelessWidget {
                   for (final c in categories)
                     ListTile(
                       onTap: () => Navigator.of(context).pop(c),
-                      leading: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: c.categoryColor,
-                        ),
-                        child: Icon(
-                          c.categoryIcon,
-                          size: 18,
-                          color: c.categoryIconColor,
-                        ),
+                      leading: ItemAvatar(
+                        color: c.categoryColor,
+                        icon: c.categoryIcon,
+                        diameter: 36,
                       ),
                       title: Text(c.categoryName),
                     ),

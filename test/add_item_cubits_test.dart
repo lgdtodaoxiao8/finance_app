@@ -42,14 +42,19 @@ void main() {
   test('AddCategoryCubit saves a category', () async {
     final cubit = AddCategoryCubit(getIt<CategoryRepository>());
     cubit.setColor(Colors.red);
-    cubit.setIconColor(Colors.white);
     cubit.setIcon(Icons.fastfood_rounded);
 
     await cubit.save('Groceries');
 
     expect(cubit.state.savedId, isNotNull);
     final categories = await getIt<CategoryRepository>().getAll();
-    expect(categories.any((c) => c.categoryName == 'Groceries'), isTrue);
+    final saved = categories.where((c) => c.categoryName == 'Groceries');
+    expect(saved, isNotEmpty);
+    // One colour drives the look: icon_color mirrors the picked colour.
+    expect(
+      saved.first.categoryIconColor.toARGB32(),
+      saved.first.categoryColor.toARGB32(),
+    );
     await cubit.close();
   });
 

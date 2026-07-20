@@ -10,11 +10,15 @@ class IconPicker extends StatefulWidget {
     required this.onSelectIcon,
     this.backgroundColor,
     this.iconColor,
+    this.initialIcon,
   });
 
   final void Function(IconData) onSelectIcon;
   final Color? backgroundColor;
   final Color? iconColor;
+
+  /// Pre-selected icon (keeps the picker in sync with the caller's default).
+  final IconData? initialIcon;
 
   @override
   State<IconPicker> createState() => _IconPickerState();
@@ -261,7 +265,8 @@ class _IconPickerState extends State<IconPicker> {
   void initState() {
     super.initState();
 
-    _selectedIcon = categorizedIcons.values.toList()[0][0];
+    _selectedIcon =
+        widget.initialIcon ?? categorizedIcons.values.toList()[0][0];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onSelectIcon(_selectedIcon!);
     });

@@ -224,26 +224,24 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected
-              ? c.categoryColor
-              : c.categoryColor.withValues(alpha: 0.14),
+          color: c.categoryColor.withValues(alpha: selected ? 0.18 : 0.10),
           borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: selected ? c.categoryColor : Colors.transparent,
+            width: 1.5,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              c.categoryIcon,
-              size: 16,
-              color: selected ? c.categoryIconColor : c.categoryColor,
-            ),
+            Icon(c.categoryIcon, size: 16, color: c.categoryColor),
             const SizedBox(width: 6),
             Text(
               c.categoryName,
               style: kTextStyle.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? c.categoryIconColor : null,
+                color: selected ? c.categoryColor : null,
               ),
             ),
           ],

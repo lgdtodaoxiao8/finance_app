@@ -118,13 +118,10 @@ class _PopupDropdownState extends State<PopupDropdown> {
                       Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected
-                              ? Color(
-                                  value['color'],
-                                ).withValues(alpha: 0.5)
-                              : Color(
-                                  value['color'],
-                                ),
+                          // One-colour item look: tinted fill, saturated icon.
+                          color: Color(value['color']).withValues(
+                            alpha: isSelected ? 0.08 : 0.15,
+                          ),
                         ),
                         padding: const EdgeInsets.all(8),
                         child: Icon(
@@ -134,8 +131,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                             fontPackage: null,
                           ),
                           size: 25,
-                          // color: const Color(0xFF40434A),
-                          color: Color(value['icon_color']),
+                          color: Color(value['color']),
                         ),
                       ),
 
@@ -277,7 +273,9 @@ class _PopupDropdownState extends State<PopupDropdown> {
                           : Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(selected['color']),
+                                color: Color(
+                                  selected['color'],
+                                ).withValues(alpha: 0.15),
                               ),
                               padding: const EdgeInsets.all(7),
                               margin: const EdgeInsets.only(top: 4),
@@ -288,7 +286,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                                   fontPackage: null,
                                 ),
                                 size: 23,
-                                color: Color(selected['icon_color']),
+                                color: Color(selected['color']),
                               ),
                             ),
                     ),

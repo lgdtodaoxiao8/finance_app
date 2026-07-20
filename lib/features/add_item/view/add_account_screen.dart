@@ -1,14 +1,17 @@
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/add_item/cubit/add_account_cubit.dart';
-import 'package:finance_app/features/add_item/widgets/widgets.dart';
+import 'package:finance_app/features/add_item/widgets/icon_picker.dart';
 import 'package:finance_app/features/add_transaction/widgets/widgets.dart';
-import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
+import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+/// Creates an account: live preview header (avatar + name), currency, icon —
+/// the same flow language as the category screen.
 class AddAccountScreen extends StatelessWidget {
   const AddAccountScreen({super.key});
 
@@ -32,18 +35,23 @@ class _AddAccountView extends StatefulWidget {
 }
 
 class _AddAccountViewState extends State<_AddAccountView> {
-  final _nameKey = GlobalKey<CustomTextFieldState>();
+  final _name = TextEditingController();
 
-  String? _nameValidator(String value) {
-    if (value.length < 4) return AppLocalizations.of(context).mustBeAtLeast4;
-    if (value.length > 30) return AppLocalizations.of(context).maximum30;
-    return null;
+  @override
+  void initState() {
+    super.initState();
+    _name.addListener(() => setState(() {}));
   }
 
-  void _save() {
-    final nameValid = _nameKey.currentState?.validate() ?? false;
-    if (!nameValid) return;
-    context.read<AddAccountCubit>().save(_nameKey.currentState!.text);
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  bool get _valid {
+    final name = _name.text.trim();
+    return name.isNotEmpty && name.length <= 30;
   }
 
   Future<int> _addNewCurrency() async {
@@ -59,6 +67,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return BlocConsumer<AddAccountCubit, AddAccountState>(
       listenWhen: (p, c) => p.savedId != c.savedId || p.error != c.error,
       listener: (context, state) {
@@ -67,9 +76,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
         } else if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                '${AppLocalizations.of(context).somethingWentWrong}: ${state.error}',
-              ),
+              content: Text('${l.somethingWentWrong}: ${state.error}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -77,48 +84,14 @@ class _AddAccountViewState extends State<_AddAccountView> {
       },
       builder: (context, state) {
         final cubit = context.read<AddAccountCubit>();
+        final accent = Theme.of(context).colorScheme.primary;
+        final icon = state.icon ?? Icons.account_balance_wallet_rounded;
         return Scaffold(
           appBar: AppBar(
-            elevation: 0,
-            shadowColor: Colors.transparent,
-            backgroundColor: Colors.transparent,
-            surfaceTintColor: Colors.transparent,
             title: Text(
-              AppLocalizations.of(context).newAccountTitle,
-              style: kTextStyle.copyWith(
-                fontSize: 22,
-                color: const Color(0xFF242528),
-                fontWeight: FontWeight.w500,
-              ),
+              l.newAccountTitle,
+              style: kTextStyle.copyWith(fontSize: 20),
             ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                child: ElevatedButton(
-                  onPressed: state.sending ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  ),
-                  child: state.sending
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          AppLocalizations.of(context).add,
-                          style: kTextStyle.copyWith(),
-                        ),
-                ),
-              ),
-            ],
           ),
           body: state.status == AddAccountStatus.loading
               ? const Center(child: CircularProgressIndicator())
@@ -126,65 +99,96 @@ class _AddAccountViewState extends State<_AddAccountView> {
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(10),
-                    child: Text(
-                      AppLocalizations.of(context).somethingWentWrong,
-                    ),
+                    child: Text(l.somethingWentWrong),
                   ),
                 )
-              : ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 13, 20, 20),
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(2),
-                            child: CustomTextField(
-                              key: _nameKey,
-                              errorTextPadding: const EdgeInsets.only(
-                                left: 20,
-                                top: 3,
+              : SafeArea(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: kCardShadow,
                               ),
-                              prefixIcon: state.icon,
-                              prefixPadding: EdgeInsets.zero,
-                              prefixIconColor: const Color(0xFF202020),
-                              validate: _nameValidator,
-                              hint: AppLocalizations.of(context).name,
+                              child: Row(
+                                children: [
+                                  ItemAvatar(
+                                    color: accent,
+                                    icon: icon,
+                                    diameter: 64,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _name,
+                                      maxLength: 30,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      style: kTextStyle.copyWith(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: l.name,
+                                        counterText: '',
+                                        border: InputBorder.none,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Divider(
-                            height: 2,
-                            thickness: 2,
-                            color: Theme.of(context).dividerColor,
-                            indent: 25,
-                            endIndent: 25,
-                          ),
-                          const SizedBox(height: 12),
-                          PopupDropdown(
-                            expand: true,
-                            borderCircularRadius: 20,
-                            colorFilling: const Color(0xFFEDEDF2),
-                            currentValue: state.selectedCurrencyId,
-                            tableType: Tables.currency,
-                            onSelect: cubit.setCurrency,
-                            onAddNew: _addNewCurrency,
-                            values: [
-                              for (final c in state.currencies) c.toMap(),
-                            ],
-                            label: AppLocalizations.of(context).accountCurrency,
-                          ),
-                          const SizedBox(height: 15),
-                          IconPicker(onSelectIcon: cubit.setIcon),
-                        ],
+                            const SizedBox(height: 20),
+                            PopupDropdown(
+                              expand: true,
+                              borderCircularRadius: 20,
+                              colorFilling: const Color(0xFFEDEDF2),
+                              currentValue: state.selectedCurrencyId,
+                              tableType: Tables.currency,
+                              onSelect: cubit.setCurrency,
+                              onAddNew: _addNewCurrency,
+                              values: [
+                                for (final c in state.currencies) c.toMap(),
+                              ],
+                              label: l.accountCurrency,
+                            ),
+                            const SizedBox(height: 20),
+                            IconPicker(
+                              onSelectIcon: cubit.setIcon,
+                              initialIcon: icon,
+                              backgroundColor: ItemAvatar.tint(accent),
+                              iconColor: accent,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: state.sending || !_valid
+                                ? null
+                                : () => cubit.save(_name.text.trim()),
+                            child: state.sending
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(l.add),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
         );
