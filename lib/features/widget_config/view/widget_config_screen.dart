@@ -466,45 +466,80 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
     final s = widget.shortcuts[index];
     final category = widget.categoryFor(s.categoryId);
     final fill = category?.categoryColor ?? Colors.grey;
-    return Row(
-      children: [
-        ModeCircle(
-          fill: fill,
-          icon: category?.categoryIcon ?? Icons.category,
-          diameter: 34,
-          isOpen: _primaryAmount(s) == null,
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            category?.categoryName ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: kTextStyle.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+    final name = category?.categoryName ?? '';
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available =
+            constraints.maxWidth - 34 - 10 - 8 - _textWidth(name, 14);
+        return Row(
+          children: [
+            ModeCircle(
+              fill: fill,
+              icon: category?.categoryIcon ?? Icons.category,
+              diameter: 34,
+              isOpen: _primaryAmount(s) == null,
             ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        ..._rowChips(s, fill),
-      ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: kTextStyle.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ..._rowChips(s, fill, available),
+          ],
+        );
+      },
     );
   }
 
-  List<Widget> _rowChips(WidgetShortcut s, Color fill) {
+  double _textWidth(String text, double fontSize) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return painter.width;
+  }
+
+  /// Chip width mirror of [AmountChip]'s padding (fontSize * 0.85 each side).
+  double _chipWidth(String label) => _textWidth(label, 12) + 12 * 0.85 * 2 + 2;
+
+  List<Widget> _rowChips(WidgetShortcut s, Color fill, double available) {
     String short(double v) => _shortAmount(v);
     return switch (s.mode) {
       WidgetShortcutMode.fixed when s.amount != null => [
         AmountChip(label: widget.amountCaption(s.amount!), color: fill),
       ],
-      WidgetShortcutMode.presets when s.presets.isNotEmpty => [
-        for (final p in s.presets.take(2)) ...[
-          AmountChip(label: short(p), color: fill),
-          const SizedBox(width: 5),
-        ],
-        AmountChip(label: '…', color: fill),
-      ],
+      WidgetShortcutMode.presets when s.presets.isNotEmpty => () {
+        // As many preset chips as fit, mirroring the widget's ViewThatFits.
+        final labels = [for (final p in s.presets) short(p)];
+        final dotsWidth = _chipWidth('…');
+        var count = labels.length > 4 ? 4 : labels.length;
+        while (count > 1) {
+          var total = dotsWidth;
+          for (final l in labels.take(count)) {
+            total += _chipWidth(l) + 5;
+          }
+          if (total <= available) break;
+          count--;
+        }
+        return [
+          for (final l in labels.take(count)) ...[
+            AmountChip(label: l, color: fill),
+            const SizedBox(width: 5),
+          ],
+          AmountChip(label: '…', color: fill),
+        ];
+      }(),
       _ => [AmountChip(label: '+', color: fill)],
     };
   }

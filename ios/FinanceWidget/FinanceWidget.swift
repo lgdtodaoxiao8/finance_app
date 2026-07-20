@@ -438,13 +438,14 @@ struct QuickAddEntryView: View {
   private var glyphSize: CGFloat { 24 }
   private var captionSize: CGFloat { 11 }
 
+  // No extra padding anywhere below: iOS 17 already applies default widget
+  // content margins (~16pt); stacking our own on top squeezed the layout and
+  // made it look non-native.
   private var smallGrid: some View {
     VStack(spacing: 6) {
       gridRowView(0)
       gridRowView(1)
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 10)
     .widgetURL(smallURL)
   }
 
@@ -556,7 +557,6 @@ struct QuickAddEntryView: View {
         }
       }
     }
-    .padding(14)
   }
 
   private var rowCircleSize: CGFloat { 34 }
@@ -582,11 +582,9 @@ struct QuickAddEntryView: View {
         .font(.subheadline.weight(.medium))
         .foregroundColor(.primary)
         .lineLimit(1)
-        .layoutPriority(-1)
       Spacer(minLength: 8)
       rowActions(shortcut)
         .opacity(logged ? 0.35 : 1)
-        .fixedSize()
     }
     .frame(maxHeight: .infinity)
   }
@@ -599,25 +597,39 @@ struct QuickAddEntryView: View {
         amountChip(shortcut, amount)
       }
     case "presets":
-      // Two presets at most — chips must never crowd the category name.
-      HStack(spacing: 6) {
-        ForEach(Array(shortcut.presets.prefix(2)), id: \.self) { preset in
-          amountChip(shortcut, preset)
-        }
-        // Custom amount → open the app prefilled (Link works in medium).
-        linkChip(shortcut, systemName: "ellipsis")
+      // As many preset chips as actually fit next to the category name —
+      // ViewThatFits tries the widest layout first and steps down.
+      ViewThatFits(in: .horizontal) {
+        presetChips(shortcut, showing: 4)
+        presetChips(shortcut, showing: 3)
+        presetChips(shortcut, showing: 2)
+        presetChips(shortcut, showing: 1)
       }
     default:
       linkChip(shortcut, systemName: "plus")
     }
   }
 
+  private func presetChips(_ shortcut: Shortcut, showing: Int) -> some View {
+    HStack(spacing: 6) {
+      // Bare numbers: the currency symbol would repeat on every chip and
+      // costs the width of a whole extra preset.
+      ForEach(Array(shortcut.presets.prefix(showing)), id: \.self) { preset in
+        amountChip(shortcut, preset, withSymbol: false)
+      }
+      // Custom amount → open the app prefilled (Link works in medium).
+      linkChip(shortcut, systemName: "ellipsis")
+    }
+  }
+
   /// Quiet tinted capsule that logs the amount instantly.
-  private func amountChip(_ shortcut: Shortcut, _ amount: Double) -> some View {
+  private func amountChip(
+    _ shortcut: Shortcut, _ amount: Double, withSymbol: Bool = true
+  ) -> some View {
     Button(intent: QuickAddIntent(
       categoryId: shortcut.categoryId, amount: amount, shortcutId: shortcut.id)
     ) {
-      Text(amountCaption(amount))
+      Text(withSymbol ? amountCaption(amount) : shortAmount(amount))
         .font(.system(size: 13, weight: .semibold, design: .rounded))
         .foregroundColor(shortcut.color)
         .padding(.vertical, 7)
