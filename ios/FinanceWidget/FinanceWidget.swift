@@ -20,15 +20,29 @@ struct CategoryItem: Identifiable {
   let name: String
   let value: Double
   let color: Color
+  let iconCode: Int
+}
+
+struct RecentItem: Identifiable {
+  let id = UUID()
+  let name: String
+  let amount: Double
+  let isExpense: Bool
+  let color: Color
+  let iconCode: Int
+  let date: Date
 }
 
 struct FinanceEntry: TimelineEntry {
   let date: Date
   let income: Double
   let expense: Double
+  /// Spent today — the most glanceable number of all.
+  let today: Double
   let balance: Double
   let symbol: String
   let categories: [CategoryItem]
+  let recent: [RecentItem]
 }
 
 // MARK: - Data loading (from the shared App Group store written by home_widget)
@@ -41,19 +55,11 @@ private func colorFromARGB(_ argb: Int) -> Color {
   return Color(.sRGB, red: r, green: g, blue: b, opacity: a == 0 ? 1 : a)
 }
 
-private func money(_ value: Double, _ symbol: String) -> String {
-  let formatter = NumberFormatter()
-  formatter.numberStyle = .decimal
-  formatter.minimumFractionDigits = 2
-  formatter.maximumFractionDigits = 2
-  let text = formatter.string(from: NSNumber(value: value)) ?? "0.00"
-  return symbol.isEmpty ? text : "\(text) \(symbol)"
-}
-
 private func loadEntry() -> FinanceEntry {
   let defaults = UserDefaults(suiteName: appGroupId)
   let income = defaults?.double(forKey: "income") ?? 0
   let expense = defaults?.double(forKey: "expense") ?? 0
+  let today = defaults?.double(forKey: "today") ?? 0
   let balance = defaults?.double(forKey: "balance") ?? 0
   let symbol = defaults?.string(forKey: "symbol") ?? ""
 
@@ -67,7 +73,28 @@ private func loadEntry() -> FinanceEntry {
       let value = (item["value"] as? NSNumber)?.doubleValue ?? 0
       let colorInt = (item["color"] as? NSNumber)?.intValue ?? 0xFF9E9E_9E
       categories.append(
-        CategoryItem(name: name, value: value, color: colorFromARGB(colorInt)))
+        CategoryItem(
+          name: name, value: value, color: colorFromARGB(colorInt),
+          iconCode: (item["iconCode"] as? NSNumber)?.intValue ?? 0))
+    }
+  }
+
+  var recent: [RecentItem] = []
+  if let json = defaults?.string(forKey: "recent"),
+    let data = json.data(using: .utf8),
+    let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+  {
+    for item in array {
+      let ms = (item["date"] as? NSNumber)?.doubleValue ?? 0
+      recent.append(
+        RecentItem(
+          name: item["name"] as? String ?? "",
+          amount: (item["amount"] as? NSNumber)?.doubleValue ?? 0,
+          isExpense: item["isExpense"] as? Bool ?? true,
+          color: colorFromARGB(
+            (item["color"] as? NSNumber)?.intValue ?? 0xFF9E9E_9E),
+          iconCode: (item["iconCode"] as? NSNumber)?.intValue ?? 0,
+          date: Date(timeIntervalSince1970: ms / 1000)))
     }
   }
 
@@ -75,9 +102,11 @@ private func loadEntry() -> FinanceEntry {
     date: Date(),
     income: income,
     expense: expense,
+    today: today,
     balance: balance,
     symbol: symbol,
-    categories: categories)
+    categories: categories,
+    recent: recent)
 }
 
 // MARK: - Timeline
@@ -85,8 +114,8 @@ private func loadEntry() -> FinanceEntry {
 struct Provider: TimelineProvider {
   func placeholder(in context: Context) -> FinanceEntry {
     FinanceEntry(
-      date: Date(), income: 0, expense: 0, balance: 0, symbol: "$",
-      categories: [])
+      date: Date(), income: 0, expense: 0, today: 0, balance: 0, symbol: "$",
+      categories: [], recent: [])
   }
 
   func getSnapshot(
@@ -102,54 +131,197 @@ struct Provider: TimelineProvider {
   }
 }
 
-// MARK: - UI
+// MARK: - Summary UI
+//
+// The informational widget speaks the app's tint language: category glyphs
+// in TINTED circles (information), unlike the quick-add widget whose SOLID
+// circles mean "tap to log". Amounts use the rounded design, labels plain SF.
 
-private let accent = Color(red: 0.23, green: 0.51, blue: 0.96)
-private let negative = Color(red: 0.94, green: 0.31, blue: 0.37)
+private let positive = Color(red: 0.12, green: 0.71, blue: 0.45)
 
 struct FinanceWidgetEntryView: View {
   var entry: FinanceEntry
   @Environment(\.widgetFamily) var family
 
+  /// "1 700 $" — glanceable money: grouped, no decimals.
+  private func compactMoney(_ value: Double) -> String {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    formatter.maximumFractionDigits = 0
+    let text = formatter.string(from: NSNumber(value: value.rounded())) ?? "0"
+    return entry.symbol.isEmpty ? text : "\(text) \(entry.symbol)"
+  }
+
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      HStack {
-        Text("This month")
-          .font(.caption)
-          .foregroundColor(.secondary)
-        Spacer()
-        // Tapping the widget body (outside buttons) opens the full add screen.
-        Image(systemName: "plus.circle.fill")
-          .foregroundColor(accent)
+    Group {
+      switch family {
+      case .systemSmall: smallView
+      case .systemLarge: largeView
+      default: mediumView
       }
-      Text(money(entry.expense, entry.symbol))
-        .font(.title2).bold()
-        .foregroundColor(negative)
+    }
+    // This is the informational summary widget; the dedicated QuickAddWidget
+    // owns interactive one-tap logging. Tapping here opens the add screen.
+    // The `homeWidget` query param is REQUIRED: the home_widget plugin only
+    // forwards URLs that carry it (isWidgetUrl in SwiftHomeWidgetPlugin).
+    .widgetURL(URL(string: "financeapp://add?homeWidget"))
+  }
+
+  /// Tinted category circle with the real Material glyph.
+  private func tintCircle(
+    color: Color, iconCode: Int, name: String, diameter: CGFloat
+  ) -> some View {
+    ZStack {
+      Circle().fill(color.opacity(0.16))
+      Glyph(iconCode: iconCode, fallback: name, size: diameter * 0.5)
+        .foregroundColor(color)
+    }
+    .frame(width: diameter, height: diameter)
+  }
+
+  private var spentHeader: some View {
+    VStack(alignment: .leading, spacing: 3) {
+      Text("This month").font(.caption).foregroundColor(.secondary)
+      Text(compactMoney(entry.expense))
+        .font(.system(size: 26, weight: .bold, design: .rounded))
+        .foregroundColor(.primary)
         .minimumScaleFactor(0.6)
         .lineLimit(1)
-      Text("Spent")
-        .font(.caption2)
-        .foregroundColor(.secondary)
+      HStack(spacing: 4) {
+        Text("Today").font(.caption2).foregroundColor(.secondary)
+        Text(compactMoney(entry.today))
+          .font(.system(size: 11, weight: .semibold, design: .rounded))
+          .foregroundColor(.secondary)
+      }
+    }
+  }
 
-      if family != .systemSmall {
-        Spacer(minLength: 2)
-        ForEach(entry.categories.prefix(2)) { category in
-          HStack(spacing: 6) {
-            Circle().fill(category.color).frame(width: 8, height: 8)
-            Text(category.name).font(.caption).lineLimit(1)
-            Spacer()
-            Text(money(category.value, entry.symbol)).font(.caption).bold()
+  // MARK: small — the headline number + the top categories as tinted dots.
+
+  private var smallView: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      spentHeader
+      Spacer(minLength: 6)
+      HStack(spacing: 8) {
+        ForEach(entry.categories.prefix(3)) { c in
+          tintCircle(color: c.color, iconCode: c.iconCode, name: c.name,
+                     diameter: 30)
+        }
+        Spacer(minLength: 0)
+      }
+    }
+  }
+
+  // MARK: medium — numbers on the left, top categories on the right.
+
+  private var mediumView: some View {
+    HStack(alignment: .top, spacing: 16) {
+      VStack(alignment: .leading, spacing: 3) {
+        spentHeader
+        Spacer(minLength: 4)
+        HStack(spacing: 4) {
+          Text("Income").font(.caption2).foregroundColor(.secondary)
+          Text(compactMoney(entry.income))
+            .font(.system(size: 11, weight: .semibold, design: .rounded))
+            .foregroundColor(positive)
+        }
+      }
+      VStack(spacing: 10) {
+        ForEach(entry.categories.prefix(3)) { c in
+          categoryRow(c)
+        }
+        if entry.categories.isEmpty { Spacer() }
+      }
+      .frame(maxWidth: .infinity)
+    }
+  }
+
+  private func categoryRow(_ c: CategoryItem) -> some View {
+    HStack(spacing: 8) {
+      tintCircle(color: c.color, iconCode: c.iconCode, name: c.name,
+                 diameter: 26)
+      Text(c.name)
+        .font(.caption)
+        .foregroundColor(.primary)
+        .lineLimit(1)
+      Spacer(minLength: 4)
+      Text(compactMoney(c.value))
+        .font(.system(size: 12, weight: .semibold, design: .rounded))
+        .foregroundColor(.secondary)
+    }
+  }
+
+  // MARK: large — summary + category bars + recent transactions.
+
+  private var largeView: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      HStack(alignment: .top) {
+        spentHeader
+        Spacer()
+        VStack(alignment: .trailing, spacing: 6) {
+          statChip(label: Text("Income"), value: entry.income, tint: positive)
+          statChip(label: Text("Balance"), value: entry.balance,
+                   tint: entry.balance < 0 ? .secondary : positive)
+        }
+      }
+      if !entry.categories.isEmpty {
+        let maxValue = entry.categories.map(\.value).max() ?? 1
+        VStack(spacing: 10) {
+          ForEach(entry.categories.prefix(3)) { c in
+            VStack(spacing: 4) {
+              categoryRow(c)
+              GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                  Capsule().fill(c.color.opacity(0.13))
+                  Capsule().fill(c.color)
+                    .frame(
+                      width: geo.size.width
+                        * (maxValue > 0 ? c.value / maxValue : 0))
+                }
+              }
+              .frame(height: 5)
+            }
           }
         }
       }
       Spacer(minLength: 0)
+      if !entry.recent.isEmpty {
+        Text("Recent").font(.caption).foregroundColor(.secondary)
+        VStack(spacing: 9) {
+          ForEach(entry.recent.prefix(3)) { t in
+            recentRow(t)
+          }
+        }
+      }
     }
-    .padding(14)
-    // This is the informational summary widget; the dedicated QuickAddWidget
-    // now owns interactive one-tap logging. Tapping here opens the add screen.
-    // The `homeWidget` query param is REQUIRED: the home_widget plugin only
-    // forwards URLs that carry it (isWidgetUrl in SwiftHomeWidgetPlugin).
-    .widgetURL(URL(string: "financeapp://add?homeWidget"))
+  }
+
+  private func statChip(label: Text, value: Double, tint: Color) -> some View {
+    HStack(spacing: 4) {
+      label.font(.caption2).foregroundColor(.secondary)
+      Text(compactMoney(value))
+        .font(.system(size: 12, weight: .semibold, design: .rounded))
+        .foregroundColor(tint)
+    }
+  }
+
+  private func recentRow(_ t: RecentItem) -> some View {
+    HStack(spacing: 8) {
+      tintCircle(color: t.color, iconCode: t.iconCode, name: t.name,
+                 diameter: 28)
+      VStack(alignment: .leading, spacing: 1) {
+        Text(t.name).font(.caption).foregroundColor(.primary).lineLimit(1)
+        Text(t.date, format: .dateTime.day().month())
+          .font(.caption2)
+          .foregroundColor(.secondary)
+      }
+      Spacer(minLength: 4)
+      Text(
+        (t.isExpense ? "−" : "+") + compactMoney(abs(t.amount))
+      )
+      .font(.system(size: 12, weight: .semibold, design: .rounded))
+      .foregroundColor(t.isExpense ? .primary : positive)
+    }
   }
 }
 
@@ -160,15 +332,15 @@ struct FinanceWidget: Widget {
     StaticConfiguration(kind: kind, provider: Provider()) { entry in
       if #available(iOS 17.0, *) {
         FinanceWidgetEntryView(entry: entry)
-          .containerBackground(.white, for: .widget)
+          .containerBackground(Color(UIColor.systemBackground), for: .widget)
       } else {
         FinanceWidgetEntryView(entry: entry)
-          .background(Color.white)
+          .background(Color(UIColor.systemBackground))
       }
     }
     .configurationDisplayName("Finance")
     .description("Your spending at a glance. Tap to add a transaction.")
-    .supportedFamilies([.systemSmall, .systemMedium])
+    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
   }
 }
 
@@ -376,22 +548,33 @@ private let materialIconsAvailable: Bool = {
   return UIFont(name: "MaterialIcons-Regular", size: 12) != nil
 }()
 
-/// The category's Material icon glyph; falls back to the category's initial
-/// letter when the font or codepoint is unavailable.
+/// A Material icon glyph from the bundled font; falls back to the item's
+/// initial letter when the font or codepoint is unavailable.
+struct Glyph: View {
+  let iconCode: Int
+  let fallback: String
+  let size: CGFloat
+
+  var body: some View {
+    if materialIconsAvailable, iconCode > 0,
+      let scalar = UnicodeScalar(iconCode)
+    {
+      Text(String(Character(scalar)))
+        .font(.custom("MaterialIcons-Regular", size: size))
+    } else {
+      Text(String(fallback.prefix(1)).uppercased())
+        .font(.system(size: size * 0.78, weight: .semibold, design: .rounded))
+    }
+  }
+}
+
+/// The shortcut's category glyph (see Glyph).
 private struct CategoryGlyph: View {
   let shortcut: Shortcut
   let size: CGFloat
 
   var body: some View {
-    if materialIconsAvailable, let scalar = UnicodeScalar(shortcut.iconCode),
-      shortcut.iconCode > 0
-    {
-      Text(String(Character(scalar)))
-        .font(.custom("MaterialIcons-Regular", size: size))
-    } else {
-      Text(String(shortcut.name.prefix(1)).uppercased())
-        .font(.system(size: size * 0.78, weight: .semibold, design: .rounded))
-    }
+    Glyph(iconCode: shortcut.iconCode, fallback: shortcut.name, size: size)
   }
 }
 

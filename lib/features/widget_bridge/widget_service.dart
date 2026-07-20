@@ -97,13 +97,33 @@ class WidgetService {
       await Future.wait([
         HomeWidget.saveWidgetData<double>('income', snapshot.income),
         HomeWidget.saveWidgetData<double>('expense', snapshot.expense),
+        HomeWidget.saveWidgetData<double>('today', snapshot.todayExpense),
         HomeWidget.saveWidgetData<double>('balance', snapshot.balance),
         HomeWidget.saveWidgetData<String>('symbol', snapshot.baseSymbol),
         HomeWidget.saveWidgetData<String>(
           'categories',
           jsonEncode([
             for (final c in snapshot.topCategories)
-              {'name': c.name, 'value': c.value, 'color': c.colorValue},
+              {
+                'name': c.name,
+                'value': c.value,
+                'color': c.colorValue,
+                'iconCode': c.iconCode,
+              },
+          ]),
+        ),
+        HomeWidget.saveWidgetData<String>(
+          'recent',
+          jsonEncode([
+            for (final t in snapshot.recent)
+              {
+                'name': t.name,
+                'amount': t.amount,
+                'isExpense': t.isExpense,
+                'color': t.colorValue,
+                'iconCode': t.iconCode,
+                'date': t.dateMs,
+              },
           ]),
         ),
         HomeWidget.saveWidgetData<String>('shortcuts', shortcutsJson),
