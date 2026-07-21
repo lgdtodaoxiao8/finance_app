@@ -137,6 +137,14 @@ class WidgetService {
             for (final g in groups) {'id': g.id, 'name': g.name},
           ]),
         ),
+        // Month-to-date spend per category id, for the medium quick-add rows.
+        HomeWidget.saveWidgetData<String>(
+          'category_spend',
+          jsonEncode({
+            for (final e in snapshot.spendByCategoryId.entries)
+              e.key.toString(): e.value,
+          }),
+        ),
       ];
       // Each group's resolved shortcuts under its own key; the default group
       // also under the legacy `shortcuts` key so an unconfigured instance

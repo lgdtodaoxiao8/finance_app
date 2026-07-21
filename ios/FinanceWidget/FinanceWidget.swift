@@ -572,10 +572,26 @@ struct SelectGroupIntent: WidgetConfigurationIntent {
   init() {}
 }
 
+/// Month-to-date expense per category id (base currency), for the medium rows.
+private func loadCategorySpend() -> [Int: Double] {
+  let defaults = UserDefaults(suiteName: appGroupId)
+  guard let json = defaults?.string(forKey: "category_spend"),
+    let data = json.data(using: .utf8),
+    let dict = try? JSONSerialization.jsonObject(with: data)
+      as? [String: NSNumber]
+  else { return [:] }
+  var out: [Int: Double] = [:]
+  for (key, value) in dict {
+    if let id = Int(key) { out[id] = value.doubleValue }
+  }
+  return out
+}
+
 struct QuickAddEntry: TimelineEntry {
   let date: Date
   let symbol: String
   let shortcuts: [Shortcut]
+  let spend: [Int: Double]
   let lastAddedId: String
   let lastAddedAt: Date
 
@@ -596,6 +612,7 @@ private func loadQuickAddEntry(groupId: String?, at date: Date = Date())
     date: date,
     symbol: defaults?.string(forKey: "symbol") ?? "",
     shortcuts: loadShortcuts(groupId: groupId),
+    spend: loadCategorySpend(),
     lastAddedId: defaults?.string(forKey: "last_added_id") ?? "",
     lastAddedAt: Date(timeIntervalSince1970: lastAt))
 }
@@ -603,7 +620,7 @@ private func loadQuickAddEntry(groupId: String?, at date: Date = Date())
 struct QuickAddProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> QuickAddEntry {
     QuickAddEntry(
-      date: Date(), symbol: "$", shortcuts: [], lastAddedId: "",
+      date: Date(), symbol: "$", shortcuts: [], spend: [:], lastAddedId: "",
       lastAddedAt: Date(timeIntervalSince1970: 0))
   }
 
@@ -821,18 +838,27 @@ struct QuickAddEntryView: View {
   // MARK: medium — three fixed row slots (same grid discipline as small).
 
   private var mediumList: some View {
-    VStack(spacing: 10) {
+    VStack(spacing: 0) {
       ForEach(0..<3, id: \.self) { index in
         if index < entry.shortcuts.count {
-          rowView(entry.shortcuts[index])
+          rowView(entry.shortcuts[index]).frame(maxHeight: .infinity)
         } else {
-          placeholderRow
+          placeholderRow.frame(maxHeight: .infinity)
         }
       }
     }
   }
 
   private var rowCircleSize: CGFloat { 34 }
+  private var rowGap: CGFloat { 10 }
+
+  /// The largest month-to-date spend among the shown categories — scales the
+  /// per-row bars so the biggest reads full.
+  private var mediumMaxSpend: Double {
+    entry.shortcuts.prefix(3)
+      .map { entry.spend[$0.categoryId] ?? 0 }
+      .max() ?? 0
+  }
 
   private var placeholderRow: some View {
     HStack(spacing: 10) {
@@ -844,22 +870,52 @@ struct QuickAddEntryView: View {
         .frame(width: 72, height: 9)
       Spacer(minLength: 0)
     }
-    .frame(maxHeight: .infinity)
   }
 
+  // Each row is a hybrid: icon + name + quick-actions on top (action), and the
+  // category's month-to-date spend + a mini bar underneath (context) — so the
+  // medium size earns its space instead of being a taller button list.
   private func rowView(_ shortcut: Shortcut) -> some View {
     let logged = entry.isJustAdded(shortcut)
-    return HStack(spacing: 10) {
-      modeCircle(shortcut, diameter: rowCircleSize, glyph: 17)
-      Text(shortcut.name)
-        .font(.subheadline.weight(.medium))
-        .foregroundColor(.primary)
-        .lineLimit(1)
-      Spacer(minLength: 8)
-      rowActions(shortcut)
-        .opacity(logged ? 0.35 : 1)
+    let spent = entry.spend[shortcut.categoryId] ?? 0
+    let fraction = mediumMaxSpend > 0 ? spent / mediumMaxSpend : 0
+    return VStack(spacing: 5) {
+      HStack(spacing: rowGap) {
+        modeCircle(shortcut, diameter: rowCircleSize, glyph: 17)
+        Text(shortcut.name)
+          .font(.subheadline.weight(.medium))
+          .foregroundColor(.primary)
+          .lineLimit(1)
+        Spacer(minLength: 8)
+        rowActions(shortcut)
+          .opacity(logged ? 0.35 : 1)
+          .fixedSize()
+      }
+      HStack(spacing: 6) {
+        GeometryReader { geo in
+          ZStack(alignment: .leading) {
+            Capsule().fill(shortcut.color.opacity(0.13))
+            Capsule().fill(shortcut.color)
+              .frame(width: geo.size.width * fraction)
+          }
+        }
+        .frame(height: 4)
+        Text(spentCaption(spent))
+          .font(.system(size: 10, weight: .medium, design: .rounded))
+          .foregroundColor(.secondary)
+          .fixedSize()
+      }
+      .padding(.leading, rowCircleSize + rowGap)
     }
-    .frame(maxHeight: .infinity)
+  }
+
+  /// "2 700 $ this month" collapsed to the compact "2 700 $".
+  private func spentCaption(_ value: Double) -> String {
+    let n = NumberFormatter()
+    n.numberStyle = .decimal
+    n.maximumFractionDigits = 0
+    let text = n.string(from: NSNumber(value: value.rounded())) ?? "0"
+    return entry.symbol.isEmpty ? text : "\(text) \(entry.symbol)"
   }
 
   @ViewBuilder
