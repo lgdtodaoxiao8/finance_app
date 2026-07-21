@@ -1,3 +1,4 @@
+import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:finance_app/features/widget_config/view/widget_visuals.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
@@ -133,18 +134,10 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: widget.category.categoryColor,
-                      ),
-                      child: Icon(
-                        widget.category.categoryIcon,
-                        size: 20,
-                        color: widgetOnColor(widget.category.categoryColor),
-                      ),
+                    ItemAvatar(
+                      color: widget.category.categoryColor,
+                      icon: widget.category.categoryIcon,
+                      diameter: 40,
                     ),
                     const SizedBox(width: 12),
                     Text(

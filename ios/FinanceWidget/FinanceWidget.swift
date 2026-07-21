@@ -720,15 +720,14 @@ struct QuickAddEntryView: View {
   ) -> some View {
     let logged = entry.isJustAdded(shortcut)
     let isOpen = shortcut.primaryAmount == nil
-    let tinted = isOpen || logged
     return ZStack(alignment: .bottomTrailing) {
       ZStack {
-        Circle().fill(shortcut.color.opacity(tinted ? 0.16 : 1))
-        if logged {
-          Circle().strokeBorder(shortcut.color.opacity(0.6), lineWidth: 1)
-        }
+        // One-colour style: glyph in the category colour on a faint tint of
+        // it (matches ItemAvatar). The just-logged flash briefly inverts to a
+        // solid fill with a contrasting glyph, then fades back.
+        Circle().fill(shortcut.color.opacity(logged ? 1 : 0.16))
         CategoryGlyph(shortcut: shortcut, size: glyph)
-          .foregroundColor(tinted ? shortcut.color : shortcut.onColor)
+          .foregroundColor(logged ? shortcut.onColor : shortcut.color)
       }
       .frame(width: diameter, height: diameter)
       if isOpen {

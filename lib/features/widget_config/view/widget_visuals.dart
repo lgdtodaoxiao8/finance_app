@@ -1,23 +1,17 @@
 /// Shared visual language of the quick-add widget, mirrored from
 /// FinanceWidget.swift so in-app previews match the home screen exactly.
 ///
-/// Mode narrative: instant-log buttons (fixed / presets) are SOLID circles;
-/// "ask each time" buttons are TINTED circles wearing a small "+" badge —
-/// tinted + badge reads as "opens input" without any words.
+/// All buttons use the one-colour tint style (see ItemAvatar): the glyph in
+/// the category colour on a faint tint of the same colour. "Ask each time"
+/// buttons additionally wear a small "+" badge that reads as "opens input".
 library;
 
 import 'package:flutter/material.dart';
 
-/// White or near-black — whichever is legible on [fill]. The native widget
-/// uses the same rule (contrastingOn in FinanceWidget.swift).
-Color widgetOnColor(Color fill) {
-  final luminance = 0.299 * fill.r + 0.587 * fill.g + 0.114 * fill.b;
-  return luminance > 0.62 ? Colors.black.withValues(alpha: 0.82) : Colors.white;
-}
-
-/// The mode-aware circle: solid for instant-log, tinted + "+" badge for
-/// "ask each time". [diameter] scales everything, so the same widget serves
-/// the config preview and the editor's mini-illustrations.
+/// The one-colour circle: the glyph in [fill] on a faint tint of [fill]
+/// (same rule as ItemAvatar). "Ask each time" adds a "+" badge. [diameter]
+/// scales everything, so it serves both the config preview and the editor's
+/// mini-illustrations.
 class ModeCircle extends StatelessWidget {
   const ModeCircle({
     super.key,
@@ -46,13 +40,9 @@ class ModeCircle extends StatelessWidget {
             height: diameter,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isOpen ? fill.withValues(alpha: 0.16) : fill,
+              color: fill.withValues(alpha: 0.15),
             ),
-            child: Icon(
-              icon,
-              size: diameter * 0.46,
-              color: isOpen ? fill : widgetOnColor(fill),
-            ),
+            child: Icon(icon, size: diameter * 0.46, color: fill),
           ),
           if (isOpen)
             Positioned(
