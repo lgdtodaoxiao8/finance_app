@@ -260,10 +260,11 @@ struct FinanceWidgetEntryView: View {
   // MARK: large — summary + category bars + recent transactions.
 
   private var largeView: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      // Equal spacers top and bottom center the block vertically, so the
-      // header isn't jammed against the top edge and the rhythm reads calm.
-      Spacer(minLength: 0)
+    // No outer spacers: the header hugs the top content margin and the recent
+    // list hugs the bottom one, so the vertical insets equal iOS's default
+    // side margins. Leftover height is distributed BETWEEN sections (min 14),
+    // never around them.
+    VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .top) {
         spentHeader
         Spacer()
@@ -274,6 +275,7 @@ struct FinanceWidgetEntryView: View {
         }
       }
       if !entry.categories.isEmpty {
+        Spacer(minLength: 14)
         let maxValue = entry.categories.map(\.value).max() ?? 1
         VStack(spacing: 10) {
           ForEach(entry.categories.prefix(3)) { c in
@@ -297,6 +299,7 @@ struct FinanceWidgetEntryView: View {
         }
       }
       if !entry.recent.isEmpty {
+        Spacer(minLength: 14)
         VStack(alignment: .leading, spacing: 8) {
           Text("Recent").font(.caption).foregroundColor(.secondary)
           VStack(spacing: 10) {
@@ -307,7 +310,6 @@ struct FinanceWidgetEntryView: View {
           }
         }
       }
-      Spacer(minLength: 0)
     }
   }
 
