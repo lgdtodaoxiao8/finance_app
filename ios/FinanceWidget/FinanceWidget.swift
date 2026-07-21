@@ -145,11 +145,7 @@ struct FinanceWidgetEntryView: View {
 
   /// "1 700 $" — glanceable money: grouped, no decimals.
   private func compactMoney(_ value: Double) -> String {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .decimal
-    formatter.maximumFractionDigits = 0
-    let text = formatter.string(from: NSNumber(value: value.rounded())) ?? "0"
-    return entry.symbol.isEmpty ? text : "\(text) \(entry.symbol)"
+    return money(value, symbol: entry.symbol)
   }
 
   var body: some View {
@@ -302,9 +298,8 @@ struct FinanceWidgetEntryView: View {
         Spacer(minLength: 14)
         VStack(alignment: .leading, spacing: 8) {
           Text("Recent").font(.caption).foregroundColor(.secondary)
-          VStack(spacing: 10) {
-            // Two rows keep the widget breathing; three filled it edge to edge.
-            ForEach(entry.recent.prefix(2)) { t in
+          VStack(spacing: 9) {
+            ForEach(entry.recent.prefix(3)) { t in
               recentRow(t)
             }
           }
@@ -384,17 +379,29 @@ struct QuickAddIntent: AppIntent {
   @Parameter(title: "Category") var categoryId: Int
   @Parameter(title: "Amount") var amount: Double
   @Parameter(title: "Shortcut") var shortcutId: String
+  // Category display info, so the optimistic recent item is complete without
+  // any app / DB round-trip.
+  @Parameter(title: "Name") var categoryName: String
+  @Parameter(title: "Color") var colorValue: Int
+  @Parameter(title: "Icon") var iconCode: Int
 
   init() {}
-  init(categoryId: Int, amount: Double, shortcutId: String) {
+  init(
+    categoryId: Int, amount: Double, shortcutId: String,
+    categoryName: String, colorValue: Int, iconCode: Int
+  ) {
     self.categoryId = categoryId
     self.amount = amount
     self.shortcutId = shortcutId
+    self.categoryName = categoryName
+    self.colorValue = colorValue
+    self.iconCode = iconCode
   }
 
   func perform() async throws -> some IntentResult {
     let defaults = UserDefaults(suiteName: appGroupId)
 
+    // Queue the real write for the app to drain on next open/resume.
     var queue: [[String: Any]] = []
     if let json = defaults?.string(forKey: "pending_quickadd"),
       let data = json.data(using: .utf8),
@@ -409,11 +416,48 @@ struct QuickAddIntent: AppIntent {
       defaults?.set(outStr, forKey: "pending_quickadd")
     }
 
-    // Optimistic update so the widget reflects the spend immediately.
-    let expense = defaults?.double(forKey: "expense") ?? 0
-    defaults?.set(expense + amount, forKey: "expense")
-    let balance = defaults?.double(forKey: "balance") ?? 0
-    defaults?.set(balance - amount, forKey: "balance")
+    // Optimistic updates so BOTH widgets reflect the spend immediately —
+    // totals, today, the recent list and the medium per-category spend — until
+    // the app republishes the real snapshot.
+    defaults?.set((defaults?.double(forKey: "expense") ?? 0) + amount, forKey: "expense")
+    defaults?.set((defaults?.double(forKey: "balance") ?? 0) - amount, forKey: "balance")
+    defaults?.set((defaults?.double(forKey: "today") ?? 0) + amount, forKey: "today")
+
+    // Prepend a recent row (keep the newest few).
+    var recent: [[String: Any]] = []
+    if let json = defaults?.string(forKey: "recent"),
+      let data = json.data(using: .utf8),
+      let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+    {
+      recent = arr
+    }
+    let nowMs = Date().timeIntervalSince1970 * 1000
+    recent.insert(
+      [
+        "name": categoryName, "amount": amount, "isExpense": true,
+        "color": colorValue, "iconCode": iconCode, "date": nowMs,
+      ], at: 0)
+    recent = Array(recent.prefix(6))
+    if let out = try? JSONSerialization.data(withJSONObject: recent),
+      let outStr = String(data: out, encoding: .utf8)
+    {
+      defaults?.set(outStr, forKey: "recent")
+    }
+
+    // Bump this category's month-to-date spend (medium widget bars).
+    var spend: [String: Double] = [:]
+    if let json = defaults?.string(forKey: "category_spend"),
+      let data = json.data(using: .utf8),
+      let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Double]
+    {
+      spend = dict
+    }
+    spend[String(categoryId)] = (spend[String(categoryId)] ?? 0) + amount
+    if let out = try? JSONSerialization.data(withJSONObject: spend),
+      let outStr = String(data: out, encoding: .utf8)
+    {
+      defaults?.set(outStr, forKey: "category_spend")
+    }
 
     // Drive the brief logged-state fade on the tapped button.
     defaults?.set(shortcutId, forKey: "last_added_id")
@@ -438,6 +482,9 @@ struct Shortcut: Identifiable {
   let categoryId: Int
   let name: String
   let color: Color
+  /// Raw ARGB of [color] — passed to QuickAddIntent for the optimistic
+  /// recent-item update.
+  let colorValue: Int
   /// Legible foreground on top of [color] (white on dark fills, near-black on
   /// light ones) — computed from the fill, NOT the category's icon colour,
   /// which is free-form and often clashes (e.g. black on saturated blue).
@@ -489,6 +536,7 @@ private func loadShortcuts(groupId: String?) -> [Shortcut] {
       categoryId: (item["categoryId"] as? NSNumber)?.intValue ?? 0,
       name: item["name"] as? String ?? "",
       color: colorFromARGB(argb),
+      colorValue: argb,
       onColor: contrastingOn(argb),
       iconCode: (item["iconCode"] as? NSNumber)?.intValue ?? 0,
       mode: item["mode"] as? String ?? "open",
@@ -505,6 +553,19 @@ private func shortAmount(_ value: Double) -> String {
   formatter.numberStyle = .decimal
   formatter.maximumFractionDigits = 2
   return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+}
+
+/// Grouped money with the symbol after the number. Small amounts keep their
+/// cents (individual spends read exactly); big aggregates round to stay
+/// glanceable.
+private func money(_ value: Double, symbol: String) -> String {
+  let formatter = NumberFormatter()
+  formatter.numberStyle = .decimal
+  let small = abs(value) < 100
+  formatter.maximumFractionDigits = small ? 2 : 0
+  let n = small ? value : value.rounded()
+  let text = formatter.string(from: NSNumber(value: n)) ?? "0"
+  return symbol.isEmpty ? text : "\(text) \(symbol)"
 }
 
 // MARK: Group configuration (per-widget category sets)
@@ -697,6 +758,14 @@ struct QuickAddEntryView: View {
     return entry.symbol.isEmpty ? number : "\(number) \(entry.symbol)"
   }
 
+  /// Builds the log intent carrying the category display info, so the widget
+  /// can update its recent list optimistically without an app round-trip.
+  private func quickAddIntent(_ s: Shortcut, _ amount: Double) -> QuickAddIntent {
+    QuickAddIntent(
+      categoryId: s.categoryId, amount: amount, shortcutId: s.id,
+      categoryName: s.name, colorValue: s.colorValue, iconCode: s.iconCode)
+  }
+
   var body: some View {
     if family == .systemSmall {
       smallGrid
@@ -766,9 +835,7 @@ struct QuickAddEntryView: View {
   @ViewBuilder
   private func circleButton(_ shortcut: Shortcut) -> some View {
     if let amount = shortcut.primaryAmount {
-      Button(intent: QuickAddIntent(
-        categoryId: shortcut.categoryId, amount: amount, shortcutId: shortcut.id)
-      ) {
+      Button(intent: quickAddIntent(shortcut, amount)) {
         circleCell(shortcut, caption: amountCaption(amount))
       }
       .buttonStyle(.plain)
@@ -909,13 +976,9 @@ struct QuickAddEntryView: View {
     }
   }
 
-  /// "2 700 $ this month" collapsed to the compact "2 700 $".
+  /// The category's month-to-date spend, e.g. "2 700 $" / "5.51 $".
   private func spentCaption(_ value: Double) -> String {
-    let n = NumberFormatter()
-    n.numberStyle = .decimal
-    n.maximumFractionDigits = 0
-    let text = n.string(from: NSNumber(value: value.rounded())) ?? "0"
-    return entry.symbol.isEmpty ? text : "\(text) \(entry.symbol)"
+    return money(value, symbol: entry.symbol)
   }
 
   @ViewBuilder
@@ -955,9 +1018,7 @@ struct QuickAddEntryView: View {
   private func amountChip(
     _ shortcut: Shortcut, _ amount: Double, withSymbol: Bool = true
   ) -> some View {
-    Button(intent: QuickAddIntent(
-      categoryId: shortcut.categoryId, amount: amount, shortcutId: shortcut.id)
-    ) {
+    Button(intent: quickAddIntent(shortcut, amount)) {
       Text(withSymbol ? amountCaption(amount) : shortAmount(amount))
         .font(.system(size: 13, weight: .semibold, design: .rounded))
         .foregroundColor(shortcut.color)
