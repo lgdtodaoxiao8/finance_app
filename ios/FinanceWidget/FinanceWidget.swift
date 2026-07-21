@@ -226,9 +226,10 @@ struct FinanceWidgetEntryView: View {
             .foregroundColor(positive)
         }
       }
-      VStack(spacing: 10) {
+      VStack(spacing: 0) {
+        // Rows share the column height evenly — no clustering at the top.
         ForEach(entry.categories.prefix(3)) { c in
-          categoryRow(c)
+          categoryRow(c).frame(maxHeight: .infinity)
         }
         if entry.categories.isEmpty { Spacer() }
       }
@@ -236,10 +237,15 @@ struct FinanceWidgetEntryView: View {
     }
   }
 
+  // One shared row grid for the whole widget: 28pt circle, 8pt gap — so the
+  // text column starts at the same x in every section.
+  private let rowCircle: CGFloat = 28
+  private let rowGap: CGFloat = 8
+
   private func categoryRow(_ c: CategoryItem) -> some View {
-    HStack(spacing: 8) {
+    HStack(spacing: rowGap) {
       tintCircle(color: c.color, iconCode: c.iconCode, name: c.name,
-                 diameter: 26)
+                 diameter: rowCircle)
       Text(c.name)
         .font(.caption)
         .foregroundColor(.primary)
@@ -268,7 +274,7 @@ struct FinanceWidgetEntryView: View {
         let maxValue = entry.categories.map(\.value).max() ?? 1
         VStack(spacing: 10) {
           ForEach(entry.categories.prefix(3)) { c in
-            VStack(spacing: 4) {
+            VStack(spacing: 5) {
               categoryRow(c)
               GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -280,19 +286,26 @@ struct FinanceWidgetEntryView: View {
                 }
               }
               .frame(height: 5)
+              // The bar sits on the text column, not under the circle —
+              // one left edge for everything that reads.
+              .padding(.leading, rowCircle + rowGap)
             }
           }
         }
       }
-      Spacer(minLength: 0)
       if !entry.recent.isEmpty {
-        Text("Recent").font(.caption).foregroundColor(.secondary)
-        VStack(spacing: 9) {
-          ForEach(entry.recent.prefix(3)) { t in
-            recentRow(t)
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Recent").font(.caption).foregroundColor(.secondary)
+          VStack(spacing: 10) {
+            ForEach(entry.recent.prefix(3)) { t in
+              recentRow(t)
+            }
           }
         }
       }
+      // Any leftover height goes to the bottom, keeping the section gaps
+      // identical instead of one stretched hole in the middle.
+      Spacer(minLength: 0)
     }
   }
 
@@ -306,9 +319,9 @@ struct FinanceWidgetEntryView: View {
   }
 
   private func recentRow(_ t: RecentItem) -> some View {
-    HStack(spacing: 8) {
+    HStack(spacing: rowGap) {
       tintCircle(color: t.color, iconCode: t.iconCode, name: t.name,
-                 diameter: 28)
+                 diameter: rowCircle)
       VStack(alignment: .leading, spacing: 1) {
         Text(t.name).font(.caption).foregroundColor(.primary).lineLimit(1)
         Text(t.date, format: .dateTime.day().month())
