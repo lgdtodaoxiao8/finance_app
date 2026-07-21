@@ -261,6 +261,9 @@ struct FinanceWidgetEntryView: View {
 
   private var largeView: some View {
     VStack(alignment: .leading, spacing: 14) {
+      // Equal spacers top and bottom center the block vertically, so the
+      // header isn't jammed against the top edge and the rhythm reads calm.
+      Spacer(minLength: 0)
       HStack(alignment: .top) {
         spentHeader
         Spacer()
@@ -297,14 +300,13 @@ struct FinanceWidgetEntryView: View {
         VStack(alignment: .leading, spacing: 8) {
           Text("Recent").font(.caption).foregroundColor(.secondary)
           VStack(spacing: 10) {
-            ForEach(entry.recent.prefix(3)) { t in
+            // Two rows keep the widget breathing; three filled it edge to edge.
+            ForEach(entry.recent.prefix(2)) { t in
               recentRow(t)
             }
           }
         }
       }
-      // Any leftover height goes to the bottom, keeping the section gaps
-      // identical instead of one stretched hole in the middle.
       Spacer(minLength: 0)
     }
   }
