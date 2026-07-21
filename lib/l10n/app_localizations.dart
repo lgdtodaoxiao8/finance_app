@@ -1646,6 +1646,42 @@ abstract class AppLocalizations {
   /// **'Tap opens the app to type any amount.'**
   String get widgetOpenHint;
 
+  /// No description provided for @widgetGroupsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Create category sets for the quick-add widget. Long-press a widget on the home screen → “Edit Widget” to choose which set it shows.'**
+  String get widgetGroupsIntro;
+
+  /// No description provided for @widgetGroupDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Main'**
+  String get widgetGroupDefault;
+
+  /// No description provided for @widgetAddGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a set'**
+  String get widgetAddGroup;
+
+  /// No description provided for @widgetGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Set name'**
+  String get widgetGroupName;
+
+  /// No description provided for @widgetGroupNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Everyday, Work'**
+  String get widgetGroupNameHint;
+
+  /// No description provided for @widgetGroupCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} categories'**
+  String widgetGroupCategories(int count);
+
   /// No description provided for @editCategoryTitle.
   ///
   /// In en, this message translates to:

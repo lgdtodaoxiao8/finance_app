@@ -59,7 +59,7 @@ void main() {
   Widget host() => const MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    home: WidgetConfigScreen(),
+    home: WidgetConfigScreen(groupId: 'default'),
   );
 
   testWidgets('renders with the empty-shortcuts state', (tester) async {

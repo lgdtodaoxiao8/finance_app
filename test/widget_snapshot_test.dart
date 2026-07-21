@@ -27,7 +27,14 @@ void main() {
     final txs = [
       _tx(id: 1, amount: 10, type: 'income'),
       _tx(id: 2, amount: 42, type: 'expense', category: 'Food', color: 1),
-      _tx(id: 3, amount: 3, type: 'expense', category: 'Food', color: 1, rate: 2),
+      _tx(
+        id: 3,
+        amount: 3,
+        type: 'expense',
+        category: 'Food',
+        color: 1,
+        rate: 2,
+      ),
       _tx(id: 4, amount: 4, type: 'expense', category: 'Transport', color: 2),
     ];
 

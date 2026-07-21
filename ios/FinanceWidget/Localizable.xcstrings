@@ -81,6 +81,36 @@
         }
       }
     },
+    "Main" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Основное"
+          }
+        }
+      }
+    },
+    "Category set" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набор категорий"
+          }
+        }
+      }
+    },
+    "Choose which category set this widget shows." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите, какой набор категорий показывает виджет."
+          }
+        }
+      }
+    },
     "Quick Add" : {
       "localizations" : {
         "ru" : {

@@ -467,9 +467,14 @@ private func contrastingOn(_ argb: Int) -> Color {
   return luminance > 0.62 ? Color.black.opacity(0.82) : .white
 }
 
-private func loadShortcuts() -> [Shortcut] {
+/// Loads the shortcuts for one group. Each group is published under
+/// `shortcuts.<id>`; falls back to the legacy `shortcuts` key (default group).
+private func loadShortcuts(groupId: String?) -> [Shortcut] {
   let defaults = UserDefaults(suiteName: appGroupId)
-  guard let json = defaults?.string(forKey: "shortcuts"),
+  let json =
+    (groupId.flatMap { defaults?.string(forKey: "shortcuts.\($0)") })
+    ?? defaults?.string(forKey: "shortcuts")
+  guard let json,
     let data = json.data(using: .utf8),
     let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
   else { return [] }
@@ -502,6 +507,71 @@ private func shortAmount(_ value: Double) -> String {
   return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
 }
 
+// MARK: Group configuration (per-widget category sets)
+
+/// One named shortcut group, mirrored from the app's `widget_groups` JSON.
+private struct WidgetGroupInfo {
+  let id: String
+  let name: String
+}
+
+private func loadGroups() -> [WidgetGroupInfo] {
+  let defaults = UserDefaults(suiteName: appGroupId)
+  guard let json = defaults?.string(forKey: "widget_groups"),
+    let data = json.data(using: .utf8),
+    let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+  else {
+    return [WidgetGroupInfo(id: "default", name: String(localized: "Main"))]
+  }
+  return array.map {
+    let raw = $0["name"] as? String ?? ""
+    return WidgetGroupInfo(
+      id: $0["id"] as? String ?? "default",
+      // The default group is stored nameless; show a localized label.
+      name: raw.isEmpty ? String(localized: "Main") : raw)
+  }
+}
+
+/// The "Category set" a QuickAdd widget instance is bound to (chosen in the
+/// system "Edit Widget" sheet).
+struct GroupEntity: AppEntity {
+  let id: String
+  let name: String
+
+  static var typeDisplayRepresentation: TypeDisplayRepresentation {
+    "Category set"
+  }
+  var displayRepresentation: DisplayRepresentation {
+    DisplayRepresentation(title: "\(name)")
+  }
+  static var defaultQuery = GroupQuery()
+}
+
+struct GroupQuery: EntityQuery {
+  func entities(for identifiers: [String]) async throws -> [GroupEntity] {
+    loadGroups()
+      .filter { identifiers.contains($0.id) }
+      .map { GroupEntity(id: $0.id, name: $0.name) }
+  }
+  func suggestedEntities() async throws -> [GroupEntity] {
+    loadGroups().map { GroupEntity(id: $0.id, name: $0.name) }
+  }
+  func defaultResult() async -> GroupEntity? {
+    loadGroups().first.map { GroupEntity(id: $0.id, name: $0.name) }
+  }
+}
+
+/// Widget configuration: which category set this instance shows.
+struct SelectGroupIntent: WidgetConfigurationIntent {
+  static var title: LocalizedStringResource = "Quick Add"
+  static var description = IntentDescription(
+    "Choose which category set this widget shows.")
+
+  @Parameter(title: "Category set") var group: GroupEntity?
+
+  init() {}
+}
+
 struct QuickAddEntry: TimelineEntry {
   let date: Date
   let symbol: String
@@ -517,37 +587,41 @@ struct QuickAddEntry: TimelineEntry {
   }
 }
 
-private func loadQuickAddEntry(at date: Date = Date()) -> QuickAddEntry {
+private func loadQuickAddEntry(groupId: String?, at date: Date = Date())
+  -> QuickAddEntry
+{
   let defaults = UserDefaults(suiteName: appGroupId)
   let lastAt = defaults?.double(forKey: "last_added_at") ?? 0
   return QuickAddEntry(
     date: date,
     symbol: defaults?.string(forKey: "symbol") ?? "",
-    shortcuts: loadShortcuts(),
+    shortcuts: loadShortcuts(groupId: groupId),
     lastAddedId: defaults?.string(forKey: "last_added_id") ?? "",
     lastAddedAt: Date(timeIntervalSince1970: lastAt))
 }
 
-struct QuickAddProvider: TimelineProvider {
+struct QuickAddProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> QuickAddEntry {
     QuickAddEntry(
       date: Date(), symbol: "$", shortcuts: [], lastAddedId: "",
       lastAddedAt: Date(timeIntervalSince1970: 0))
   }
 
-  func getSnapshot(
-    in context: Context, completion: @escaping (QuickAddEntry) -> Void
-  ) {
-    completion(loadQuickAddEntry())
+  func snapshot(for configuration: SelectGroupIntent, in context: Context) async
+    -> QuickAddEntry
+  {
+    loadQuickAddEntry(groupId: configuration.group?.id)
   }
 
-  func getTimeline(
-    in context: Context, completion: @escaping (Timeline<QuickAddEntry>) -> Void
-  ) {
+  func timeline(for configuration: SelectGroupIntent, in context: Context) async
+    -> Timeline<QuickAddEntry>
+  {
     // A second entry a few seconds out crossfades the logged state away.
-    let now = loadQuickAddEntry()
-    let clear = loadQuickAddEntry(at: Date().addingTimeInterval(2.6))
-    completion(Timeline(entries: [now, clear], policy: .never))
+    let gid = configuration.group?.id
+    let now = loadQuickAddEntry(groupId: gid)
+    let clear = loadQuickAddEntry(
+      groupId: gid, at: Date().addingTimeInterval(2.6))
+    return Timeline(entries: [now, clear], policy: .never)
   }
 }
 
@@ -860,18 +934,14 @@ struct QuickAddWidget: Widget {
   let kind = "QuickAddWidget"
 
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: QuickAddProvider()) { entry in
-      if #available(iOS 17.0, *) {
-        QuickAddEntryView(entry: entry)
-          .containerBackground(Color(UIColor.systemBackground), for: .widget)
-      } else {
-        // Interactive quick-add needs iOS 17; older systems see a hint.
-        VStack {
-          Image(systemName: "plus.circle.fill")
-          Text("Requires iOS 17").font(.caption2)
-        }
-        .background(Color(UIColor.systemBackground))
-      }
+    // AppIntentConfiguration makes the widget configurable: long-press →
+    // "Edit Widget" → pick a category set (GroupEntity). Two instances can
+    // therefore show different categories.
+    AppIntentConfiguration(
+      kind: kind, intent: SelectGroupIntent.self, provider: QuickAddProvider()
+    ) { entry in
+      QuickAddEntryView(entry: entry)
+        .containerBackground(Color(UIColor.systemBackground), for: .widget)
     }
     .configurationDisplayName("Quick Add")
     .description("Log a spend in one tap. Configure categories in the app.")

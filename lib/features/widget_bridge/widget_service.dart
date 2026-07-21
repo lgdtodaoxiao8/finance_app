@@ -8,7 +8,9 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_snapshot.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
-import 'package:flutter/foundation.dart';
+import 'package:finance_app/models/main_model.dart';
+// foundation also exports a `Category` annotation; hide it so ours wins.
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:home_widget/home_widget.dart';
 
 /// Keeps the native home-screen widget in sync with the app's data.
@@ -92,9 +94,11 @@ class WidgetService {
       _transactions,
       baseSymbol: _baseSymbol,
     );
-    final shortcutsJson = await _buildShortcutsJson();
+    final groups = _preferences.getWidgetGroups();
+    final categories = await _categoryRepository.getAll();
+    final byId = {for (final c in categories) c.categoryId: c};
     try {
-      await Future.wait([
+      final writes = <Future<void>>[
         HomeWidget.saveWidgetData<double>('income', snapshot.income),
         HomeWidget.saveWidgetData<double>('expense', snapshot.expense),
         HomeWidget.saveWidgetData<double>('today', snapshot.todayExpense),
@@ -126,8 +130,27 @@ class WidgetService {
               },
           ]),
         ),
-        HomeWidget.saveWidgetData<String>('shortcuts', shortcutsJson),
-      ]);
+        // The list of groups the widget's "Edit Widget" picker offers.
+        HomeWidget.saveWidgetData<String>(
+          'widget_groups',
+          jsonEncode([
+            for (final g in groups) {'id': g.id, 'name': g.name},
+          ]),
+        ),
+      ];
+      // Each group's resolved shortcuts under its own key; the default group
+      // also under the legacy `shortcuts` key so an unconfigured instance
+      // still shows something.
+      for (final g in groups) {
+        final json = _resolveShortcutsJson(g.shortcuts, byId);
+        writes.add(
+          HomeWidget.saveWidgetData<String>('shortcuts.${g.id}', json),
+        );
+        if (g.id == AppPreferences.defaultWidgetGroupId) {
+          writes.add(HomeWidget.saveWidgetData<String>('shortcuts', json));
+        }
+      }
+      await Future.wait(writes);
       await HomeWidget.updateWidget(
         iOSName: iosWidgetName,
         androidName: androidWidgetName,
@@ -139,14 +162,13 @@ class WidgetService {
     }
   }
 
-  /// Resolves the user's configured [WidgetShortcut]s against the current
-  /// categories into the compact JSON the native widget renders (color + icon
-  /// come from the category, so they always reflect the latest edits).
-  Future<String> _buildShortcutsJson() async {
-    final shortcuts = _preferences.getWidgetShortcuts();
-    if (shortcuts.isEmpty) return '[]';
-    final categories = await _categoryRepository.getAll();
-    final byId = {for (final c in categories) c.categoryId: c};
+  /// Resolves configured [WidgetShortcut]s against the current categories into
+  /// the compact JSON the native widget renders (colour + icon come from the
+  /// category, so they always reflect the latest edits).
+  String _resolveShortcutsJson(
+    List<WidgetShortcut> shortcuts,
+    Map<int, Category> byId,
+  ) {
     final out = <Map<String, dynamic>>[];
     for (final s in shortcuts) {
       final category = byId[s.categoryId];

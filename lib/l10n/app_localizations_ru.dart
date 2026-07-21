@@ -840,6 +840,27 @@ class AppLocalizationsRu extends AppLocalizations {
       'Касание открывает приложение для ввода любой суммы.';
 
   @override
+  String get widgetGroupsIntro =>
+      'Создавайте наборы категорий для виджета быстрого добавления. Зажмите виджет на экране → «Изменить виджет», чтобы выбрать, какой набор он показывает.';
+
+  @override
+  String get widgetGroupDefault => 'Основное';
+
+  @override
+  String get widgetAddGroup => 'Добавить набор';
+
+  @override
+  String get widgetGroupName => 'Название набора';
+
+  @override
+  String get widgetGroupNameHint => 'напр. Повседневное, Работа';
+
+  @override
+  String widgetGroupCategories(int count) {
+    return '$count категорий';
+  }
+
+  @override
   String get editCategoryTitle => 'Изменить категорию';
 
   @override

@@ -4,6 +4,7 @@ import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
+import 'package:finance_app/features/widget_config/data/widget_group.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:finance_app/features/widget_config/view/shortcut_editor_sheet.dart';
 import 'package:finance_app/features/widget_config/view/widget_visuals.dart';
@@ -15,12 +16,15 @@ import 'package:flutter/material.dart';
 String _shortAmount(double v) =>
     v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
 
-/// Lets the user pin categories to the home-screen quick-add widget and choose
-/// how each button behaves (fixed amount / preset amounts / open the app).
-/// Shortcuts are stored per-device in [AppPreferences] and republished to the
-/// widget on every change.
+/// Lets the user pin categories to one home-screen widget group and choose how
+/// each button behaves (fixed amount / preset amounts / open the app). Groups
+/// are stored per-device in [AppPreferences] and republished to the widget on
+/// every change.
 class WidgetConfigScreen extends StatefulWidget {
-  const WidgetConfigScreen({super.key});
+  const WidgetConfigScreen({super.key, required this.groupId});
+
+  /// Which group's shortcuts this screen edits.
+  final String groupId;
 
   @override
   State<WidgetConfigScreen> createState() => _WidgetConfigScreenState();
@@ -41,14 +45,19 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
   Future<void> _load() async {
     final categories = await getIt<CategoryRepository>().getAll();
     final base = await getIt<CurrencyRepository>().getBase();
-    final shortcuts = getIt<AppPreferences>().getWidgetShortcuts();
+    final group = getIt<AppPreferences>().getWidgetGroups().firstWhere(
+      (g) => g.id == widget.groupId,
+      orElse: () => WidgetGroup(id: widget.groupId, name: ''),
+    );
     if (!mounted) return;
     setState(() {
       _categories = categories;
       _symbol = base?.currencySymbol ?? '';
       // Drop shortcuts whose category was deleted.
       final ids = categories.map((c) => c.categoryId).toSet();
-      _shortcuts = shortcuts.where((s) => ids.contains(s.categoryId)).toList();
+      _shortcuts = group.shortcuts
+          .where((s) => ids.contains(s.categoryId))
+          .toList();
       _loading = false;
     });
   }
@@ -70,7 +79,12 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
       for (var i = 0; i < _shortcuts.length; i++)
         _shortcuts[i].copyWith(order: i),
     ];
-    await getIt<AppPreferences>().setWidgetShortcuts(_shortcuts);
+    final prefs = getIt<AppPreferences>();
+    final groups = [
+      for (final g in prefs.getWidgetGroups())
+        g.id == widget.groupId ? g.copyWith(shortcuts: _shortcuts) : g,
+    ];
+    await prefs.setWidgetGroups(groups);
     await getIt<WidgetService>().publishOnce();
   }
 

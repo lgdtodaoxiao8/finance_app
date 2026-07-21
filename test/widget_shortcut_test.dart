@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:finance_app/core/preferences/app_preferences.dart';
+import 'package:finance_app/features/widget_config/data/widget_group.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,40 +56,68 @@ void main() {
     });
   });
 
-  group('AppPreferences widget shortcuts', () {
-    test('stores, sorts by order, and reads back', () async {
+  group('AppPreferences widget groups', () {
+    test('stores groups; shortcuts sort by order', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = AppPreferences(await SharedPreferences.getInstance());
 
-      expect(prefs.getWidgetShortcuts(), isEmpty);
+      // With no data the default group exists but is empty.
+      final initial = prefs.getWidgetGroups();
+      expect(initial, hasLength(1));
+      expect(initial.first.id, AppPreferences.defaultWidgetGroupId);
+      expect(initial.first.shortcuts, isEmpty);
 
-      await prefs.setWidgetShortcuts(const [
-        WidgetShortcut(
-          id: 'second',
-          categoryId: 2,
-          mode: WidgetShortcutMode.open,
-          order: 1,
+      await prefs.setWidgetGroups([
+        const WidgetGroup(
+          id: AppPreferences.defaultWidgetGroupId,
+          name: '',
+          shortcuts: [
+            WidgetShortcut(
+              id: 'second',
+              categoryId: 2,
+              mode: WidgetShortcutMode.open,
+              order: 1,
+            ),
+            WidgetShortcut(
+              id: 'first',
+              categoryId: 1,
+              mode: WidgetShortcutMode.fixed,
+              amount: 5,
+              order: 0,
+            ),
+          ],
         ),
-        WidgetShortcut(
-          id: 'first',
-          categoryId: 1,
-          mode: WidgetShortcutMode.fixed,
-          amount: 5,
-          order: 0,
-        ),
+        const WidgetGroup(id: 'work', name: 'Work'),
       ]);
 
-      final read = prefs.getWidgetShortcuts();
-      expect(read.map((s) => s.id).toList(), ['first', 'second']);
-      expect(read.first.amount, 5);
+      final groups = prefs.getWidgetGroups();
+      expect(groups.map((g) => g.id).toList(), [
+        AppPreferences.defaultWidgetGroupId,
+        'work',
+      ]);
+      expect(groups.first.shortcuts.map((s) => s.id).toList(), [
+        'first',
+        'second',
+      ]);
+      expect(groups.first.shortcuts.first.amount, 5);
     });
 
-    test('returns empty on corrupt data', () async {
+    test('migrates the legacy single list into the default group', () async {
       SharedPreferences.setMockInitialValues({
-        'widget_shortcuts': 'not json',
+        'widget_shortcuts': jsonEncode([
+          const WidgetShortcut(
+            id: 'a',
+            categoryId: 1,
+            mode: WidgetShortcutMode.fixed,
+            amount: 9,
+          ).toJson(),
+        ]),
       });
       final prefs = AppPreferences(await SharedPreferences.getInstance());
-      expect(prefs.getWidgetShortcuts(), isEmpty);
+      final groups = prefs.getWidgetGroups();
+      expect(groups, hasLength(1));
+      expect(groups.first.id, AppPreferences.defaultWidgetGroupId);
+      expect(groups.first.shortcuts.single.id, 'a');
     });
   });
 }

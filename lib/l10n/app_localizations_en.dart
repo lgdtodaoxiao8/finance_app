@@ -835,6 +835,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetOpenHint => 'Tap opens the app to type any amount.';
 
   @override
+  String get widgetGroupsIntro =>
+      'Create category sets for the quick-add widget. Long-press a widget on the home screen → “Edit Widget” to choose which set it shows.';
+
+  @override
+  String get widgetGroupDefault => 'Main';
+
+  @override
+  String get widgetAddGroup => 'Add a set';
+
+  @override
+  String get widgetGroupName => 'Set name';
+
+  @override
+  String get widgetGroupNameHint => 'e.g. Everyday, Work';
+
+  @override
+  String widgetGroupCategories(int count) {
+    return '$count categories';
+  }
+
+  @override
   String get editCategoryTitle => 'Edit category';
 
   @override
