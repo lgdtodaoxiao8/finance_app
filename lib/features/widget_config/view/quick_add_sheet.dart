@@ -13,18 +13,26 @@ import 'package:flutter/material.dart';
 /// "custom amount" / "ask each time" paths) and reusable anywhere a one-tap log
 /// is wanted. Logs an expense to the first account in the base currency.
 class QuickAddSheet extends StatefulWidget {
-  const QuickAddSheet({super.key, this.categoryId});
+  const QuickAddSheet({super.key, this.categoryId, this.amount});
 
   /// Pre-selected category (e.g. from a widget deep link). Null → user picks.
   final int? categoryId;
 
+  /// Pre-filled amount (e.g. carried from the small widget's amount builder
+  /// when the user taps "exact"). Null/≤0 → the field starts empty.
+  final double? amount;
+
   /// Opens the sheet as a modal bottom sheet.
-  static Future<void> show(BuildContext context, {int? categoryId}) {
+  static Future<void> show(
+    BuildContext context, {
+    int? categoryId,
+    double? amount,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => QuickAddSheet(categoryId: categoryId),
+      builder: (_) => QuickAddSheet(categoryId: categoryId, amount: amount),
     );
   }
 
@@ -45,7 +53,19 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   void initState() {
     super.initState();
     _selectedCategoryId = widget.categoryId;
+    // Carry over an amount already assembled on the widget, so "exact" continues
+    // where the builder left off instead of starting from zero.
+    if (widget.amount != null && widget.amount! > 0) {
+      _amountController.text = _fmtAmount(widget.amount!);
+    }
     _load();
+  }
+
+  /// Formats a prefilled amount without a trailing ".0" (e.g. "300", "12.5").
+  static String _fmtAmount(double value) {
+    return value == value.roundToDouble()
+        ? value.toInt().toString()
+        : value.toString();
   }
 
   Future<void> _load() async {

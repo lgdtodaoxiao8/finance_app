@@ -162,12 +162,15 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
           AmountText(
             _net,
             symbol: _symbol,
+            adaptive: true,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w800,
               color: _net < 0 ? AppColors.negative : AppColors.positive,
             ),
           ),
+
           if (savingsRate != null) ...[
             const SizedBox(height: 6),
             Text(

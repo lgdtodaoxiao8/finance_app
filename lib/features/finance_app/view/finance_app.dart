@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:finance_app/core/config/app_config.dart';
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/di/injector.dart';
+import 'package:finance_app/core/format.dart';
 import 'package:finance_app/core/settings/app_settings.dart';
 import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
@@ -98,17 +99,19 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
   }
 
   /// Routes a home-widget deep link.
-  /// - `*://quickadd?category=ID` opens the fast quick-add sheet, prefilled.
+  /// - `*://quickadd?category=ID[&amount=N]` opens the fast quick-add sheet,
+  ///   prefilled with the category (and any amount already built on the widget).
   /// - `*://add` opens the full add-transaction screen.
   void _handleWidgetLaunch(Uri? uri) {
     if (uri == null) return;
     final isQuickAdd = uri.host == 'quickadd' || uri.path.contains('quickadd');
     if (isQuickAdd) {
       final categoryId = int.tryParse(uri.queryParameters['category'] ?? '');
+      final amount = double.tryParse(uri.queryParameters['amount'] ?? '');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final context = _navigatorKey.currentContext;
         if (context != null) {
-          QuickAddSheet.show(context, categoryId: categoryId);
+          QuickAddSheet.show(context, categoryId: categoryId, amount: amount);
         }
       });
       return;
@@ -146,6 +149,16 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
           locale: settings.locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          // Keep the context-free money abbreviation suffixes ("К"/"М" vs
+          // "K"/"M") in sync with the resolved app language.
+          builder: (context, child) {
+            final l = AppLocalizations.of(context);
+            setCompactSuffixes(
+              thousands: l.compactThousands,
+              millions: l.compactMillions,
+            );
+            return child ?? const SizedBox.shrink();
+          },
           routes: routes,
         );
       },

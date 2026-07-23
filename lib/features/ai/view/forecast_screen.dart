@@ -105,6 +105,8 @@ class _ForecastScreenState extends State<ForecastScreen> {
               AmountText(
                 f.projectedBalance,
                 symbol: f.symbol,
+                adaptive: true,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w800,

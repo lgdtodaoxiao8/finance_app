@@ -832,7 +832,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetPresetsHint => 'Tap a preset to log it instantly.';
 
   @override
-  String get widgetOpenHint => 'Tap opens the app to type any amount.';
+  String get widgetOpenHint =>
+      'Tap builds the amount right on the widget, then logs it.';
+
+  @override
+  String get widgetStepsTitle => 'Amount steps';
+
+  @override
+  String get widgetStepsHint =>
+      'Leave empty to adapt to your spending automatically.';
+
+  @override
+  String get compactThousands => 'K';
+
+  @override
+  String get compactMillions => 'M';
 
   @override
   String get widgetGroupsIntro =>

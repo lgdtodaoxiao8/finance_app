@@ -837,7 +837,20 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get widgetOpenHint =>
-      'Касание открывает приложение для ввода любой суммы.';
+      'Сумма набирается прямо в виджете и сразу записывается.';
+
+  @override
+  String get widgetStepsTitle => 'Шаги суммы';
+
+  @override
+  String get widgetStepsHint =>
+      'Оставьте пустым — подстроятся под ваши траты автоматически.';
+
+  @override
+  String get compactThousands => 'К';
+
+  @override
+  String get compactMillions => 'М';
 
   @override
   String get widgetGroupsIntro =>

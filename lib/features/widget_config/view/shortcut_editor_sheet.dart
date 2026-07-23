@@ -90,13 +90,17 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
   }
 
   void _save() {
+    // `presets` doubles as the custom amount-builder steps in "ask each time"
+    // mode (empty → the widget derives them from spending automatically).
+    final keepsAmounts =
+        _mode == WidgetShortcutMode.presets || _mode == WidgetShortcutMode.open;
     final result = widget.shortcut.copyWith(
       mode: _mode,
       clearAmount: _mode != WidgetShortcutMode.fixed,
       amount: _mode == WidgetShortcutMode.fixed
           ? _parse(_amountController.text)
           : null,
-      presets: _mode == WidgetShortcutMode.presets ? _presets : const [],
+      presets: keepsAmounts ? _presets : const [],
     );
     Navigator.of(context).pop(result);
   }
@@ -162,6 +166,7 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
                 const SizedBox(height: 8),
                 if (_mode == WidgetShortcutMode.fixed) _fixedField(l),
                 if (_mode == WidgetShortcutMode.presets) _presetsField(l),
+                if (_mode == WidgetShortcutMode.open) _openStepsField(l),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
@@ -190,7 +195,35 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
     );
   }
 
-  Widget _presetsField(AppLocalizations l) {
+  Widget _presetsField(AppLocalizations l) => _amountListEditor(l);
+
+  /// "Ask each time" mode: optional custom builder steps. Empty = the widget
+  /// adapts them to the user's spending (and currency) automatically.
+  Widget _openStepsField(AppLocalizations l) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.widgetStepsTitle,
+          style: kTextStyle.copyWith(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          l.widgetStepsHint,
+          style: kTextStyle.copyWith(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _amountListEditor(l),
+      ],
+    );
+  }
+
+  /// Shared editor for a list of amounts (preset chips / builder steps): the
+  /// current values as deletable chips plus an input to add more.
+  Widget _amountListEditor(AppLocalizations l) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

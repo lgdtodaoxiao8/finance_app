@@ -1643,8 +1643,32 @@ abstract class AppLocalizations {
   /// No description provided for @widgetOpenHint.
   ///
   /// In en, this message translates to:
-  /// **'Tap opens the app to type any amount.'**
+  /// **'Tap builds the amount right on the widget, then logs it.'**
   String get widgetOpenHint;
+
+  /// No description provided for @widgetStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount steps'**
+  String get widgetStepsTitle;
+
+  /// No description provided for @widgetStepsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to adapt to your spending automatically.'**
+  String get widgetStepsHint;
+
+  /// No description provided for @compactThousands.
+  ///
+  /// In en, this message translates to:
+  /// **'K'**
+  String get compactThousands;
+
+  /// No description provided for @compactMillions.
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get compactMillions;
 
   /// No description provided for @widgetGroupsIntro.
   ///

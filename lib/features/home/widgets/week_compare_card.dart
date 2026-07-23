@@ -176,6 +176,7 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
           child: AmountText(
             value,
             symbol: _symbol,
+            adaptive: true,
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontSize: 13,

@@ -7,6 +7,7 @@ import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_snapshot.dart';
+import 'package:finance_app/features/widget_config/data/amount_steps.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:finance_app/models/main_model.dart';
 // foundation also exports a `Category` annotation; hide it so ours wins.
@@ -97,6 +98,7 @@ class WidgetService {
     final groups = _preferences.getWidgetGroups();
     final categories = await _categoryRepository.getAll();
     final byId = {for (final c in categories) c.categoryId: c};
+    final magnitudes = _expenseMagnitudes();
     try {
       final writes = <Future<void>>[
         HomeWidget.saveWidgetData<double>('income', snapshot.income),
@@ -150,7 +152,7 @@ class WidgetService {
       // also under the legacy `shortcuts` key so an unconfigured instance
       // still shows something.
       for (final g in groups) {
-        final json = _resolveShortcutsJson(g.shortcuts, byId);
+        final json = _resolveShortcutsJson(g.shortcuts, byId, magnitudes);
         writes.add(
           HomeWidget.saveWidgetData<String>('shortcuts.${g.id}', json),
         );
@@ -170,17 +172,57 @@ class WidgetService {
     }
   }
 
+  /// Re-prices per-widget configured amounts (fixed amounts, preset chips,
+  /// custom builder steps) after a base-currency change. Each stored value was
+  /// in the OLD base currency, so multiply by [multiplier] (= 1 / newBaseRate —
+  /// the same factor makeBase uses to rebase exchange rates) and snap to a nice
+  /// number. Auto builder steps aren't touched: they're re-derived from
+  /// spending, which is already re-expressed in the new base.
+  Future<void> rescaleConfiguredAmounts(double multiplier) async {
+    if (!multiplier.isFinite || multiplier <= 0 || multiplier == 1) return;
+    final groups = _preferences.getWidgetGroups();
+    final updated = [
+      for (final g in groups)
+        g.copyWith(
+          shortcuts: [
+            for (final s in g.shortcuts)
+              s.copyWith(
+                amount: s.amount == null
+                    ? null
+                    : niceRound(s.amount! * multiplier),
+                clearAmount: s.amount == null,
+                presets: rescaleAmounts(s.presets, multiplier),
+              ),
+          ],
+        ),
+    ];
+    await _preferences.setWidgetGroups(updated);
+    await publishOnce();
+  }
+
   /// Resolves configured [WidgetShortcut]s against the current categories into
   /// the compact JSON the native widget renders (colour + icon come from the
   /// category, so they always reflect the latest edits).
+  ///
+  /// "Ask each time" shortcuts also carry the amount-builder [steps]: the user's
+  /// custom values if set, otherwise a currency-adaptive ladder derived from how
+  /// much they actually spend in that category (see [autoAmountSteps]).
   String _resolveShortcutsJson(
     List<WidgetShortcut> shortcuts,
     Map<int, Category> byId,
+    ({Map<int, double> byCategory, double global}) magnitudes,
   ) {
     final out = <Map<String, dynamic>>[];
     for (final s in shortcuts) {
       final category = byId[s.categoryId];
       if (category == null) continue;
+      final steps = s.mode == WidgetShortcutMode.open
+          ? (s.presets.isNotEmpty
+                ? s.presets
+                : autoAmountSteps(
+                    magnitudes.byCategory[s.categoryId] ?? magnitudes.global,
+                  ))
+          : const <double>[];
       out.add({
         'id': s.id,
         'categoryId': s.categoryId,
@@ -191,9 +233,32 @@ class WidgetService {
         'mode': s.mode.name,
         'amount': s.amount,
         'presets': s.presets,
+        'steps': steps,
       });
     }
     return jsonEncode(out);
+  }
+
+  /// Per-category and global median expense (base currency) — the magnitude the
+  /// amount-builder steps adapt to. Per-category kicks in only with enough
+  /// history (≥3 expenses); otherwise the global median stands in.
+  ({Map<int, double> byCategory, double global}) _expenseMagnitudes() {
+    final byCat = <int, List<double>>{};
+    final all = <double>[];
+    for (final t in _transactions) {
+      if (!t.isExpense || t.isCanceled) continue;
+      final a = t.amountInBase.abs();
+      if (a <= 0) continue;
+      all.add(a);
+      final cid = t.categoryId;
+      if (cid != null) (byCat[cid] ??= <double>[]).add(a);
+    }
+    final global = median(all) ?? 0;
+    final byCategory = <int, double>{};
+    byCat.forEach((cid, list) {
+      byCategory[cid] = list.length >= 3 ? (median(list) ?? global) : global;
+    });
+    return (byCategory: byCategory, global: global);
   }
 
   Future<void> dispose() async {

@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
+import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,6 +69,7 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
         const Duration(milliseconds: 500),
       );
 
+      final previousBase = await _repository.getBase();
       if (state.needToEnterRate) {
         final rate = state.rateToBase;
         if (rate == null || rate == 0) throw Exception('Rate is null');
@@ -77,7 +79,22 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
         // whole conversion.
         await _repository.setRate(id, 1 / rate);
       }
+      // Factor to re-express old-base amounts in the new base (= makeBase's
+      // rebase multiplier). Captured before makeBase resets the rate to 1.0.
+      double? amountMultiplier;
+      if (previousBase != null && previousBase.currencyId != id) {
+        final newBaseRate = await _repository.getRate(id);
+        if (newBaseRate != null && newBaseRate != 0) {
+          amountMultiplier = 1 / newBaseRate;
+        }
+      }
       await _repository.makeBase(id);
+
+      // Re-price the per-widget configured amounts (presets / fixed / steps)
+      // into the new base so they stay meaningful after the switch.
+      if (amountMultiplier != null && getIt.isRegistered<WidgetService>()) {
+        await getIt<WidgetService>().rescaleConfiguredAmounts(amountMultiplier);
+      }
 
       // Persist the new base + rates as a synced preference so the choice
       // travels to the user's other devices.

@@ -118,6 +118,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
               child: AmountText(
                 _total,
                 symbol: _symbol,
+                abbreviateAbove: 100000,
                 style: kTextStyle.copyWith(
                   color: valueColor,
                   fontSize: 15,

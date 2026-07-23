@@ -143,9 +143,10 @@ struct FinanceWidgetEntryView: View {
   var entry: FinanceEntry
   @Environment(\.widgetFamily) var family
 
-  /// "1 700 $" — glanceable money: grouped, no decimals.
+  /// Glanceable money: grouped below 100k, abbreviated ("250К") above so
+  /// high-denomination currencies don't overflow.
   private func compactMoney(_ value: Double) -> String {
-    return money(value, symbol: entry.symbol)
+    return abbreviatedMoney(value, symbol: entry.symbol)
   }
 
   var body: some View {
@@ -368,10 +369,91 @@ struct FinanceWidgets: WidgetBundle {
 
 // MARK: - Interactive quick-add (iOS 17+)
 
-/// Pure-Swift App Intent (no Flutter dependency): queues `{categoryId, amount}`
-/// in the shared App Group store and optimistically updates the widget totals.
-/// The Flutter app drains the queue and writes the real transaction into that
-/// category on next launch / resume (see drainPendingQuickAdds in Dart).
+// App Group keys for the small-widget amount builder (see the builder intents
+// and QuickAddEntryView.amountBuilder). `builder_shortcut` holds the id of the
+// "ask each time" shortcut whose builder is open ("" = the plain grid);
+// `builder_amount` is the running total being assembled tap by tap.
+private let builderShortcutKey = "builder_shortcut"
+private let builderAmountKey = "builder_amount"
+
+/// Queues `{categoryId, amount}` for the app to drain into a real transaction,
+/// and optimistically updates the shared snapshot (totals, today, recent list,
+/// per-category spend) so both widgets reflect the spend immediately. Shared by
+/// the one-tap `QuickAddIntent` and the amount builder's `ConfirmBuilderIntent`.
+@available(iOS 17.0, *)
+private func performQuickAddLog(
+  categoryId: Int, amount: Double, shortcutId: String,
+  categoryName: String, colorValue: Int, iconCode: Int
+) {
+  let defaults = UserDefaults(suiteName: appGroupId)
+
+  // Queue the real write for the app to drain on next open/resume.
+  var queue: [[String: Any]] = []
+  if let json = defaults?.string(forKey: "pending_quickadd"),
+    let data = json.data(using: .utf8),
+    let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+  {
+    queue = arr
+  }
+  queue.append(["categoryId": categoryId, "amount": amount])
+  if let out = try? JSONSerialization.data(withJSONObject: queue),
+    let outStr = String(data: out, encoding: .utf8)
+  {
+    defaults?.set(outStr, forKey: "pending_quickadd")
+  }
+
+  // Optimistic updates so BOTH widgets reflect the spend immediately —
+  // totals, today, the recent list and the medium per-category spend — until
+  // the app republishes the real snapshot.
+  defaults?.set((defaults?.double(forKey: "expense") ?? 0) + amount, forKey: "expense")
+  defaults?.set((defaults?.double(forKey: "balance") ?? 0) - amount, forKey: "balance")
+  defaults?.set((defaults?.double(forKey: "today") ?? 0) + amount, forKey: "today")
+
+  // Prepend a recent row (keep the newest few).
+  var recent: [[String: Any]] = []
+  if let json = defaults?.string(forKey: "recent"),
+    let data = json.data(using: .utf8),
+    let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+  {
+    recent = arr
+  }
+  let nowMs = Date().timeIntervalSince1970 * 1000
+  recent.insert(
+    [
+      "name": categoryName, "amount": amount, "isExpense": true,
+      "color": colorValue, "iconCode": iconCode, "date": nowMs,
+    ], at: 0)
+  recent = Array(recent.prefix(6))
+  if let out = try? JSONSerialization.data(withJSONObject: recent),
+    let outStr = String(data: out, encoding: .utf8)
+  {
+    defaults?.set(outStr, forKey: "recent")
+  }
+
+  // Bump this category's month-to-date spend (medium widget bars).
+  var spend: [String: Double] = [:]
+  if let json = defaults?.string(forKey: "category_spend"),
+    let data = json.data(using: .utf8),
+    let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Double]
+  {
+    spend = dict
+  }
+  spend[String(categoryId)] = (spend[String(categoryId)] ?? 0) + amount
+  if let out = try? JSONSerialization.data(withJSONObject: spend),
+    let outStr = String(data: out, encoding: .utf8)
+  {
+    defaults?.set(outStr, forKey: "category_spend")
+  }
+
+  // Drive the brief logged-state fade on the tapped button.
+  defaults?.set(shortcutId, forKey: "last_added_id")
+  defaults?.set(Date().timeIntervalSince1970, forKey: "last_added_at")
+
+  WidgetCenter.shared.reloadTimelines(ofKind: "FinanceWidget")
+  WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
+}
+
+/// Pure-Swift App Intent (no Flutter dependency): logs one instant quick-add.
 @available(iOS 17.0, *)
 struct QuickAddIntent: AppIntent {
   static var title: LocalizedStringResource = "Quick add expense"
@@ -399,80 +481,133 @@ struct QuickAddIntent: AppIntent {
   }
 
   func perform() async throws -> some IntentResult {
+    performQuickAddLog(
+      categoryId: categoryId, amount: amount, shortcutId: shortcutId,
+      categoryName: categoryName, colorValue: colorValue, iconCode: iconCode)
+    return .result()
+  }
+}
+
+// MARK: Amount builder intents (small "ask each time" — build a sum in-widget)
+//
+// Tapping an "ask each time" category flips the small widget into an amount
+// builder instead of opening the app: increment buttons assemble a total in
+// the App Group, `✓` logs it via performQuickAddLog, `✕` returns to the grid.
+// All state lives in the App Group and every intent reloads the timeline, so
+// the widget re-renders with the new state — no app launch, no keyboard.
+
+/// Opens the builder for a shortcut (starts a fresh amount at 0).
+@available(iOS 17.0, *)
+struct OpenBuilderIntent: AppIntent {
+  static var title: LocalizedStringResource = "Enter an amount"
+  @Parameter(title: "Shortcut") var shortcutId: String
+
+  init() {}
+  init(shortcutId: String) { self.shortcutId = shortcutId }
+
+  func perform() async throws -> some IntentResult {
     let defaults = UserDefaults(suiteName: appGroupId)
-
-    // Queue the real write for the app to drain on next open/resume.
-    var queue: [[String: Any]] = []
-    if let json = defaults?.string(forKey: "pending_quickadd"),
-      let data = json.data(using: .utf8),
-      let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
-    {
-      queue = arr
-    }
-    queue.append(["categoryId": categoryId, "amount": amount])
-    if let out = try? JSONSerialization.data(withJSONObject: queue),
-      let outStr = String(data: out, encoding: .utf8)
-    {
-      defaults?.set(outStr, forKey: "pending_quickadd")
-    }
-
-    // Optimistic updates so BOTH widgets reflect the spend immediately —
-    // totals, today, the recent list and the medium per-category spend — until
-    // the app republishes the real snapshot.
-    defaults?.set((defaults?.double(forKey: "expense") ?? 0) + amount, forKey: "expense")
-    defaults?.set((defaults?.double(forKey: "balance") ?? 0) - amount, forKey: "balance")
-    defaults?.set((defaults?.double(forKey: "today") ?? 0) + amount, forKey: "today")
-
-    // Prepend a recent row (keep the newest few).
-    var recent: [[String: Any]] = []
-    if let json = defaults?.string(forKey: "recent"),
-      let data = json.data(using: .utf8),
-      let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
-    {
-      recent = arr
-    }
-    let nowMs = Date().timeIntervalSince1970 * 1000
-    recent.insert(
-      [
-        "name": categoryName, "amount": amount, "isExpense": true,
-        "color": colorValue, "iconCode": iconCode, "date": nowMs,
-      ], at: 0)
-    recent = Array(recent.prefix(6))
-    if let out = try? JSONSerialization.data(withJSONObject: recent),
-      let outStr = String(data: out, encoding: .utf8)
-    {
-      defaults?.set(outStr, forKey: "recent")
-    }
-
-    // Bump this category's month-to-date spend (medium widget bars).
-    var spend: [String: Double] = [:]
-    if let json = defaults?.string(forKey: "category_spend"),
-      let data = json.data(using: .utf8),
-      let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Double]
-    {
-      spend = dict
-    }
-    spend[String(categoryId)] = (spend[String(categoryId)] ?? 0) + amount
-    if let out = try? JSONSerialization.data(withJSONObject: spend),
-      let outStr = String(data: out, encoding: .utf8)
-    {
-      defaults?.set(outStr, forKey: "category_spend")
-    }
-
-    // Drive the brief logged-state fade on the tapped button.
-    defaults?.set(shortcutId, forKey: "last_added_id")
-    defaults?.set(Date().timeIntervalSince1970, forKey: "last_added_at")
-
-    WidgetCenter.shared.reloadTimelines(ofKind: "FinanceWidget")
+    defaults?.set(shortcutId, forKey: builderShortcutKey)
+    defaults?.set(0.0, forKey: builderAmountKey)
     WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
     return .result()
   }
 }
 
+/// Adds an increment to the amount being built.
+@available(iOS 17.0, *)
+struct BuilderAddIntent: AppIntent {
+  static var title: LocalizedStringResource = "Add to amount"
+  @Parameter(title: "Amount") var delta: Double
+
+  init() {}
+  init(delta: Double) { self.delta = delta }
+
+  func perform() async throws -> some IntentResult {
+    let defaults = UserDefaults(suiteName: appGroupId)
+    let current = defaults?.double(forKey: builderAmountKey) ?? 0
+    defaults?.set(current + delta, forKey: builderAmountKey)
+    WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
+    return .result()
+  }
+}
+
+/// Resets the amount being built back to 0 (⌫).
+@available(iOS 17.0, *)
+struct BuilderClearIntent: AppIntent {
+  static var title: LocalizedStringResource = "Clear amount"
+
+  func perform() async throws -> some IntentResult {
+    let defaults = UserDefaults(suiteName: appGroupId)
+    defaults?.set(0.0, forKey: builderAmountKey)
+    WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
+    return .result()
+  }
+}
+
+/// Dismisses the builder and returns to the grid (✕), discarding the amount.
+@available(iOS 17.0, *)
+struct CloseBuilderIntent: AppIntent {
+  static var title: LocalizedStringResource = "Close"
+
+  func perform() async throws -> some IntentResult {
+    let defaults = UserDefaults(suiteName: appGroupId)
+    defaults?.set("", forKey: builderShortcutKey)
+    defaults?.set(0.0, forKey: builderAmountKey)
+    WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
+    return .result()
+  }
+}
+
+/// Logs the built amount (✓) and returns to the grid. A zero amount just
+/// closes the builder without logging.
+@available(iOS 17.0, *)
+struct ConfirmBuilderIntent: AppIntent {
+  static var title: LocalizedStringResource = "Log amount"
+  @Parameter(title: "Category") var categoryId: Int
+  @Parameter(title: "Amount") var amount: Double
+  @Parameter(title: "Shortcut") var shortcutId: String
+  @Parameter(title: "Name") var categoryName: String
+  @Parameter(title: "Color") var colorValue: Int
+  @Parameter(title: "Icon") var iconCode: Int
+
+  init() {}
+  init(
+    categoryId: Int, amount: Double, shortcutId: String,
+    categoryName: String, colorValue: Int, iconCode: Int
+  ) {
+    self.categoryId = categoryId
+    self.amount = amount
+    self.shortcutId = shortcutId
+    self.categoryName = categoryName
+    self.colorValue = colorValue
+    self.iconCode = iconCode
+  }
+
+  func perform() async throws -> some IntentResult {
+    let defaults = UserDefaults(suiteName: appGroupId)
+    // Close the builder either way.
+    defaults?.set("", forKey: builderShortcutKey)
+    defaults?.set(0.0, forKey: builderAmountKey)
+    if amount > 0 {
+      // performQuickAddLog reloads both widgets; the grid then shows the brief
+      // just-logged fade on this shortcut's cell.
+      performQuickAddLog(
+        categoryId: categoryId, amount: amount, shortcutId: shortcutId,
+        categoryName: categoryName, colorValue: colorValue, iconCode: iconCode)
+    } else {
+      WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
+    }
+    return .result()
+  }
+}
+
 // NOTE: interactive widget buttons cannot open the app — iOS 17 ignores
-// `openAppWhenRun` for widget intents (they always run in the background).
-// "Ask each time" shortcuts therefore go through deep links instead:
-// `Link` in the medium widget, `widgetURL` in the small one.
+// `openAppWhenRun` for widget intents (they always run in the background). So
+// "ask each time" shortcuts assemble their amount IN the widget (small: the
+// amount builder above; medium: preset chips + an `…` Link). The only path
+// that opens the app is the `…`/exact escape: a `Link` in the medium widget,
+// and the small builder's fall-through `widgetURL` (carrying the built amount).
 
 // MARK: - Quick-add widget (configurable category shortcuts)
 
@@ -494,6 +629,9 @@ struct Shortcut: Identifiable {
   let mode: String  // "fixed" | "presets" | "open"
   let amount: Double?
   let presets: [Double]
+  /// Amount-builder increment steps ("ask each time" mode). Resolved on the
+  /// Dart side — custom values, or a currency-adaptive ladder from spending.
+  let steps: [Double]
 
   /// The amount a single tap should log (fixed value, or the first preset).
   var primaryAmount: Double? {
@@ -530,6 +668,9 @@ private func loadShortcuts(groupId: String?) -> [Shortcut] {
     let presets = (item["presets"] as? [Any] ?? []).compactMap {
       ($0 as? NSNumber)?.doubleValue
     }
+    let steps = (item["steps"] as? [Any] ?? []).compactMap {
+      ($0 as? NSNumber)?.doubleValue
+    }
     let argb = (item["color"] as? NSNumber)?.intValue ?? 0xFF9E9E_9E
     return Shortcut(
       id: item["id"] as? String ?? UUID().uuidString,
@@ -541,7 +682,8 @@ private func loadShortcuts(groupId: String?) -> [Shortcut] {
       iconCode: (item["iconCode"] as? NSNumber)?.intValue ?? 0,
       mode: item["mode"] as? String ?? "open",
       amount: (item["amount"] as? NSNumber)?.doubleValue,
-      presets: presets)
+      presets: presets,
+      steps: steps)
   }
 }
 
@@ -566,6 +708,41 @@ private func money(_ value: Double, symbol: String) -> String {
   let n = small ? value : value.rounded()
   let text = formatter.string(from: NSNumber(value: n)) ?? "0"
   return symbol.isEmpty ? text : "\(text) \(symbol)"
+}
+
+// MARK: Compact money — keep amounts narrow at any currency scale
+//
+// `100/500/1000` fits dollars; the same real value in tenge is `50 000/250 000/
+// 500 000` and blows past the layout. These abbreviate large numbers to "50К" /
+// "1,2М" (locale suffix — the widget follows the system language). Thresholds
+// are absolute, so dollar-scale amounts stay full and only high-denomination
+// currencies get abbreviated.
+
+/// "50К" / "1,2М" — a number abbreviated with a localized thousands/millions
+/// suffix.
+private func abbrev(_ value: Double) -> String {
+  let formatter = NumberFormatter()
+  formatter.numberStyle = .decimal
+  formatter.maximumFractionDigits = 1
+  if abs(value) >= 1_000_000 {
+    let n = formatter.string(from: NSNumber(value: value / 1_000_000)) ?? "0"
+    return n + String(localized: "M")
+  }
+  let n = formatter.string(from: NSNumber(value: value / 1_000)) ?? "0"
+  return n + String(localized: "K")
+}
+
+/// Money for display: full grouped value below 100k, abbreviated above.
+private func abbreviatedMoney(_ value: Double, symbol: String) -> String {
+  if abs(value) < 100_000 { return money(value, symbol: symbol) }
+  let text = abbrev(value)
+  return symbol.isEmpty ? text : "\(text) \(symbol)"
+}
+
+/// A builder step / chip label: full number up to 10k ("100", "1000"), then
+/// abbreviated ("50К") so tenge-scale steps still fit a chip.
+private func stepLabel(_ value: Double) -> String {
+  return abs(value) >= 10_000 ? abbrev(value) : shortAmount(value)
 }
 
 // MARK: Group configuration (per-widget category sets)
@@ -655,6 +832,10 @@ struct QuickAddEntry: TimelineEntry {
   let spend: [Int: Double]
   let lastAddedId: String
   let lastAddedAt: Date
+  /// Id of the shortcut whose small-widget amount builder is open ("" = grid).
+  let builderShortcutId: String
+  /// Running total being assembled in the builder.
+  let builderAmount: Double
 
   /// True while the just-tapped button should show its quiet logged state
   /// (dimmed fill + hairline ring; no icons, no checkmarks).
@@ -675,14 +856,17 @@ private func loadQuickAddEntry(groupId: String?, at date: Date = Date())
     shortcuts: loadShortcuts(groupId: groupId),
     spend: loadCategorySpend(),
     lastAddedId: defaults?.string(forKey: "last_added_id") ?? "",
-    lastAddedAt: Date(timeIntervalSince1970: lastAt))
+    lastAddedAt: Date(timeIntervalSince1970: lastAt),
+    builderShortcutId: defaults?.string(forKey: builderShortcutKey) ?? "",
+    builderAmount: defaults?.double(forKey: builderAmountKey) ?? 0)
 }
 
 struct QuickAddProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> QuickAddEntry {
     QuickAddEntry(
       date: Date(), symbol: "$", shortcuts: [], spend: [:], lastAddedId: "",
-      lastAddedAt: Date(timeIntervalSince1970: 0))
+      lastAddedAt: Date(timeIntervalSince1970: 0), builderShortcutId: "",
+      builderAmount: 0)
   }
 
   func snapshot(for configuration: SelectGroupIntent, in context: Context) async
@@ -752,9 +936,9 @@ struct QuickAddEntryView: View {
   var entry: QuickAddEntry
   @Environment(\.widgetFamily) var family
 
-  /// "500 $" — mirrors the app's money formatting (symbol after the number).
+  /// "500 $" — chip amount; abbreviates large (tenge-scale) values to "50К".
   private func amountCaption(_ value: Double) -> String {
-    let number = shortAmount(value)
+    let number = stepLabel(value)
     return entry.symbol.isEmpty ? number : "\(number) \(entry.symbol)"
   }
 
@@ -768,28 +952,36 @@ struct QuickAddEntryView: View {
 
   var body: some View {
     if family == .systemSmall {
-      smallGrid
+      // Tapping an "ask each time" category flips this widget into an in-place
+      // amount builder (no app open). Scoped by shortcut id, so a builder
+      // opened on one instance doesn't affect another showing a different set.
+      if let s = activeBuilderShortcut {
+        amountBuilder(s)
+      } else {
+        smallGrid
+      }
     } else {
       mediumList
     }
   }
 
+  /// The "ask each time" shortcut whose builder is currently open, if it belongs
+  /// to THIS widget's shortcut set (otherwise the grid stays put).
+  private var activeBuilderShortcut: Shortcut? {
+    guard !entry.builderShortcutId.isEmpty else { return nil }
+    return entry.shortcuts.first { $0.id == entry.builderShortcutId }
+  }
+
   // MARK: small — a strict 2×2 grid; unused cells stay as quiet placeholders
   // so a single shortcut still reads as part of the grid.
 
-  /// Where a tap outside the instant-log buttons lands: the quick-add sheet
-  /// for the first "ask each time" shortcut (its circles aren't buttons —
-  /// small widgets can't open the app from a Button, only via widgetURL),
-  /// or the plain add screen when there is none.
+  /// Where a tap on the grid's empty space lands: the plain add screen. "Ask
+  /// each time" cells are now Buttons that open the in-widget amount builder,
+  /// so the grid no longer needs a per-category open deep link.
+  /// (`homeWidget` marks the URL for the home_widget plugin — without it the
+  /// plugin ignores the launch and widgetClicked never fires.)
   private var smallURL: URL? {
-    // `homeWidget` marks the URL for the home_widget plugin — without it the
-    // plugin ignores the launch and widgetClicked never fires.
-    if let open = entry.shortcuts.prefix(4).first(where: { $0.mode == "open" })
-    {
-      return URL(
-        string: "financeapp://quickadd?category=\(open.categoryId)&homeWidget")
-    }
-    return URL(string: "financeapp://add?homeWidget")
+    URL(string: "financeapp://add?homeWidget")
   }
 
   // Cell metrics shared by real cells and placeholders so the grid never
@@ -840,9 +1032,11 @@ struct QuickAddEntryView: View {
       }
       .buttonStyle(.plain)
     } else {
-      // "open" mode — a plain cell, so the tap falls through to widgetURL
-      // (Buttons can't open the app from a widget; see smallURL).
-      circleCell(shortcut, caption: shortcut.name)
+      // "ask each time" — open the in-widget amount builder (no app launch).
+      Button(intent: OpenBuilderIntent(shortcutId: shortcut.id)) {
+        circleCell(shortcut, caption: shortcut.name)
+      }
+      .buttonStyle(.plain)
     }
   }
 
@@ -900,6 +1094,113 @@ struct QuickAddEntryView: View {
         .offset(x: 3, y: 3)
       }
     }
+  }
+
+  // MARK: small amount builder — assemble a sum for an "ask each time" category
+  // right on the widget, then log it with one tap. No keyboard, no app launch.
+
+  private func confirmIntent(_ s: Shortcut, _ amount: Double)
+    -> ConfirmBuilderIntent
+  {
+    ConfirmBuilderIntent(
+      categoryId: s.categoryId, amount: amount, shortcutId: s.id,
+      categoryName: s.name, colorValue: s.colorValue, iconCode: s.iconCode)
+  }
+
+  private func amountBuilder(_ s: Shortcut) -> some View {
+    let amount = entry.builderAmount
+    let hasAmount = amount > 0
+    // Currency-adaptive increments resolved on the Dart side; a sane default if
+    // none were published yet.
+    let steps = s.steps.isEmpty ? [100.0, 500.0, 1000.0] : s.steps
+    return VStack(spacing: 6) {
+      // Header: category identity + close (✕ → back to the grid).
+      HStack(spacing: 7) {
+        ZStack {
+          Circle().fill(s.color.opacity(0.16))
+          Glyph(iconCode: s.iconCode, fallback: s.name, size: 13)
+            .foregroundColor(s.color)
+        }
+        .frame(width: 24, height: 24)
+        Text(s.name)
+          .font(.caption.weight(.semibold))
+          .foregroundColor(.primary)
+          .lineLimit(1)
+        Spacer(minLength: 2)
+        Button(intent: CloseBuilderIntent()) {
+          Image(systemName: "xmark")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundColor(.secondary)
+            .frame(width: 22, height: 22)
+            .background(Color.primary.opacity(0.06), in: Circle())
+        }
+        .buttonStyle(.plain)
+      }
+
+      // Running amount + clear (⌫). Tapping the number falls through to the
+      // widgetURL below → opens the app prefilled for an exact amount.
+      HStack(alignment: .firstTextBaseline, spacing: 6) {
+        Text(abbreviatedMoney(amount, symbol: entry.symbol))
+          .font(.system(size: 25, weight: .bold, design: .rounded))
+          .foregroundColor(hasAmount ? .primary : .secondary)
+          .lineLimit(1)
+          .minimumScaleFactor(0.5)
+        Spacer(minLength: 0)
+        if hasAmount {
+          Button(intent: BuilderClearIntent()) {
+            Image(systemName: "delete.left")
+              .font(.system(size: 15, weight: .semibold))
+              .foregroundColor(.secondary)
+          }
+          .buttonStyle(.plain)
+        }
+      }
+
+      // Increment chips. The widest label must fit the narrow small widget
+      // without truncating, so cap the font and let it scale down; large
+      // (tenge-scale) steps abbreviate to "+50К".
+      HStack(spacing: 5) {
+        ForEach(steps, id: \.self) { inc in
+          Button(intent: BuilderAddIntent(delta: inc)) {
+            Text("+" + stepLabel(inc))
+              .font(.system(size: 13, weight: .semibold, design: .rounded))
+              .lineLimit(1)
+              .minimumScaleFactor(0.75)
+              .foregroundColor(s.color)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 8)
+              .padding(.horizontal, 2)
+              .background(s.color.opacity(0.13), in: Capsule())
+          }
+          .buttonStyle(.plain)
+        }
+      }
+
+      // Confirm (✓ → log the amount, back to the grid). Dimmed until there is
+      // an amount to log.
+      Button(intent: confirmIntent(s, amount)) {
+        HStack(spacing: 5) {
+          Image(systemName: "checkmark")
+            .font(.system(size: 12, weight: .bold))
+          Text(String(localized: "Save"))
+            .font(.system(size: 14, weight: .bold, design: .rounded))
+        }
+        .foregroundColor(hasAmount ? s.onColor : .secondary)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 9)
+        .background(
+          hasAmount ? s.color : Color.primary.opacity(0.08), in: Capsule())
+      }
+      .buttonStyle(.plain)
+    }
+    // Fall-through for any tap outside a button (the amount, empty space): open
+    // the app prefilled with this category + the amount built so far, for an
+    // exact edit. `homeWidget` is required for the home_widget plugin to route.
+    .widgetURL(
+      URL(
+        string:
+          "financeapp://quickadd?category=\(s.categoryId)"
+          + "&amount=\(Int(amount.rounded()))&homeWidget"))
   }
 
   // MARK: medium — three fixed row slots (same grid discipline as small).
@@ -980,9 +1281,9 @@ struct QuickAddEntryView: View {
     }
   }
 
-  /// The category's month-to-date spend, e.g. "2 700 $" / "5.51 $".
+  /// The category's month-to-date spend, e.g. "2 700 $" / "250К ₸".
   private func spentCaption(_ value: Double) -> String {
-    return money(value, symbol: entry.symbol)
+    return abbreviatedMoney(value, symbol: entry.symbol)
   }
 
   @ViewBuilder
@@ -1023,7 +1324,7 @@ struct QuickAddEntryView: View {
     _ shortcut: Shortcut, _ amount: Double, withSymbol: Bool = true
   ) -> some View {
     Button(intent: quickAddIntent(shortcut, amount)) {
-      Text(withSymbol ? amountCaption(amount) : shortAmount(amount))
+      Text(withSymbol ? amountCaption(amount) : stepLabel(amount))
         .font(.system(size: 13, weight: .semibold, design: .rounded))
         .foregroundColor(shortcut.color)
         .padding(.vertical, 7)

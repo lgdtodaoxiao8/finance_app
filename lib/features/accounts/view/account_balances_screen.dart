@@ -130,6 +130,8 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
           AmountText(
             _total,
             symbol: _symbol,
+            adaptive: true,
+            textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w800,

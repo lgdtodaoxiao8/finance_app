@@ -259,6 +259,7 @@ class _StatCard extends StatelessWidget {
             child: AmountText(
               amount,
               symbol: symbol,
+              abbreviateAbove: 100000,
               style: kTextStyle.copyWith(
                 color: color,
                 fontSize: 15,
