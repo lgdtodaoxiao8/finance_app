@@ -905,18 +905,22 @@ struct QuickAddEntryView: View {
   // MARK: medium — three fixed row slots (same grid discipline as small).
 
   private var mediumList: some View {
-    VStack(spacing: 0) {
+    // Rows keep their natural height; the block is centered vertically so the
+    // top and bottom breathing room match the (uniform) side margins instead
+    // of stretching edge-to-edge.
+    VStack(spacing: 9) {
       ForEach(0..<3, id: \.self) { index in
         if index < entry.shortcuts.count {
-          rowView(entry.shortcuts[index]).frame(maxHeight: .infinity)
+          rowView(entry.shortcuts[index])
         } else {
-          placeholderRow.frame(maxHeight: .infinity)
+          placeholderRow
         }
       }
     }
+    .frame(maxHeight: .infinity, alignment: .center)
   }
 
-  private var rowCircleSize: CGFloat { 34 }
+  private var rowCircleSize: CGFloat { 28 }
   private var rowGap: CGFloat { 10 }
 
   /// The largest month-to-date spend among the shown categories — scales the
@@ -939,39 +943,39 @@ struct QuickAddEntryView: View {
     }
   }
 
-  // Each row is a hybrid: icon + name + quick-actions on top (action), and the
-  // category's month-to-date spend + a mini bar underneath (context) — so the
-  // medium size earns its space instead of being a taller button list.
+  // Each row is a compact hybrid: icon + name + the category's month-to-date
+  // spend + quick-actions on one line (context + action), and a thin progress
+  // bar underneath — short enough that three rows leave real top/bottom
+  // breathing room instead of filling the widget edge to edge.
   private func rowView(_ shortcut: Shortcut) -> some View {
     let logged = entry.isJustAdded(shortcut)
     let spent = entry.spend[shortcut.categoryId] ?? 0
     let fraction = mediumMaxSpend > 0 ? spent / mediumMaxSpend : 0
-    return VStack(spacing: 5) {
+    return VStack(spacing: 4) {
       HStack(spacing: rowGap) {
-        modeCircle(shortcut, diameter: rowCircleSize, glyph: 17)
+        modeCircle(shortcut, diameter: rowCircleSize, glyph: 16)
         Text(shortcut.name)
           .font(.subheadline.weight(.medium))
           .foregroundColor(.primary)
           .lineLimit(1)
-        Spacer(minLength: 8)
+        Spacer(minLength: 6)
+        Text(spentCaption(spent))
+          .font(.system(size: 11, weight: .medium, design: .rounded))
+          .foregroundColor(.secondary)
+          .fixedSize()
         rowActions(shortcut)
           .opacity(logged ? 0.35 : 1)
           .fixedSize()
       }
-      HStack(spacing: 6) {
-        GeometryReader { geo in
-          ZStack(alignment: .leading) {
-            Capsule().fill(shortcut.color.opacity(0.13))
-            Capsule().fill(shortcut.color)
-              .frame(width: geo.size.width * fraction)
-          }
+      // Thin bar sits on the text column (not under the circle).
+      GeometryReader { geo in
+        ZStack(alignment: .leading) {
+          Capsule().fill(shortcut.color.opacity(0.13))
+          Capsule().fill(shortcut.color)
+            .frame(width: geo.size.width * fraction)
         }
-        .frame(height: 4)
-        Text(spentCaption(spent))
-          .font(.system(size: 10, weight: .medium, design: .rounded))
-          .foregroundColor(.secondary)
-          .fixedSize()
       }
+      .frame(height: 3)
       .padding(.leading, rowCircleSize + rowGap)
     }
   }
