@@ -718,16 +718,18 @@ private func money(_ value: Double, symbol: String) -> String {
 // are absolute, so dollar-scale amounts stay full and only high-denomination
 // currencies get abbreviated.
 
-/// "50К" / "1,2М" — a number abbreviated with a localized thousands/millions
-/// suffix.
+/// "50К" / "1,864М" — a number abbreviated with a localized thousands/millions
+/// suffix. Millions keep 3 decimals (where the lost precision matters), thousands
+/// just 1 ("253,7К") so they stay short and don't wrap in tight rows.
 private func abbrev(_ value: Double) -> String {
   let formatter = NumberFormatter()
   formatter.numberStyle = .decimal
-  formatter.maximumFractionDigits = 1
   if abs(value) >= 1_000_000 {
+    formatter.maximumFractionDigits = 3
     let n = formatter.string(from: NSNumber(value: value / 1_000_000)) ?? "0"
     return n + String(localized: "M")
   }
+  formatter.maximumFractionDigits = 1
   let n = formatter.string(from: NSNumber(value: value / 1_000)) ?? "0"
   return n + String(localized: "K")
 }
@@ -975,13 +977,15 @@ struct QuickAddEntryView: View {
   // MARK: small — a strict 2×2 grid; unused cells stay as quiet placeholders
   // so a single shortcut still reads as part of the grid.
 
-  /// Where a tap on the grid's empty space lands: the plain add screen. "Ask
-  /// each time" cells are now Buttons that open the in-widget amount builder,
-  /// so the grid no longer needs a per-category open deep link.
+  /// Where a tap on the grid's "+" add cell / empty space lands: the fast
+  /// quick-add sheet with NO preset category, so the user can log an irregular
+  /// spend into any category. "Ask each time" cells are Buttons that open the
+  /// in-widget amount builder instead; small widgets can't open the app from a
+  /// Button, so the "+" cell is a plain view that falls through to this URL.
   /// (`homeWidget` marks the URL for the home_widget plugin — without it the
   /// plugin ignores the launch and widgetClicked never fires.)
   private var smallURL: URL? {
-    URL(string: "financeapp://add?homeWidget")
+    URL(string: "financeapp://quickadd?homeWidget")
   }
 
   // Cell metrics shared by real cells and placeholders so the grid never
@@ -1012,16 +1016,43 @@ struct QuickAddEntryView: View {
   private func gridCell(_ index: Int) -> some View {
     if index < entry.shortcuts.count {
       circleButton(entry.shortcuts[index])
+    } else if index == entry.shortcuts.count {
+      // First free slot: a "+" for irregular, uncategorised spends. It's a
+      // plain view (not a Button) so the tap falls through to the widgetURL →
+      // the quick-add sheet with no preset category (pick any).
+      addCell
     } else {
-      VStack(spacing: 3) {
-        Circle()
-          .fill(Color.primary.opacity(0.05))
-          .frame(width: circleSize, height: circleSize)
-        Text(" ")
-          .font(.system(size: captionSize))
-      }
-      .frame(maxWidth: .infinity)
+      placeholderCell
     }
+  }
+
+  private var placeholderCell: some View {
+    VStack(spacing: 3) {
+      Circle()
+        .fill(Color.primary.opacity(0.05))
+        .frame(width: circleSize, height: circleSize)
+      Text(" ")
+        .font(.system(size: captionSize))
+    }
+    .frame(maxWidth: .infinity)
+  }
+
+  private var addCell: some View {
+    VStack(spacing: 4) {
+      ZStack {
+        Circle().fill(Color.accentColor.opacity(0.15))
+        Image(systemName: "plus")
+          .font(.system(size: glyphSize, weight: .semibold))
+          .foregroundColor(.accentColor)
+      }
+      .frame(width: circleSize, height: circleSize)
+      Text(String(localized: "Add"))
+        .font(.system(size: captionSize))
+        .foregroundColor(.secondary)
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+    }
+    .frame(maxWidth: .infinity)
   }
 
   @ViewBuilder

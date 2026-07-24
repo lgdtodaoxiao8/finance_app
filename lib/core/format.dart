@@ -1,9 +1,10 @@
 import 'package:intl/intl.dart';
 
 final NumberFormat _amountFormat = NumberFormat('#,##0.00');
-// Three decimals keep the abbreviated form informative ("2,292М", "869,5К")
-// rather than losing everything below the leading digit ("2,3М").
-final NumberFormat _abbrevFormat = NumberFormat('#,##0.###');
+// Millions keep three decimals ("2,292М") where the lost precision matters;
+// thousands keep just one ("253,7К") so they stay short and don't wrap.
+final NumberFormat _abbrevMillions = NumberFormat('#,##0.###');
+final NumberFormat _abbrevThousands = NumberFormat('#,##0.#');
 
 /// Formats a monetary amount with thousands separators and 2 decimals.
 String formatAmount(double value) => _amountFormat.format(value);
@@ -45,10 +46,10 @@ void setCompactSuffixes({required String thousands, required String millions}) {
 String abbreviateAmount(double value) {
   final a = value.abs();
   if (a >= 1000000) {
-    return '${_abbrevFormat.format(value / 1000000)}$_millionsSuffix';
+    return '${_abbrevMillions.format(value / 1000000)}$_millionsSuffix';
   }
   if (a >= 1000) {
-    return '${_abbrevFormat.format(value / 1000)}$_thousandsSuffix';
+    return '${_abbrevThousands.format(value / 1000)}$_thousandsSuffix';
   }
   return formatAmount(value);
 }

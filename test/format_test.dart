@@ -10,8 +10,8 @@ void main() {
       expect(abbreviateAmount(1863662.80), '1.864M');
     });
 
-    test('abbreviates thousands, dropping trailing zeros', () {
-      expect(abbreviateAmount(253701.30), '253.701K');
+    test('keeps thousands short (one decimal), dropping trailing zeros', () {
+      expect(abbreviateAmount(253701.30), '253.7K');
       expect(abbreviateAmount(869500), '869.5K');
       expect(abbreviateAmount(50000), '50K');
     });
@@ -22,13 +22,13 @@ void main() {
     });
 
     test('abbreviates from 1000 up', () {
-      expect(abbreviateAmount(3965.24), '3.965K');
+      expect(abbreviateAmount(12345), '12.3K');
     });
 
     test('honours localized suffixes', () {
       setCompactSuffixes(thousands: 'К', millions: 'М');
       expect(abbreviateAmount(2291724.70), '2.292М');
-      expect(abbreviateAmount(253701.30), '253.701К');
+      expect(abbreviateAmount(253701.30), '253.7К');
     });
   });
 }

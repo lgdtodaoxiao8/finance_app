@@ -32,6 +32,12 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
   StreamSubscription<dynamic>? _dbSubscription;
   Timer? _syncDebounce;
 
+  // Dedupe widget launches: on a cold start, `initiallyLaunchedFromHomeWidget`
+  // and the `widgetClicked` stream can both deliver the SAME uri, which would
+  // otherwise open the quick-add sheet twice.
+  Uri? _lastLaunchUri;
+  DateTime? _lastLaunchAt;
+
   @override
   void initState() {
     super.initState();
@@ -104,6 +110,17 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
   /// - `*://add` opens the full add-transaction screen.
   void _handleWidgetLaunch(Uri? uri) {
     if (uri == null) return;
+    // Drop the duplicate that arrives from both the initial-launch check and
+    // the widgetClicked stream on a cold start (same uri within a moment).
+    final now = DateTime.now();
+    if (_lastLaunchUri == uri &&
+        _lastLaunchAt != null &&
+        now.difference(_lastLaunchAt!) < const Duration(seconds: 1)) {
+      return;
+    }
+    _lastLaunchUri = uri;
+    _lastLaunchAt = now;
+
     final isQuickAdd = uri.host == 'quickadd' || uri.path.contains('quickadd');
     if (isQuickAdd) {
       final categoryId = int.tryParse(uri.queryParameters['category'] ?? '');
