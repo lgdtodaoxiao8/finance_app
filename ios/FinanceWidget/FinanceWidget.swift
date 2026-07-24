@@ -1115,17 +1115,18 @@ struct QuickAddEntryView: View {
     switch s.mode {
     case "fixed":
       if let amount = s.amount {
-        // No pill: the amount sits in the bottom-right corner in the category
-        // colour, with a soft systemBackground halo so it reads over the icon.
-        Text(stepLabel(amount))
+        // No pill: the amount (with its currency symbol) sits in the bottom-
+        // right corner in the category colour, with a soft systemBackground halo
+        // so it reads over the icon. Width-capped so long sums shrink to fit.
+        Text(amountCaption(amount))
           .font(.system(size: diameter * 0.22, weight: .heavy, design: .rounded))
           .foregroundColor(s.color)
           .lineLimit(1)
           .minimumScaleFactor(0.5)
+          .frame(maxWidth: diameter * 0.95, alignment: .trailing)
           .shadow(color: Color(UIColor.systemBackground), radius: 1)
           .shadow(color: Color(UIColor.systemBackground), radius: 1)
-          .padding(.trailing, diameter * 0.05)
-          .padding(.bottom, diameter * 0.03)
+          .offset(x: 2, y: 2)
       }
     case "presets":
       // Two SMALL horizontal pills — a quiet narrative hint ("several presets"),
