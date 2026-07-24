@@ -345,12 +345,23 @@ class _SpendingCard extends StatelessWidget {
                           fontSize: 12,
                         ),
                       ),
-                      AmountText(
-                        total,
-                        symbol: symbol,
-                        style: kTextStyle.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                      // Keep the total inside the donut hole (centerSpaceRadius
+                      // 56 → ~112pt): big sums abbreviate ("1,9М €") so the
+                      // number sits centered with breathing room instead of
+                      // spanning edge to edge; smaller sums stay full.
+                      SizedBox(
+                        width: 96,
+                        child: AmountText(
+                          total,
+                          symbol: symbol,
+                          abbreviateAbove: 100000,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: kTextStyle.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
