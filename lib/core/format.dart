@@ -1,7 +1,9 @@
 import 'package:intl/intl.dart';
 
 final NumberFormat _amountFormat = NumberFormat('#,##0.00');
-final NumberFormat _abbrevFormat = NumberFormat('#,##0.#');
+// Two decimals keep the abbreviated form informative ("2,29М", "253,7К")
+// rather than losing everything below the leading digit ("2,3М").
+final NumberFormat _abbrevFormat = NumberFormat('#,##0.##');
 
 /// Formats a monetary amount with thousands separators and 2 decimals.
 String formatAmount(double value) => _amountFormat.format(value);
