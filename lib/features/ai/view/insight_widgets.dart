@@ -111,7 +111,7 @@ class CategoryBarRow extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                AmountText.maskString(formatMoney(bar.amount, symbol)),
+                AmountText.maskString(compactMoney(bar.amount, symbol)),
                 style: const TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,

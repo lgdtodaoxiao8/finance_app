@@ -315,7 +315,7 @@ class _ThisMonthCard extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            AmountText.maskString(formatMoney(net, symbol)),
+            AmountText.maskString(compactMoney(net, symbol)),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -351,8 +351,8 @@ class _ThisMonthCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             AppLocalizations.of(context).inOutSummary(
-              AmountText.maskString(formatMoney(income, symbol)),
-              AmountText.maskString(formatMoney(expense, symbol)),
+              AmountText.maskString(compactMoney(income, symbol)),
+              AmountText.maskString(compactMoney(expense, symbol)),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -407,7 +407,7 @@ class _TopCategoryCard extends StatelessWidget {
           ),
           Text(
             name != null
-                ? AmountText.maskString(formatMoney(amount, symbol))
+                ? AmountText.maskString(compactMoney(amount, symbol))
                 : AppLocalizations.of(context).noSpendYet,
             style: const TextStyle(
               fontSize: 11.5,
@@ -556,7 +556,7 @@ class _ForecastCard extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  AmountText.maskString(formatMoney(value, symbol)),
+                  AmountText.maskString(compactMoney(value, symbol)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

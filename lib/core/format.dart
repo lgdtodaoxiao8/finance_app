@@ -1,9 +1,9 @@
 import 'package:intl/intl.dart';
 
 final NumberFormat _amountFormat = NumberFormat('#,##0.00');
-// Two decimals keep the abbreviated form informative ("2,29М", "253,7К")
+// Three decimals keep the abbreviated form informative ("2,292М", "869,5К")
 // rather than losing everything below the leading digit ("2,3М").
-final NumberFormat _abbrevFormat = NumberFormat('#,##0.##');
+final NumberFormat _abbrevFormat = NumberFormat('#,##0.###');
 
 /// Formats a monetary amount with thousands separators and 2 decimals.
 String formatAmount(double value) => _amountFormat.format(value);
@@ -58,4 +58,13 @@ String abbreviateMoney(double value, String? symbol) {
   final amount = abbreviateAmount(value);
   if (symbol == null || symbol.isEmpty) return amount;
   return '$amount $symbol';
+}
+
+/// Money that stays full below 100k and abbreviates above ("253,7К", "1,864М")
+/// — the string-form counterpart of [AmountText]'s `abbreviateAbove`, for the
+/// tight tiles/chips that bake a formatted string instead of taking a value.
+String compactMoney(double value, String? symbol) {
+  return value.abs() >= 100000
+      ? abbreviateMoney(value, symbol)
+      : formatMoney(value, symbol);
 }

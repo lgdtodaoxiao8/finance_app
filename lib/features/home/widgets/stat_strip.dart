@@ -94,13 +94,13 @@ class _StatStripState extends State<StatStrip> {
         ),
         _Stat(
           Icons.today_rounded,
-          AmountText.maskString(formatMoney(avgPerDay, _symbol)),
+          AmountText.maskString(compactMoney(avgPerDay, _symbol)),
           _StatKind.perDay,
           AppColors.primary,
         ),
         _Stat(
           Icons.local_fire_department_rounded,
-          AmountText.maskString(formatMoney(biggest, _symbol)),
+          AmountText.maskString(compactMoney(biggest, _symbol)),
           _StatKind.biggest,
           const Color(0xFFF5A623),
         ),

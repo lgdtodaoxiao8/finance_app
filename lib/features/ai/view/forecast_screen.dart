@@ -130,19 +130,19 @@ class _ForecastScreenState extends State<ForecastScreen> {
         const SizedBox(height: 16),
         _Row(
           AppLocalizations.of(context).incomeThisMonth,
-          AmountText.maskString(formatMoney(f.income, f.symbol)),
+          AmountText.maskString(compactMoney(f.income, f.symbol)),
         ),
         _Row(
           AppLocalizations.of(context).spentSoFar,
-          AmountText.maskString(formatMoney(f.expenseSoFar, f.symbol)),
+          AmountText.maskString(compactMoney(f.expenseSoFar, f.symbol)),
         ),
         _Row(
           AppLocalizations.of(context).projectedTotalSpend,
-          AmountText.maskString(formatMoney(f.projectedExpense, f.symbol)),
+          AmountText.maskString(compactMoney(f.projectedExpense, f.symbol)),
         ),
         _Row(
           AppLocalizations.of(context).dailySpendRate,
-          AmountText.maskString(formatMoney(f.dailyRate, f.symbol)),
+          AmountText.maskString(compactMoney(f.dailyRate, f.symbol)),
         ),
         _Row(
           AppLocalizations.of(context).daysLeftInMonth,

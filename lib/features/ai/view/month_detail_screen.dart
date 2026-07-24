@@ -99,7 +99,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                       child: MiniStat(
                         label: AppLocalizations.of(context).income,
                         value: AmountText.maskString(
-                          formatMoney(_income, _symbol),
+                          compactMoney(_income, _symbol),
                         ),
                         color: AppColors.positive,
                       ),
@@ -109,7 +109,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                       child: MiniStat(
                         label: AppLocalizations.of(context).expense,
                         value: AmountText.maskString(
-                          formatMoney(_expense, _symbol),
+                          compactMoney(_expense, _symbol),
                         ),
                         color: AppColors.negative,
                       ),
@@ -227,7 +227,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
             ),
           ),
           Text(
-            '${up ? '+' : '−'}${AmountText.maskString(formatMoney(diff.abs(), _symbol))}',
+            '${up ? '+' : '−'}${AmountText.maskString(compactMoney(diff.abs(), _symbol))}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,

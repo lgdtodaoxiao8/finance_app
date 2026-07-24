@@ -5,13 +5,13 @@ void main() {
   group('abbreviateAmount', () {
     setUp(() => setCompactSuffixes(thousands: 'K', millions: 'M'));
 
-    test('keeps two informative decimals for millions', () {
-      expect(abbreviateAmount(2291724.70), '2.29M');
-      expect(abbreviateAmount(1863662.80), '1.86M');
+    test('keeps three informative decimals for millions', () {
+      expect(abbreviateAmount(2291724.70), '2.292M');
+      expect(abbreviateAmount(1863662.80), '1.864M');
     });
 
     test('abbreviates thousands, dropping trailing zeros', () {
-      expect(abbreviateAmount(253701.30), '253.7K');
+      expect(abbreviateAmount(253701.30), '253.701K');
       expect(abbreviateAmount(869500), '869.5K');
       expect(abbreviateAmount(50000), '50K');
     });
@@ -22,13 +22,13 @@ void main() {
     });
 
     test('abbreviates from 1000 up', () {
-      expect(abbreviateAmount(3965.24), '3.97K');
+      expect(abbreviateAmount(3965.24), '3.965K');
     });
 
     test('honours localized suffixes', () {
       setCompactSuffixes(thousands: 'К', millions: 'М');
-      expect(abbreviateAmount(2291724.70), '2.29М');
-      expect(abbreviateAmount(253701.30), '253.7К');
+      expect(abbreviateAmount(2291724.70), '2.292М');
+      expect(abbreviateAmount(253701.30), '253.701К');
     });
   });
 }
