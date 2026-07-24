@@ -1115,23 +1115,28 @@ struct QuickAddEntryView: View {
     switch s.mode {
     case "fixed":
       if let amount = s.amount {
+        // No pill: the amount sits in the bottom-right corner in the category
+        // colour, with a soft systemBackground halo so it reads over the icon.
         Text(stepLabel(amount))
-          .font(.system(size: diameter * 0.2, weight: .bold, design: .rounded))
-          .foregroundColor(s.onColor)
+          .font(.system(size: diameter * 0.22, weight: .heavy, design: .rounded))
+          .foregroundColor(s.color)
           .lineLimit(1)
           .minimumScaleFactor(0.5)
-          .padding(.horizontal, diameter * 0.11)
-          .frame(height: height)
-          .background(pillBadge(s, ring: ring))
-          .offset(x: 3, y: 3)
+          .shadow(color: Color(UIColor.systemBackground), radius: 1)
+          .shadow(color: Color(UIColor.systemBackground), radius: 1)
+          .padding(.trailing, diameter * 0.05)
+          .padding(.bottom, diameter * 0.03)
       }
     case "presets":
-      // Two HORIZONTAL pills (wider than tall), same height as the "+".
-      HStack(spacing: diameter * 0.045) {
-        pillBadge(s, ring: ring).frame(width: diameter * 0.42, height: height)
-        pillBadge(s, ring: ring).frame(width: diameter * 0.42, height: height)
+      // Two SMALL horizontal pills — a quiet narrative hint ("several presets"),
+      // not a functional element, so keep them compact on the circle.
+      HStack(spacing: diameter * 0.03) {
+        pillBadge(s, ring: ring)
+          .frame(width: diameter * 0.3, height: diameter * 0.2)
+        pillBadge(s, ring: ring)
+          .frame(width: diameter * 0.3, height: diameter * 0.2)
       }
-      .offset(x: 3, y: 3)
+      .offset(x: 3, y: 2)
     default:
       ZStack {
         Circle().fill(Color(UIColor.systemBackground))
