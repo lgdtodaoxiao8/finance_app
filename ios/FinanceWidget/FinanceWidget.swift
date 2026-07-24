@@ -632,15 +632,6 @@ struct Shortcut: Identifiable {
   /// Amount-builder increment steps ("ask each time" mode). Resolved on the
   /// Dart side — custom values, or a currency-adaptive ladder from spending.
   let steps: [Double]
-
-  /// The amount a single tap should log (fixed value, or the first preset).
-  var primaryAmount: Double? {
-    switch mode {
-    case "fixed": return amount
-    case "presets": return presets.first
-    default: return nil
-    }
-  }
 }
 
 /// White or near-black, whichever is legible on the given ARGB fill.
@@ -954,11 +945,15 @@ struct QuickAddEntryView: View {
 
   var body: some View {
     if family == .systemSmall {
-      // Tapping an "ask each time" category flips this widget into an in-place
-      // amount builder (no app open). Scoped by shortcut id, so a builder
-      // opened on one instance doesn't affect another showing a different set.
+      // Tapping a "presets" or "ask each time" category flips this widget into
+      // a full-size takeover (no app open): a preset picker or an amount
+      // builder. Scoped by shortcut id, so it doesn't affect another instance.
       if let s = activeBuilderShortcut {
-        amountBuilder(s)
+        if s.mode == "presets" {
+          presetPicker(s)
+        } else {
+          amountBuilder(s)
+        }
       } else {
         smallGrid
       }
@@ -1057,13 +1052,15 @@ struct QuickAddEntryView: View {
 
   @ViewBuilder
   private func circleButton(_ shortcut: Shortcut) -> some View {
-    if let amount = shortcut.primaryAmount {
+    if shortcut.mode == "fixed", let amount = shortcut.amount {
+      // One exact sum: a single tap logs it right away.
       Button(intent: quickAddIntent(shortcut, amount)) {
         circleCell(shortcut, caption: amountCaption(amount))
       }
       .buttonStyle(.plain)
     } else {
-      // "ask each time" — open the in-widget amount builder (no app launch).
+      // "presets" opens the preset picker; "ask each time" opens the amount
+      // builder — both take over the widget (no app launch, no dumb logging).
       Button(intent: OpenBuilderIntent(shortcutId: shortcut.id)) {
         circleCell(shortcut, caption: shortcut.name)
       }
@@ -1073,20 +1070,20 @@ struct QuickAddEntryView: View {
 
   /// Icon in a coloured circle, caption below.
   ///
-  /// The tap outcome is readable at a glance: instant-log buttons (fixed /
-  /// presets) are SOLID circles captioned with the amount; "ask each time"
-  /// cells are quiet TINTED circles wearing a small "+" badge and captioned
-  /// with the category name — tinted + badge narrates "opens input".
+  /// The tap outcome is readable at a glance: a "fixed" cell is captioned with
+  /// its exact amount (one tap logs it); "presets" and "ask each time" cells
+  /// wear a small "+" badge and are captioned with the category name — badge
+  /// narrates "opens a picker / input".
   /// The just-logged state is a quiet fade: fill drops to a tint, the glyph
   /// takes the category colour and a hairline ring appears, then crossfades
   /// back.
   private func circleCell(_ shortcut: Shortcut, caption: String) -> some View {
-    let isOpen = shortcut.primaryAmount == nil
+    let opensTakeover = shortcut.mode != "fixed"
     return VStack(spacing: 4) {
       modeCircle(shortcut, diameter: circleSize, glyph: glyphSize)
       Text(caption)
         .font(
-          isOpen
+          opensTakeover
             ? .system(size: captionSize)
             : .system(size: captionSize, weight: .semibold, design: .rounded)
         )
@@ -1102,7 +1099,7 @@ struct QuickAddEntryView: View {
     _ shortcut: Shortcut, diameter: CGFloat, glyph: CGFloat
   ) -> some View {
     let logged = entry.isJustAdded(shortcut)
-    let isOpen = shortcut.primaryAmount == nil
+    let isOpen = shortcut.mode != "fixed"
     return ZStack(alignment: .bottomTrailing) {
       ZStack {
         // One-colour style: glyph in the category colour on a faint tint of
@@ -1138,6 +1135,73 @@ struct QuickAddEntryView: View {
       categoryName: s.name, colorValue: s.colorValue, iconCode: s.iconCode)
   }
 
+  /// Shared takeover header: category identity + close (✕ → back to the grid).
+  private func takeoverHeader(_ s: Shortcut) -> some View {
+    HStack(spacing: 7) {
+      ZStack {
+        Circle().fill(s.color.opacity(0.16))
+        Glyph(iconCode: s.iconCode, fallback: s.name, size: 13)
+          .foregroundColor(s.color)
+      }
+      .frame(width: 24, height: 24)
+      Text(s.name)
+        .font(.caption.weight(.semibold))
+        .foregroundColor(.primary)
+        .lineLimit(1)
+      Spacer(minLength: 2)
+      Button(intent: CloseBuilderIntent()) {
+        Image(systemName: "xmark")
+          .font(.system(size: 10, weight: .bold))
+          .foregroundColor(.secondary)
+          .frame(width: 22, height: 22)
+          .background(Color.primary.opacity(0.06), in: Circle())
+      }
+      .buttonStyle(.plain)
+    }
+  }
+
+  // MARK: small preset picker — pick one of the shortcut's preset amounts on a
+  // full-size takeover, then log it with one tap (no dumb first-preset logging).
+
+  private func presetButton(_ s: Shortcut, _ amount: Double) -> some View {
+    // Logs this preset and returns to the grid (with the just-logged fade).
+    Button(intent: confirmIntent(s, amount)) {
+      Text(amountCaption(amount))
+        .font(.system(size: 15, weight: .semibold, design: .rounded))
+        .foregroundColor(s.color)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(s.color.opacity(0.14), in: Capsule())
+    }
+    .buttonStyle(.plain)
+  }
+
+  private func presetPicker(_ s: Shortcut) -> some View {
+    // Up to four presets, laid out two-per-row so they stay big and tappable.
+    let presets = Array(s.presets.prefix(4))
+    let rows = stride(from: 0, to: presets.count, by: 2).map {
+      Array(presets[$0..<min($0 + 2, presets.count)])
+    }
+    return VStack(spacing: 8) {
+      takeoverHeader(s)
+      Spacer(minLength: 0)
+      ForEach(rows.indices, id: \.self) { r in
+        HStack(spacing: 8) {
+          ForEach(rows[r], id: \.self) { presetButton(s, $0) }
+          // A lone button on the last row shouldn't stretch full width.
+          if rows[r].count == 1 { Spacer(minLength: 0) }
+        }
+      }
+      Spacer(minLength: 0)
+    }
+    // Any tap outside a preset button opens the app prefilled with this
+    // category (for a non-preset amount). `homeWidget` is required to route.
+    .widgetURL(
+      URL(string: "financeapp://quickadd?category=\(s.categoryId)&homeWidget"))
+  }
+
   private func amountBuilder(_ s: Shortcut) -> some View {
     let amount = entry.builderAmount
     let hasAmount = amount > 0
@@ -1145,28 +1209,7 @@ struct QuickAddEntryView: View {
     // none were published yet.
     let steps = s.steps.isEmpty ? [100.0, 500.0, 1000.0] : s.steps
     return VStack(spacing: 6) {
-      // Header: category identity + close (✕ → back to the grid).
-      HStack(spacing: 7) {
-        ZStack {
-          Circle().fill(s.color.opacity(0.16))
-          Glyph(iconCode: s.iconCode, fallback: s.name, size: 13)
-            .foregroundColor(s.color)
-        }
-        .frame(width: 24, height: 24)
-        Text(s.name)
-          .font(.caption.weight(.semibold))
-          .foregroundColor(.primary)
-          .lineLimit(1)
-        Spacer(minLength: 2)
-        Button(intent: CloseBuilderIntent()) {
-          Image(systemName: "xmark")
-            .font(.system(size: 10, weight: .bold))
-            .foregroundColor(.secondary)
-            .frame(width: 22, height: 22)
-            .background(Color.primary.opacity(0.06), in: Circle())
-        }
-        .buttonStyle(.plain)
-      }
+      takeoverHeader(s)
 
       // Running amount + clear (⌫). Tapping the number falls through to the
       // widgetURL below → opens the app prefilled for an exact amount.
