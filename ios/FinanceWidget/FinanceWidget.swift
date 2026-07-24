@@ -1053,9 +1053,10 @@ struct QuickAddEntryView: View {
   @ViewBuilder
   private func circleButton(_ shortcut: Shortcut) -> some View {
     if shortcut.mode == "fixed", let amount = shortcut.amount {
-      // One exact sum: a single tap logs it right away.
+      // One exact sum: a single tap logs it right away. The amount rides the
+      // circle as a badge; the caption is the category name like the others.
       Button(intent: quickAddIntent(shortcut, amount)) {
-        circleCell(shortcut, caption: amountCaption(amount))
+        circleCell(shortcut, caption: shortcut.name)
       }
       .buttonStyle(.plain)
     } else {
@@ -1068,25 +1069,17 @@ struct QuickAddEntryView: View {
     }
   }
 
-  /// Icon in a coloured circle, caption below.
-  ///
-  /// The tap outcome is readable at a glance: a "fixed" cell is captioned with
-  /// its exact amount (one tap logs it); "presets" and "ask each time" cells
-  /// wear a small "+" badge and are captioned with the category name — badge
-  /// narrates "opens a picker / input".
-  /// The just-logged state is a quiet fade: fill drops to a tint, the glyph
-  /// takes the category colour and a hairline ring appears, then crossfades
-  /// back.
+  /// Icon in a coloured circle + the category name below. The mode is told
+  /// apart by the bottom-trailing badge (see modeBadge): the fixed amount on a
+  /// pill, two pills for presets, a "+" for "ask each time".
   private func circleCell(_ shortcut: Shortcut, caption: String) -> some View {
-    let opensTakeover = shortcut.mode != "fixed"
     return VStack(spacing: 4) {
-      modeCircle(shortcut, diameter: circleSize, glyph: glyphSize)
+      ZStack(alignment: .bottomTrailing) {
+        modeCircle(shortcut, diameter: circleSize, glyph: glyphSize)
+        modeBadge(shortcut, diameter: circleSize)
+      }
       Text(caption)
-        .font(
-          opensTakeover
-            ? .system(size: captionSize)
-            : .system(size: captionSize, weight: .semibold, design: .rounded)
-        )
+        .font(.system(size: captionSize))
         .foregroundColor(.secondary)
         .lineLimit(1)
         .minimumScaleFactor(0.75)
@@ -1094,33 +1087,70 @@ struct QuickAddEntryView: View {
     .frame(maxWidth: .infinity)
   }
 
-  /// The mode-aware circle shared by both families.
+  /// The plain tinted icon circle, shared by both families (badges are added by
+  /// the small grid's circleCell, not here, so the medium rows stay clean).
   private func modeCircle(
     _ shortcut: Shortcut, diameter: CGFloat, glyph: CGFloat
   ) -> some View {
     let logged = entry.isJustAdded(shortcut)
-    let isOpen = shortcut.mode != "fixed"
-    return ZStack(alignment: .bottomTrailing) {
+    // One-colour style: glyph in the category colour on a faint tint of it
+    // (matches ItemAvatar). The just-logged flash briefly inverts to a solid
+    // fill with a contrasting glyph, then fades back.
+    return ZStack {
+      Circle().fill(shortcut.color.opacity(logged ? 1 : 0.16))
+      CategoryGlyph(shortcut: shortcut, size: glyph)
+        .foregroundColor(logged ? shortcut.onColor : shortcut.color)
+    }
+    .frame(width: diameter, height: diameter)
+  }
+
+  /// The bottom-trailing badge that tells the three modes apart at a glance —
+  /// all the same height and sitting ON the circle like the "+": fixed = its
+  /// amount on a pill; presets = two pills ("several presets"); "ask each time"
+  /// = a "+".
+  @ViewBuilder
+  private func modeBadge(_ s: Shortcut, diameter: CGFloat) -> some View {
+    let height = diameter * 0.36  // same footprint as the "+" badge
+    let ring = diameter * 0.03  // systemBackground separation, like the "+"
+    switch s.mode {
+    case "fixed":
+      if let amount = s.amount {
+        Text(stepLabel(amount))
+          .font(.system(size: diameter * 0.2, weight: .bold, design: .rounded))
+          .foregroundColor(s.onColor)
+          .lineLimit(1)
+          .minimumScaleFactor(0.5)
+          .padding(.horizontal, diameter * 0.11)
+          .frame(height: height)
+          .background(pillBadge(s, ring: ring))
+          .offset(x: 3, y: 3)
+      }
+    case "presets":
+      // Two HORIZONTAL pills (wider than tall), same height as the "+".
+      HStack(spacing: diameter * 0.045) {
+        pillBadge(s, ring: ring).frame(width: diameter * 0.42, height: height)
+        pillBadge(s, ring: ring).frame(width: diameter * 0.42, height: height)
+      }
+      .offset(x: 3, y: 3)
+    default:
       ZStack {
-        // One-colour style: glyph in the category colour on a faint tint of
-        // it (matches ItemAvatar). The just-logged flash briefly inverts to a
-        // solid fill with a contrasting glyph, then fades back.
-        Circle().fill(shortcut.color.opacity(logged ? 1 : 0.16))
-        CategoryGlyph(shortcut: shortcut, size: glyph)
-          .foregroundColor(logged ? shortcut.onColor : shortcut.color)
+        Circle().fill(Color(UIColor.systemBackground))
+        Circle().fill(s.color).padding(ring)
+        Image(systemName: "plus")
+          .font(.system(size: diameter * 0.16, weight: .bold))
+          .foregroundColor(.white)
       }
-      .frame(width: diameter, height: diameter)
-      if isOpen {
-        ZStack {
-          Circle().fill(Color(UIColor.systemBackground))
-          Circle().fill(shortcut.color).padding(1.5)
-          Image(systemName: "plus")
-            .font(.system(size: diameter * 0.16, weight: .bold))
-            .foregroundColor(.white)
-        }
-        .frame(width: diameter * 0.36, height: diameter * 0.36)
-        .offset(x: 3, y: 3)
-      }
+      .frame(width: height, height: height)
+      .offset(x: 3, y: 3)
+    }
+  }
+
+  /// A category-coloured capsule with a systemBackground ring — the shared
+  /// shape behind the fixed amount and the preset pills.
+  private func pillBadge(_ s: Shortcut, ring: CGFloat) -> some View {
+    ZStack {
+      Capsule().fill(Color(UIColor.systemBackground))
+      Capsule().fill(s.color).padding(ring)
     }
   }
 
@@ -1179,8 +1209,9 @@ struct QuickAddEntryView: View {
   }
 
   private func presetPicker(_ s: Shortcut) -> some View {
-    // Up to four presets, laid out two-per-row so they stay big and tappable.
-    let presets = Array(s.presets.prefix(4))
+    // Up to six presets (our compact number formatting keeps them short), laid
+    // out two-per-row so they stay big and tappable.
+    let presets = Array(s.presets.prefix(6))
     let rows = stride(from: 0, to: presets.count, by: 2).map {
       Array(presets[$0..<min($0 + 2, presets.count)])
     }
