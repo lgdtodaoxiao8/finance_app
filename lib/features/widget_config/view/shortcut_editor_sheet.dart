@@ -371,43 +371,23 @@ class _ModeCard extends StatelessWidget {
     );
   }
 
-  /// A miniature of the actual widget button in this mode.
+  /// A miniature of the actual widget cell in this mode — the badge tells the
+  /// three modes apart (amount in the corner / two pills / "+"), matching the
+  /// home-screen widget.
   Widget _illustration() {
     final fill = category.categoryColor;
     final icon = category.categoryIcon;
-    return switch (mode) {
-      // Solid circle + one amount caption: "tap = this exact sum".
-      WidgetShortcutMode.fixed => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ModeCircle(fill: fill, icon: icon, diameter: 30, isOpen: false),
-          const SizedBox(height: 3),
-          AmountChip(label: '100', color: fill, fontSize: 8),
-        ],
-      ),
-      // Solid circle + a pair of chips: "your usual sums to pick from".
-      WidgetShortcutMode.presets => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ModeCircle(fill: fill, icon: icon, diameter: 30, isOpen: false),
-          const SizedBox(height: 3),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AmountChip(label: '100', color: fill, fontSize: 8),
-              const SizedBox(width: 3),
-              AmountChip(label: '500', color: fill, fontSize: 8),
-            ],
-          ),
-        ],
-      ),
-      // Tinted circle with the "+" badge: "opens input".
-      WidgetShortcutMode.open => ModeCircle(
-        fill: fill,
-        icon: icon,
-        diameter: 36,
-        isOpen: true,
-      ),
+    final (badge, amountLabel) = switch (mode) {
+      WidgetShortcutMode.fixed => (ModeBadge.amount, '100'),
+      WidgetShortcutMode.presets => (ModeBadge.presets, null),
+      WidgetShortcutMode.open => (ModeBadge.plus, null),
     };
+    return ModeCircle(
+      fill: fill,
+      icon: icon,
+      diameter: 40,
+      badge: badge,
+      amountLabel: amountLabel,
+    );
   }
 }

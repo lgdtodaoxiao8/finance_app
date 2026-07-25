@@ -13,8 +13,11 @@ import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
-String _shortAmount(double v) =>
-    v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
+String _shortAmount(double v) => v == v.roundToDouble()
+    ? v.toStringAsFixed(0)
+    // Round to at most 2 decimals and drop trailing zeros, so float artifacts
+    // like 3.4000000000000004 render as "3.4" (matches Swift's shortAmount).
+    : v.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
 
 /// Lets the user pin categories to one home-screen widget group and choose how
 /// each button behaves (fixed amount / preset amounts / open the app). Groups
@@ -246,7 +249,16 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
           fill: fill,
           icon: category?.categoryIcon ?? Icons.category,
           diameter: 40,
-          isOpen: shortcut.mode == WidgetShortcutMode.open,
+          badge: switch (shortcut.mode) {
+            WidgetShortcutMode.fixed => ModeBadge.amount,
+            WidgetShortcutMode.presets => ModeBadge.presets,
+            WidgetShortcutMode.open => ModeBadge.plus,
+          },
+          amountLabel:
+              shortcut.mode == WidgetShortcutMode.fixed &&
+                  shortcut.amount != null
+              ? _amountCaption(shortcut.amount!)
+              : null,
         ),
         title: Text(
           category?.categoryName ?? '',
@@ -318,16 +330,6 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
   static const double _circle = 52;
   static const double _caption = 11;
 
-  /// The amount one tap logs, or null for "ask each time" (mirrors
-  /// Shortcut.primaryAmount in Swift).
-  double? _primaryAmount(WidgetShortcut s) {
-    return switch (s.mode) {
-      WidgetShortcutMode.fixed => s.amount,
-      WidgetShortcutMode.presets => s.presets.isEmpty ? null : s.presets.first,
-      WidgetShortcutMode.open => null,
-    };
-  }
-
   BoxDecoration _card(BuildContext context) {
     return BoxDecoration(
       color: Theme.of(context).colorScheme.surface,
@@ -386,25 +388,21 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
 
   Widget _cell(int index) {
     if (index >= widget.shortcuts.length) {
+      // First free slot = the "+" general-add cell; the rest stay quiet.
       return Expanded(
-        child: Center(
-          child: Container(
-            width: _circle,
-            height: _circle,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.05),
-            ),
-          ),
-        ),
+        child: index == widget.shortcuts.length
+            ? _addCell()
+            : _placeholderCell(),
       );
     }
     final s = widget.shortcuts[index];
     final category = widget.categoryFor(s.categoryId);
     final fill = category?.categoryColor ?? Colors.grey;
-    final amount = _primaryAmount(s);
+    final badge = switch (s.mode) {
+      WidgetShortcutMode.fixed => ModeBadge.amount,
+      WidgetShortcutMode.presets => ModeBadge.presets,
+      WidgetShortcutMode.open => ModeBadge.plus,
+    };
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -413,23 +411,68 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
             fill: fill,
             icon: category?.categoryIcon ?? Icons.category,
             diameter: _circle,
-            isOpen: amount == null,
+            badge: badge,
+            amountLabel: s.mode == WidgetShortcutMode.fixed && s.amount != null
+                ? widget.amountCaption(s.amount!)
+                : null,
           ),
           const SizedBox(height: 4),
           Text(
-            amount == null
-                ? (category?.categoryName ?? '')
-                : widget.amountCaption(amount),
+            category?.categoryName ?? '',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: kTextStyle.copyWith(
               fontSize: _caption,
-              fontWeight: amount == null ? FontWeight.w400 : FontWeight.w600,
+              fontWeight: FontWeight.w400,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _placeholderCell() {
+    return Center(
+      child: Container(
+        width: _circle,
+        height: _circle,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.05),
+        ),
+      ),
+    );
+  }
+
+  Widget _addCell() {
+    final accent = Theme.of(context).colorScheme.primary;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: _circle,
+          height: _circle,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: accent.withValues(alpha: 0.15),
+          ),
+          child: Icon(Icons.add, size: _circle * 0.46, color: accent),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          AppLocalizations.of(context).add,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: kTextStyle.copyWith(
+            fontSize: _caption,
+            fontWeight: FontWeight.w400,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 
@@ -492,7 +535,7 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
               fill: fill,
               icon: category?.categoryIcon ?? Icons.category,
               diameter: 34,
-              isOpen: _primaryAmount(s) == null,
+              badge: ModeBadge.none,
             ),
             const SizedBox(width: 10),
             Expanded(

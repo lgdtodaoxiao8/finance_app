@@ -1,34 +1,52 @@
 /// Shared visual language of the quick-add widget, mirrored from
 /// FinanceWidget.swift so in-app previews match the home screen exactly.
 ///
-/// All buttons use the one-colour tint style (see ItemAvatar): the glyph in
-/// the category colour on a faint tint of the same colour. "Ask each time"
-/// buttons additionally wear a small "+" badge that reads as "opens input".
+/// The one-colour tint circle (glyph in the category colour on a faint tint of
+/// it, like ItemAvatar) carries a bottom-right badge that tells the three modes
+/// apart: fixed = its amount in the corner (no pill), presets = two small
+/// horizontal pills, "ask each time" = a "+".
 library;
 
 import 'package:flutter/material.dart';
 
-/// The one-colour circle: the glyph in [fill] on a faint tint of [fill]
-/// (same rule as ItemAvatar). "Ask each time" adds a "+" badge. [diameter]
-/// scales everything, so it serves both the config preview and the editor's
-/// mini-illustrations.
+/// Which mode badge sits on the circle's bottom-right corner.
+enum ModeBadge {
+  /// No badge (plain circle — e.g. the medium rows, whose chips convey mode).
+  none,
+
+  /// The fixed amount, written in the corner in the category colour, no pill.
+  amount,
+
+  /// Two small horizontal pills — "several presets".
+  presets,
+
+  /// A "+" — "ask each time" opens an input.
+  plus,
+}
+
+/// The one-colour circle + its mode badge. [diameter] scales everything, so it
+/// serves the config preview, the shortcut list and the editor illustrations.
 class ModeCircle extends StatelessWidget {
   const ModeCircle({
     super.key,
     required this.fill,
     required this.icon,
     required this.diameter,
-    required this.isOpen,
+    this.badge = ModeBadge.none,
+    this.amountLabel,
   });
 
   final Color fill;
   final IconData icon;
   final double diameter;
-  final bool isOpen;
+  final ModeBadge badge;
+
+  /// The corner text for [ModeBadge.amount] (amount + currency symbol).
+  final String? amountLabel;
 
   @override
   Widget build(BuildContext context) {
-    final badge = diameter * 0.36;
+    final surface = Theme.of(context).colorScheme.surface;
     return SizedBox(
       width: diameter,
       height: diameter,
@@ -44,29 +62,88 @@ class ModeCircle extends StatelessWidget {
             ),
             child: Icon(icon, size: diameter * 0.46, color: fill),
           ),
-          if (isOpen)
-            Positioned(
-              right: -3,
-              bottom: -3,
-              child: Container(
-                width: badge,
-                height: badge,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: fill,
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.surface,
-                    width: 1.5,
+          ..._badge(surface),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _badge(Color surface) {
+    switch (badge) {
+      case ModeBadge.none:
+        return const [];
+      case ModeBadge.plus:
+        final b = diameter * 0.36;
+        return [
+          Positioned(
+            right: -3,
+            bottom: -3,
+            child: Container(
+              width: b,
+              height: b,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: fill,
+                border: Border.all(color: surface, width: 1.5),
+              ),
+              child: Icon(Icons.add, size: b * 0.62, color: Colors.white),
+            ),
+          ),
+        ];
+      case ModeBadge.presets:
+        return [
+          Positioned(
+            right: -3,
+            bottom: -2,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _pill(surface),
+                SizedBox(width: diameter * 0.03),
+                _pill(surface),
+              ],
+            ),
+          ),
+        ];
+      case ModeBadge.amount:
+        return [
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: diameter * 0.95),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  amountLabel ?? '',
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: diameter * 0.22,
+                    fontWeight: FontWeight.w800,
+                    color: fill,
+                    shadows: [
+                      Shadow(color: surface, blurRadius: 2),
+                      Shadow(color: surface, blurRadius: 2),
+                    ],
                   ),
-                ),
-                child: Icon(
-                  Icons.add,
-                  size: badge * 0.62,
-                  color: Colors.white,
                 ),
               ),
             ),
-        ],
+          ),
+        ];
+    }
+  }
+
+  /// A category-coloured capsule with a surface ring (the preset-pill shape).
+  Widget _pill(Color surface) {
+    return Container(
+      width: diameter * 0.3,
+      height: diameter * 0.2,
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: BorderRadius.circular(diameter * 0.1),
+        border: Border.all(color: surface, width: diameter * 0.03),
       ),
     );
   }
