@@ -1796,6 +1796,12 @@ abstract class AppLocalizations {
   /// **'Add amount'**
   String get widgetAddPreset;
 
+  /// No description provided for @widgetPresetsMaxed.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum {count}'**
+  String widgetPresetsMaxed(int count);
+
   /// No description provided for @selectCategory.
   ///
   /// In en, this message translates to:

@@ -316,8 +316,6 @@ class _ThisMonthCard extends StatelessWidget {
           const Spacer(),
           Text(
             AmountText.maskString(compactMoney(net, symbol)),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 21,
               fontWeight: FontWeight.w800,
@@ -354,8 +352,6 @@ class _ThisMonthCard extends StatelessWidget {
               AmountText.maskString(compactMoney(income, symbol)),
               AmountText.maskString(compactMoney(expense, symbol)),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 10.5,
               color: AppColors.textTertiary,
@@ -398,8 +394,6 @@ class _TopCategoryCard extends StatelessWidget {
           const Spacer(),
           Text(
             name ?? '—',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -476,8 +470,6 @@ class _AiCoachCard extends StatelessWidget {
                   children: [
                     Text(
                       premium && score == null ? 'Run' : (showLabel),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -502,8 +494,6 @@ class _AiCoachCard extends StatelessWidget {
           const Spacer(),
           Text(
             l.aiReadOnSpending,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
@@ -557,8 +547,6 @@ class _ForecastCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   AmountText.maskString(compactMoney(value, symbol)),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -582,8 +570,6 @@ class _ForecastCard extends StatelessWidget {
                       ? AppLocalizations.of(context).onPaceToStayPositive
                       : AppLocalizations.of(context).headingNegative)
                 : AppLocalizations.of(context).previewUnlock,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,

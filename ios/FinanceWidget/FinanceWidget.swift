@@ -1350,15 +1350,16 @@ struct QuickAddEntryView: View {
   // full-size takeover, then log it with one tap (no dumb first-preset logging).
 
   private func presetButton(_ s: Shortcut, _ amount: Double) -> some View {
-    // Logs this preset and returns to the grid (with the just-logged fade).
+    // Logs this preset and returns to the grid (with the just-logged fade). The
+    // capsule fills its row cell so the rows can share whatever height is left
+    // under the header without squishing it.
     Button(intent: confirmIntent(s, amount)) {
       Text(amountCaption(amount))
         .font(.system(size: 15, weight: .semibold, design: .rounded))
         .foregroundColor(s.color)
         .lineLimit(1)
         .minimumScaleFactor(0.7)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(s.color.opacity(0.14), in: Capsule())
     }
     .buttonStyle(.plain)
@@ -1366,22 +1367,23 @@ struct QuickAddEntryView: View {
 
   private func presetPicker(_ s: Shortcut) -> some View {
     // Up to six presets (our compact number formatting keeps them short), laid
-    // out two-per-row so they stay big and tappable.
+    // out two-per-row. The header keeps its natural top position and the preset
+    // rows share the remaining height evenly (each `.frame(maxHeight:.infinity)`)
+    // so six presets shrink the capsules instead of crowding the category name.
     let presets = Array(s.presets.prefix(6))
     let rows = stride(from: 0, to: presets.count, by: 2).map {
       Array(presets[$0..<min($0 + 2, presets.count)])
     }
-    return VStack(spacing: 8) {
+    return VStack(spacing: 6) {
       takeoverHeader(s)
-      Spacer(minLength: 0)
       ForEach(rows.indices, id: \.self) { r in
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
           ForEach(rows[r], id: \.self) { presetButton(s, $0) }
           // A lone button on the last row shouldn't stretch full width.
           if rows[r].count == 1 { Spacer(minLength: 0) }
         }
+        .frame(maxHeight: .infinity)
       }
-      Spacer(minLength: 0)
     }
     // Any tap outside a preset button opens the app prefilled with this
     // category (for a non-preset amount). `homeWidget` is required to route.

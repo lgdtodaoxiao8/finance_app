@@ -118,8 +118,6 @@ class _Row extends StatelessWidget {
                       (income
                           ? AppLocalizations.of(context).income
                           : AppLocalizations.of(context).expense),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,

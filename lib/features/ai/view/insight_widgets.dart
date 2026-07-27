@@ -93,8 +93,6 @@ class CategoryBarRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   bar.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

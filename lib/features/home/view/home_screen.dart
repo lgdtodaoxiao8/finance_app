@@ -356,8 +356,6 @@ class _SpendingCard extends StatelessWidget {
                           symbol: symbol,
                           abbreviateAbove: 100000,
                           textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: kTextStyle.copyWith(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -413,8 +411,6 @@ class _LegendRow extends StatelessWidget {
           Expanded(
             child: Text(
               spend.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
               style: kTextStyle.copyWith(fontSize: 14),
             ),
           ),

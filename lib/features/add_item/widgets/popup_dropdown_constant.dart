@@ -94,7 +94,6 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                                         ? const Color(0xFFB3B3B8)
                                         : const Color(0xFF242528),
                                   ),
-                                  maxLines: 1,
                                 ),
                               ],
                             ),
@@ -207,7 +206,6 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                                 color: const Color(0xFF242528),
                                 //fontWeight: FontWeight.w500,
                               ),
-                              maxLines: 1,
                             ),
 
                             const SizedBox(width: 10),
@@ -219,10 +217,7 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                                   fontSize: 16,
                                   color: const Color(0xFF242528),
                                   //fontWeight: FontWeight.w500,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -239,8 +234,6 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                             color: const Color(0xFF242528),
                             //fontWeight: FontWeight.w500,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         )
                       else if (isNullCurrentValue)
                         Text(
@@ -250,8 +243,6 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                             color: const Color(0xFF242528),
                             //fontWeight: FontWeight.w500,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       const Spacer(),
                     ],

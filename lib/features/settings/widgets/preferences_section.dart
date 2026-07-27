@@ -167,8 +167,6 @@ class _Segmented<T> extends StatelessWidget {
                   ),
                   child: Text(
                     label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: optValue == value

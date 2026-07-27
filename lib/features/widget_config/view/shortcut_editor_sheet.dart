@@ -79,7 +79,14 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
     return value;
   }
 
+  /// The widget only ever renders the first six amounts (preset picker / builder
+  /// steps), so the editor caps at six too.
+  static const int _maxPresets = 6;
+
+  bool get _presetsFull => _presets.length >= _maxPresets;
+
   void _addPreset() {
+    if (_presetsFull) return;
     final value = _parse(_presetController.text);
     if (value == null || _presets.contains(value)) return;
     setState(() {
@@ -230,12 +237,28 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
   }
 
   /// Shared editor for a list of amounts (preset chips / builder steps): the
-  /// current values as deletable chips plus an input to add more.
+  /// current values as deletable chips plus an input to add more, capped at
+  /// [_maxPresets] with an "N/6" counter.
   Widget _amountListEditor(AppLocalizations l) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_presets.isNotEmpty)
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            '${_presets.length}/$_maxPresets',
+            style: kTextStyle.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _presetsFull
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        if (_presets.isNotEmpty) ...[
+          const SizedBox(height: 6),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -249,25 +272,29 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
                 ),
             ],
           ),
+        ],
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: TextField(
                 controller: _presetController,
+                enabled: !_presetsFull,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
                 onSubmitted: (_) => _addPreset(),
                 decoration: InputDecoration(
-                  labelText: l.widgetAddPreset,
+                  labelText: _presetsFull
+                      ? l.widgetPresetsMaxed(_maxPresets)
+                      : l.widgetAddPreset,
                   border: const OutlineInputBorder(),
                 ),
               ),
             ),
             const SizedBox(width: 8),
             IconButton.filledTonal(
-              onPressed: _addPreset,
+              onPressed: _presetsFull ? null : _addPreset,
               icon: const Icon(Icons.add),
             ),
           ],
@@ -359,7 +386,6 @@ class _ModeCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       hint,
-                      maxLines: 2,
                       style: kTextStyle.copyWith(
                         fontSize: 12,
                         color: theme.colorScheme.onSurfaceVariant,

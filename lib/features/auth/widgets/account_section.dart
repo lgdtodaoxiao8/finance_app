@@ -122,7 +122,6 @@ class _SignedIn extends StatelessWidget {
                     ),
                     Text(
                       user.email,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,

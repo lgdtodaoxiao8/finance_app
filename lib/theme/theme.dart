@@ -124,9 +124,10 @@ final ThemeData themeFromSeed = ThemeData(
 /// Manrope with NO baked-in colour, so text inherits the ambient theme colour
 /// (dark-on-light in light mode, light-on-dark in dark mode). Widgets that need
 /// a specific colour still override via `.copyWith(color: …)`.
-final TextStyle kTextStyle = GoogleFonts.manrope(
-  textStyle: const TextStyle(overflow: TextOverflow.ellipsis),
-);
+// No baked-in overflow: text wraps to show in full rather than truncating with
+// "…" anywhere in the app. Widgets that genuinely must fit a fixed box handle
+// it locally (e.g. the amount formatters).
+final TextStyle kTextStyle = GoogleFonts.manrope();
 
 // --------------------------------------------------------------------- dark --
 // Dark colour tokens. Widgets that already read Theme.of(context) / Material

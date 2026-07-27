@@ -109,7 +109,7 @@ class DatePickerField extends StatelessWidget {
         icon: const Icon(Icons.calendar_today, size: 18),
         label: Text(
           _formatDate(value),
-          style: kTextStyle.copyWith(overflow: TextOverflow.clip),
+          style: kTextStyle.copyWith(overflow: TextOverflow.visible),
         ),
 
         style: TextButton.styleFrom(

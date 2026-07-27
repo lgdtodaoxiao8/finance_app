@@ -916,6 +916,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetAddPreset => 'Add amount';
 
   @override
+  String widgetPresetsMaxed(int count) {
+    return 'Maximum $count';
+  }
+
+  @override
   String get selectCategory => 'Select a category';
 
   @override

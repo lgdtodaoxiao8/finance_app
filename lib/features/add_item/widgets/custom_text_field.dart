@@ -197,8 +197,6 @@ class CustomTextFieldState extends State<CustomTextField> {
                   padding: widget.errorTextPadding,
                   child: Text(
                     errorText ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: kTextStyle.copyWith(
                       color: Colors.red[700],
                       fontSize: 12.5,
@@ -212,8 +210,6 @@ class CustomTextFieldState extends State<CustomTextField> {
                 padding: widget.counterTextPadding,
                 child: Text(
                   widget.counter ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: kTextStyle.copyWith(
                     fontSize: 12.5,
                   ),

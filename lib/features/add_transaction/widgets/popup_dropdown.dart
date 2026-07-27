@@ -145,7 +145,6 @@ class _PopupDropdownState extends State<PopupDropdown> {
                               ? const Color(0xFFB3B3B8)
                               : const Color(0xFF242528),
                         ),
-                        maxLines: 1,
                         // overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -178,7 +177,6 @@ class _PopupDropdownState extends State<PopupDropdown> {
                   fontSize: 16,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                maxLines: 1,
                 // overflow: TextOverflow.ellipsis,
               ),
             ],
@@ -258,7 +256,6 @@ class _PopupDropdownState extends State<PopupDropdown> {
                                 fontSize: 20,
                                 color: const Color(0xFF242528),
                               ),
-                              overflow: TextOverflow.ellipsis,
                             )
                           : widget.tableType == Tables.account
                           ? Icon(
@@ -300,7 +297,6 @@ class _PopupDropdownState extends State<PopupDropdown> {
                           fontSize: 16,
                           color: const Color(0xFF242528),
                         ),
-                        maxLines: 1,
                       ),
                     ),
                     const Icon(Icons.arrow_drop_down_rounded, size: 25),

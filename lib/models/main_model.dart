@@ -51,7 +51,6 @@ class Currency implements RootData {
           fontSize: 20,
           color: const Color(0xFF242528),
         ),
-        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -77,7 +76,6 @@ class Currency implements RootData {
                   ? const Color(0xFFB3B3B8)
                   : const Color(0xFF242528),
             ),
-            maxLines: 1,
           ),
         ),
       ],
@@ -160,7 +158,6 @@ class Account implements RootData {
                   ? const Color(0xFFB3B3B8)
                   : const Color(0xFF242528),
             ),
-            maxLines: 1,
           ),
         ),
       ],
@@ -265,7 +262,6 @@ class Category implements RootData {
                   ? const Color(0xFFB3B3B8)
                   : const Color(0xFF242528),
             ),
-            maxLines: 1,
           ),
         ),
       ],

@@ -179,8 +179,6 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
               Expanded(
                 child: Text(
                   a.account.accountName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w700,

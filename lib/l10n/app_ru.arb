@@ -350,6 +350,7 @@
   "widgetPreviewSmall": "Маленький",
   "widgetPreviewMedium": "Средний",
   "widgetAddPreset": "Добавить сумму",
+  "widgetPresetsMaxed": "Максимум {count}",
   "selectCategory": "Выберите категорию",
   "quickAddTitle": "Быстрое добавление",
   "quickIncomeTitle": "Быстрый доход",

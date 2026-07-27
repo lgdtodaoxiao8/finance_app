@@ -920,6 +920,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get widgetAddPreset => 'Добавить сумму';
 
   @override
+  String widgetPresetsMaxed(int count) {
+    return 'Максимум $count';
+  }
+
+  @override
   String get selectCategory => 'Выберите категорию';
 
   @override

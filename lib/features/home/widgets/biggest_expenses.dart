@@ -110,8 +110,6 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
                         Text(
                           t.categoryName ??
                               AppLocalizations.of(context).expense,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 14.5,
                             fontWeight: FontWeight.w600,

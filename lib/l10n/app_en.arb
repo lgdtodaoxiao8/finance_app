@@ -350,6 +350,8 @@
   "widgetPreviewSmall": "Small",
   "widgetPreviewMedium": "Medium",
   "widgetAddPreset": "Add amount",
+  "widgetPresetsMaxed": "Maximum {count}",
+  "@widgetPresetsMaxed": { "placeholders": { "count": { "type": "int" } } },
   "selectCategory": "Select a category",
   "quickAddTitle": "Quick add",
   "quickIncomeTitle": "Quick income",

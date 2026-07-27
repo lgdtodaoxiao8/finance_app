@@ -315,8 +315,6 @@ class _TransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     primary,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: kTextStyle.copyWith(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -325,8 +323,6 @@ class _TransactionTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     secondary,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: kTextStyle.copyWith(
                       fontSize: 13,
                       color: AppColors.textSecondary,
