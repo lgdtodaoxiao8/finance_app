@@ -8,37 +8,25 @@ import 'dart:math' as math;
 /// derive them from the user's own spending magnitude — so the ladder scales
 /// automatically, and the widget just renders whatever numbers it's handed.
 
-/// The three "+" steps for a representative spend [magnitude] (base currency).
+/// The three amount-builder "+" steps for a category whose typical (median)
+/// transaction is [magnitude] (base currency).
 ///
-/// Follows the `u / 5u / 10u` pattern (e.g. `100 / 500 / 1000`) — the same shape
-/// the user already liked for dollars — where `u` is [magnitude] snapped to a
-/// round `1/2/5 × 10^k`. So a typical single tap logs roughly one usual spend,
-/// and off-grid amounts fall back to the exact-amount escape.
+/// The steps are 10% / 30% / 50% of that median, each snapped to the nearest
+/// nice round number ([niceRound]). So the buttons are sized to the category:
+/// two or three taps build up to roughly one usual spend, and they read cleanly
+/// at any currency scale (`10 / 30 / 50` for dollars, `5 000 / 15 000 / 25 000`
+/// for tenge). Off-grid totals fall back to the exact-amount escape.
 ///
-/// Falls back to `[100, 500, 1000]` when there's no magnitude signal yet.
+/// Falls back to a typical spend of ~100 (→ `10 / 30 / 50`) when there's no
+/// magnitude signal yet.
 List<double> autoAmountSteps(double magnitude) {
   final m = magnitude.abs();
-  if (m <= 0 || m.isNaN || m.isInfinite) return const [100, 500, 1000];
-  final unit = _niceUnit(m);
-  return [unit, unit * 5, unit * 10];
-}
-
-/// Snaps [m] to the nearest human-round `1/2/5 × 10^k`.
-double _niceUnit(double m) {
-  final k = (math.log(m) / math.ln10).floor();
-  final pow10 = math.pow(10, k).toDouble();
-  final f = m / pow10; // normalised into [1, 10)
-  final double nice;
-  if (f < 1.5) {
-    nice = 1;
-  } else if (f < 3.5) {
-    nice = 2;
-  } else if (f < 7.5) {
-    nice = 5;
-  } else {
-    nice = 10;
-  }
-  return nice * pow10;
+  final base = (m <= 0 || m.isNaN || m.isInfinite) ? 100.0 : m;
+  return [
+    niceRound(base * 0.1),
+    niceRound(base * 0.3),
+    niceRound(base * 0.5),
+  ];
 }
 
 /// Median of [values], or null when empty. Robust to outliers, so a single

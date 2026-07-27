@@ -3,41 +3,55 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('autoAmountSteps', () {
-    test('reproduces the dollar-friendly 100/500/1000 around ~100', () {
-      expect(autoAmountSteps(100), [100, 500, 1000]);
-      expect(autoAmountSteps(120), [100, 500, 1000]); // snaps down to 100
-      expect(autoAmountSteps(87), [100, 500, 1000]); // snaps up to 100
+    // Element-wise closeTo comparison — niceRound returns doubles that can carry
+    // tiny float error (e.g. 1.5000000000000002).
+    void expectSteps(List<double> actual, List<double> expected) {
+      expect(actual.length, expected.length);
+      for (var i = 0; i < expected.length; i++) {
+        expect(actual[i], closeTo(expected[i], 1e-6));
+      }
+    }
+
+    test('is 10% / 30% / 50% of the median for dollar-scale spends', () {
+      expectSteps(autoAmountSteps(100), [10, 30, 50]);
+      expectSteps(autoAmountSteps(200), [20, 60, 100]);
+      expectSteps(autoAmountSteps(1000), [100, 300, 500]);
     });
 
     test('scales up for high-denomination currencies (tenge)', () {
-      // A ~50 000 typical bill → 50 000 / 250 000 / 500 000.
-      expect(autoAmountSteps(50000), [50000, 250000, 500000]);
-      // A ~500 coffee in tenge → 500 / 2500 / 5000.
-      expect(autoAmountSteps(500), [500, 2500, 5000]);
+      // A ~50 000 typical bill → 5 000 / 15 000 / 25 000.
+      expectSteps(autoAmountSteps(50000), [5000, 15000, 25000]);
+      // A ~500 coffee in tenge → 50 / 150 / 250.
+      expectSteps(autoAmountSteps(500), [50, 150, 250]);
     });
 
     test('scales down for small typical spends', () {
-      expect(autoAmountSteps(5), [5, 25, 50]);
-      expect(autoAmountSteps(45), [50, 250, 500]);
+      expectSteps(autoAmountSteps(5), [0.5, 1.5, 2.5]);
     });
 
-    test('every step follows the u / 5u / 10u ratio', () {
+    test('snaps each step to the nearest nice round number', () {
+      // 340 → 34 / 102 / 170; 102 tidies to a round 100 (2 significant figures).
+      expectSteps(autoAmountSteps(340), [34, 100, 170]);
+    });
+
+    test('always returns three positive, strictly increasing steps', () {
       for (final m in [3.0, 12.0, 230.0, 7400.0, 999999.0]) {
         final s = autoAmountSteps(m);
         expect(s.length, 3);
-        expect(s[1], s[0] * 5);
-        expect(s[2], s[0] * 10);
+        expect(s[0], greaterThan(0));
+        expect(s[1], greaterThan(s[0]));
+        expect(s[2], greaterThan(s[1]));
       }
     });
 
-    test('falls back to a sane default without a signal', () {
-      expect(autoAmountSteps(0), [100, 500, 1000]);
-      expect(autoAmountSteps(double.nan), [100, 500, 1000]);
-      expect(autoAmountSteps(double.infinity), [100, 500, 1000]);
+    test('falls back to a ~100 spend (10 / 30 / 50) without a signal', () {
+      expectSteps(autoAmountSteps(0), [10, 30, 50]);
+      expectSteps(autoAmountSteps(double.nan), [10, 30, 50]);
+      expectSteps(autoAmountSteps(double.infinity), [10, 30, 50]);
     });
 
     test('treats a negative magnitude as its absolute value', () {
-      expect(autoAmountSteps(-50000), [50000, 250000, 500000]);
+      expectSteps(autoAmountSteps(-50000), [5000, 15000, 25000]);
     });
   });
 
