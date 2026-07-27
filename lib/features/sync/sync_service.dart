@@ -60,6 +60,7 @@ class SyncService {
             'color': c.color,
             'icon_color': c.iconColor,
             'icon_code_point': c.iconCodePoint,
+            'kind': c.kind,
             'updated_at': c.updatedAt,
             'deleted': false,
           },
@@ -197,6 +198,7 @@ class SyncService {
         color: Value((r['color'] as num?)?.toInt()),
         iconColor: Value((r['icon_color'] as num?)?.toInt()),
         iconCodePoint: Value((r['icon_code_point'] as num?)?.toInt()),
+        kind: Value((r['kind'] as String?) ?? 'expense'),
         updatedAt: Value(remoteUpdated),
       );
       if (existing == null) {

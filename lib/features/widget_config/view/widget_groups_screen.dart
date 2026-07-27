@@ -1,6 +1,7 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/preferences/app_preferences.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
+import 'package:finance_app/features/widget_config/data/widget_flow.dart';
 import 'package:finance_app/features/widget_config/data/widget_group.dart';
 import 'package:finance_app/features/widget_config/view/widget_config_screen.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
@@ -40,15 +41,83 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
     _load();
   }
 
+  /// Adding a group first picks its flow (expense vs income) — that decides
+  /// which home-screen widget kind ("Quick Expense" / "Quick Income") will
+  /// offer it — then its name.
   Future<void> _addGroup() async {
+    final flow = await _pickFlow(context);
+    if (flow == null || !mounted) return;
     final name = await _promptName(context, initial: '');
     if (name == null || name.isEmpty) return;
     final group = WidgetGroup(
       id: 'g${DateTime.now().millisecondsSinceEpoch}',
       name: name,
+      flow: flow,
     );
     await _save([..._groups, group]);
     if (mounted) _openGroup(group);
+  }
+
+  /// A small chooser: does this widget set log expenses or income?
+  Future<WidgetFlow?> _pickFlow(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return showModalBottomSheet<WidgetFlow>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: Text(
+                  l.widgetFlowQuestion,
+                  style: kTextStyle.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              ListTile(
+                onTap: () => Navigator.pop(ctx, WidgetFlow.expense),
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.negative.withValues(alpha: 0.12),
+                  // Up arrow = expense (money out), matching the app.
+                  child: const Icon(
+                    Icons.arrow_upward_rounded,
+                    color: AppColors.negative,
+                  ),
+                ),
+                title: Text(l.widgetFlowExpense),
+                subtitle: Text(l.widgetFlowExpenseHint),
+              ),
+              ListTile(
+                onTap: () => Navigator.pop(ctx, WidgetFlow.income),
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.positive.withValues(alpha: 0.14),
+                  // Down arrow = income (money in), matching the app.
+                  child: const Icon(
+                    Icons.arrow_downward_rounded,
+                    color: AppColors.positive,
+                  ),
+                ),
+                title: Text(l.widgetFlowIncome),
+                subtitle: Text(l.widgetFlowIncomeHint),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _rename(WidgetGroup g) async {
@@ -176,15 +245,20 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
 
   Widget _groupTile(AppLocalizations l, ThemeData theme, WidgetGroup g) {
     final isDefault = g.id == AppPreferences.defaultWidgetGroupId;
+    final isIncome = g.flow.isIncome;
+    // Income groups read green with an upward arrow; expense groups keep the
+    // neutral widget glyph.
+    final accent = isIncome ? AppColors.positive : theme.colorScheme.primary;
     return ListTile(
       onTap: () => _openGroup(g),
       leading: CircleAvatar(
         radius: 18,
-        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+        backgroundColor: accent.withValues(alpha: isIncome ? 0.14 : 0.12),
         child: Icon(
-          Icons.widgets_rounded,
+          // Down arrow = income (money in); expense keeps the neutral glyph.
+          isIncome ? Icons.arrow_downward_rounded : Icons.widgets_rounded,
           size: 18,
-          color: theme.colorScheme.primary,
+          color: accent,
         ),
       ),
       title: Text(
@@ -192,7 +266,8 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
         style: kTextStyle.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        l.widgetGroupCategories(g.shortcuts.length),
+        '${isIncome ? l.widgetFlowIncome : l.widgetFlowExpense}'
+        ' · ${l.widgetGroupCategories(g.shortcuts.length)}',
         style: kTextStyle.copyWith(
           fontSize: 12,
           color: theme.colorScheme.onSurfaceVariant,

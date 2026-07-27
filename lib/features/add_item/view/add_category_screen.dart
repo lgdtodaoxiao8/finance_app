@@ -104,6 +104,26 @@ class _AddCategoryViewState extends State<_AddCategoryView> {
                         hint: l.name,
                       ),
                       const SizedBox(height: 24),
+                      _SectionLabel(l.categoryType),
+                      const SizedBox(height: 12),
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: 'expense',
+                            label: Text(l.expense),
+                            icon: const Icon(Icons.arrow_upward_rounded),
+                          ),
+                          ButtonSegment(
+                            value: 'income',
+                            label: Text(l.income),
+                            icon: const Icon(Icons.arrow_downward_rounded),
+                          ),
+                        ],
+                        selected: {state.kind},
+                        showSelectedIcon: false,
+                        onSelectionChanged: (s) => cubit.setKind(s.first),
+                      ),
+                      const SizedBox(height: 24),
                       _SectionLabel(l.colorPicker),
                       const SizedBox(height: 12),
                       TintColorPicker(

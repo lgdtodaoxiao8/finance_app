@@ -199,13 +199,21 @@ class Category implements RootData {
   final IconData categoryIcon;
   final Color categoryIconColor;
 
+  /// 'expense' | 'income' — the hard type of this category. It can only be used
+  /// for that kind of transaction, and only the matching quick-add widget
+  /// offers it.
+  final String categoryKind;
+
   Category({
     required this.categoryId,
     required this.categoryName,
     required this.categoryColor,
     required this.categoryIcon,
     required this.categoryIconColor,
+    this.categoryKind = 'expense',
   });
+
+  bool get isIncome => categoryKind == 'income';
 
   @override
   String get displayName => categoryName;
@@ -270,6 +278,7 @@ class Category implements RootData {
     'color': categoryColor.toARGB32(),
     'icon_color': categoryIconColor.toARGB32(),
     'icon_code_point': categoryIcon.codePoint,
+    'kind': categoryKind,
   };
 
   Map<String, dynamic> toMapSaving() => {
@@ -277,6 +286,7 @@ class Category implements RootData {
     'color': categoryColor.toARGB32(),
     'icon_color': categoryIconColor.toARGB32(),
     'icon_code_point': categoryIcon.codePoint,
+    'kind': categoryKind,
   };
 
   factory Category.fromMap(Map<String, dynamic> map) => Category(
@@ -289,6 +299,7 @@ class Category implements RootData {
       fontFamily: 'MaterialIcons',
       fontPackage: null,
     ),
+    categoryKind: map['kind'] as String? ?? 'expense',
   );
 }
 

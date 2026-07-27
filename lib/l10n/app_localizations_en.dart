@@ -832,6 +832,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetPresetsHint => 'Tap a preset to log it instantly.';
 
   @override
+  String get widgetPresetsHintIncome =>
+      'Tap a preset to log the income instantly.';
+
+  @override
+  String get categoryType => 'Type';
+
+  @override
   String get widgetOpenHint =>
       'Tap builds the amount right on the widget, then logs it.';
 
@@ -915,9 +922,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddTitle => 'Quick add';
 
   @override
+  String get quickIncomeTitle => 'Quick income';
+
+  @override
   String get quickAddSaved => 'Saved';
 
   @override
   String get quickAddIncompleteSetup =>
       'Add a category, an account and a base currency first.';
+
+  @override
+  String get widgetFlowExpense => 'Expense';
+
+  @override
+  String get widgetFlowIncome => 'Income';
+
+  @override
+  String get widgetFlowQuestion => 'What should this widget log?';
+
+  @override
+  String get widgetFlowExpenseHint => 'Money going out — a spend.';
+
+  @override
+  String get widgetFlowIncomeHint =>
+      'Money coming in — a paycheck, a gift, a refund.';
 }

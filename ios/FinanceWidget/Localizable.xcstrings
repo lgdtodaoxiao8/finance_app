@@ -180,6 +180,46 @@
           }
         }
       }
+    },
+    "Quick Income" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Быстрый доход"
+          }
+        }
+      }
+    },
+    "Log income in one tap. Configure categories in the app." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записывайте доход в одно касание. Категории настраиваются в приложении."
+          }
+        }
+      }
+    },
+    "Choose which income category set this widget shows." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите, какой набор доходных категорий показывает виджет."
+          }
+        }
+      }
+    },
+    "Quick Expense" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Быстрый расход"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

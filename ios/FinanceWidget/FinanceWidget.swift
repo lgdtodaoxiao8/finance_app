@@ -364,6 +364,7 @@ struct FinanceWidgets: WidgetBundle {
   var body: some Widget {
     FinanceWidget()
     QuickAddWidget()
+    QuickIncomeWidget()
   }
 }
 
@@ -376,16 +377,20 @@ struct FinanceWidgets: WidgetBundle {
 private let builderShortcutKey = "builder_shortcut"
 private let builderAmountKey = "builder_amount"
 
-/// Queues `{categoryId, amount}` for the app to drain into a real transaction,
-/// and optimistically updates the shared snapshot (totals, today, recent list,
-/// per-category spend) so both widgets reflect the spend immediately. Shared by
-/// the one-tap `QuickAddIntent` and the amount builder's `ConfirmBuilderIntent`.
+/// Queues `{categoryId, amount, flow}` for the app to drain into a real
+/// transaction, and optimistically updates the shared snapshot (totals, today,
+/// recent list, per-category spend/income) so the widgets reflect it
+/// immediately. Shared by the one-tap `QuickAddIntent` and the amount builder's
+/// `ConfirmBuilderIntent`. [flow] is "income" for the quick-income widget,
+/// "expense" otherwise — it decides the transaction type and which side of the
+/// snapshot moves.
 @available(iOS 17.0, *)
 private func performQuickAddLog(
   categoryId: Int, amount: Double, shortcutId: String,
-  categoryName: String, colorValue: Int, iconCode: Int
+  categoryName: String, colorValue: Int, iconCode: Int, flow: String
 ) {
   let defaults = UserDefaults(suiteName: appGroupId)
+  let isIncome = flow == "income"
 
   // Queue the real write for the app to drain on next open/resume.
   var queue: [[String: Any]] = []
@@ -395,19 +400,30 @@ private func performQuickAddLog(
   {
     queue = arr
   }
-  queue.append(["categoryId": categoryId, "amount": amount])
+  queue.append(["categoryId": categoryId, "amount": amount, "flow": flow])
   if let out = try? JSONSerialization.data(withJSONObject: queue),
     let outStr = String(data: out, encoding: .utf8)
   {
     defaults?.set(outStr, forKey: "pending_quickadd")
   }
 
-  // Optimistic updates so BOTH widgets reflect the spend immediately —
-  // totals, today, the recent list and the medium per-category spend — until
-  // the app republishes the real snapshot.
-  defaults?.set((defaults?.double(forKey: "expense") ?? 0) + amount, forKey: "expense")
-  defaults?.set((defaults?.double(forKey: "balance") ?? 0) - amount, forKey: "balance")
-  defaults?.set((defaults?.double(forKey: "today") ?? 0) + amount, forKey: "today")
+  // Optimistic updates so BOTH widgets reflect the change immediately — totals,
+  // the recent list and the medium per-category bars — until the app
+  // republishes the real snapshot. Income lifts the balance and income total;
+  // expense lowers the balance, raises expense + "spent today".
+  if isIncome {
+    defaults?.set(
+      (defaults?.double(forKey: "income") ?? 0) + amount, forKey: "income")
+    defaults?.set(
+      (defaults?.double(forKey: "balance") ?? 0) + amount, forKey: "balance")
+  } else {
+    defaults?.set(
+      (defaults?.double(forKey: "expense") ?? 0) + amount, forKey: "expense")
+    defaults?.set(
+      (defaults?.double(forKey: "balance") ?? 0) - amount, forKey: "balance")
+    defaults?.set(
+      (defaults?.double(forKey: "today") ?? 0) + amount, forKey: "today")
+  }
 
   // Prepend a recent row (keep the newest few).
   var recent: [[String: Any]] = []
@@ -420,7 +436,7 @@ private func performQuickAddLog(
   let nowMs = Date().timeIntervalSince1970 * 1000
   recent.insert(
     [
-      "name": categoryName, "amount": amount, "isExpense": true,
+      "name": categoryName, "amount": amount, "isExpense": !isIncome,
       "color": colorValue, "iconCode": iconCode, "date": nowMs,
     ], at: 0)
   recent = Array(recent.prefix(6))
@@ -430,19 +446,21 @@ private func performQuickAddLog(
     defaults?.set(outStr, forKey: "recent")
   }
 
-  // Bump this category's month-to-date spend (medium widget bars).
-  var spend: [String: Double] = [:]
-  if let json = defaults?.string(forKey: "category_spend"),
+  // Bump this category's month-to-date total on the matching side (the medium
+  // rows read category_spend for expense, category_income for income).
+  let bucketKey = isIncome ? "category_income" : "category_spend"
+  var bucket: [String: Double] = [:]
+  if let json = defaults?.string(forKey: bucketKey),
     let data = json.data(using: .utf8),
     let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Double]
   {
-    spend = dict
+    bucket = dict
   }
-  spend[String(categoryId)] = (spend[String(categoryId)] ?? 0) + amount
-  if let out = try? JSONSerialization.data(withJSONObject: spend),
+  bucket[String(categoryId)] = (bucket[String(categoryId)] ?? 0) + amount
+  if let out = try? JSONSerialization.data(withJSONObject: bucket),
     let outStr = String(data: out, encoding: .utf8)
   {
-    defaults?.set(outStr, forKey: "category_spend")
+    defaults?.set(outStr, forKey: bucketKey)
   }
 
   // Drive the brief logged-state fade on the tapped button.
@@ -451,6 +469,7 @@ private func performQuickAddLog(
 
   WidgetCenter.shared.reloadTimelines(ofKind: "FinanceWidget")
   WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
+  WidgetCenter.shared.reloadTimelines(ofKind: "QuickIncomeWidget")
 }
 
 /// Pure-Swift App Intent (no Flutter dependency): logs one instant quick-add.
@@ -466,11 +485,13 @@ struct QuickAddIntent: AppIntent {
   @Parameter(title: "Name") var categoryName: String
   @Parameter(title: "Color") var colorValue: Int
   @Parameter(title: "Icon") var iconCode: Int
+  // "income" | "expense" — which kind of transaction this logs.
+  @Parameter(title: "Flow") var flow: String
 
   init() {}
   init(
     categoryId: Int, amount: Double, shortcutId: String,
-    categoryName: String, colorValue: Int, iconCode: Int
+    categoryName: String, colorValue: Int, iconCode: Int, flow: String
   ) {
     self.categoryId = categoryId
     self.amount = amount
@@ -478,12 +499,14 @@ struct QuickAddIntent: AppIntent {
     self.categoryName = categoryName
     self.colorValue = colorValue
     self.iconCode = iconCode
+    self.flow = flow
   }
 
   func perform() async throws -> some IntentResult {
     performQuickAddLog(
       categoryId: categoryId, amount: amount, shortcutId: shortcutId,
-      categoryName: categoryName, colorValue: colorValue, iconCode: iconCode)
+      categoryName: categoryName, colorValue: colorValue, iconCode: iconCode,
+      flow: flow)
     return .result()
   }
 }
@@ -570,11 +593,12 @@ struct ConfirmBuilderIntent: AppIntent {
   @Parameter(title: "Name") var categoryName: String
   @Parameter(title: "Color") var colorValue: Int
   @Parameter(title: "Icon") var iconCode: Int
+  @Parameter(title: "Flow") var flow: String
 
   init() {}
   init(
     categoryId: Int, amount: Double, shortcutId: String,
-    categoryName: String, colorValue: Int, iconCode: Int
+    categoryName: String, colorValue: Int, iconCode: Int, flow: String
   ) {
     self.categoryId = categoryId
     self.amount = amount
@@ -582,6 +606,7 @@ struct ConfirmBuilderIntent: AppIntent {
     self.categoryName = categoryName
     self.colorValue = colorValue
     self.iconCode = iconCode
+    self.flow = flow
   }
 
   func perform() async throws -> some IntentResult {
@@ -590,13 +615,15 @@ struct ConfirmBuilderIntent: AppIntent {
     defaults?.set("", forKey: builderShortcutKey)
     defaults?.set(0.0, forKey: builderAmountKey)
     if amount > 0 {
-      // performQuickAddLog reloads both widgets; the grid then shows the brief
+      // performQuickAddLog reloads the widgets; the grid then shows the brief
       // just-logged fade on this shortcut's cell.
       performQuickAddLog(
         categoryId: categoryId, amount: amount, shortcutId: shortcutId,
-        categoryName: categoryName, colorValue: colorValue, iconCode: iconCode)
+        categoryName: categoryName, colorValue: colorValue, iconCode: iconCode,
+        flow: flow)
     } else {
       WidgetCenter.shared.reloadTimelines(ofKind: "QuickAddWidget")
+      WidgetCenter.shared.reloadTimelines(ofKind: "QuickIncomeWidget")
     }
     return .result()
   }
@@ -633,6 +660,11 @@ struct Shortcut: Identifiable {
   /// Dart side — custom values, or a currency-adaptive ladder from spending.
   let steps: [Double]
 }
+
+/// The pleasant green of the income widget's add "+" (matches the app's
+/// `AppColors.positive`). The expense widget's add "+" uses the accent (blue).
+private let incomeGreen = Color(
+  red: 0x1F / 255, green: 0xB5 / 255, blue: 0x74 / 255)
 
 /// White or near-black, whichever is legible on the given ARGB fill.
 private func contrastingOn(_ argb: Int) -> Color {
@@ -744,6 +776,8 @@ private func stepLabel(_ value: Double) -> String {
 private struct WidgetGroupInfo {
   let id: String
   let name: String
+  /// "expense" | "income" — which widget kind offers this group.
+  let flow: String
 }
 
 private func loadGroups() -> [WidgetGroupInfo] {
@@ -752,15 +786,25 @@ private func loadGroups() -> [WidgetGroupInfo] {
     let data = json.data(using: .utf8),
     let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
   else {
-    return [WidgetGroupInfo(id: "default", name: String(localized: "Main"))]
+    return [
+      WidgetGroupInfo(id: "default", name: String(localized: "Main"),
+        flow: "expense")
+    ]
   }
   return array.map {
     let raw = $0["name"] as? String ?? ""
     return WidgetGroupInfo(
       id: $0["id"] as? String ?? "default",
       // The default group is stored nameless; show a localized label.
-      name: raw.isEmpty ? String(localized: "Main") : raw)
+      name: raw.isEmpty ? String(localized: "Main") : raw,
+      flow: $0["flow"] as? String ?? "expense")
   }
+}
+
+/// The groups offered to a widget of the given flow — an expense widget lists
+/// only expense groups, an income widget only income groups.
+private func loadGroups(flow: String) -> [WidgetGroupInfo] {
+  loadGroups().filter { $0.flow == flow }
 }
 
 /// The "Category set" a QuickAdd widget instance is bound to (chosen in the
@@ -779,22 +823,27 @@ struct GroupEntity: AppEntity {
 }
 
 struct GroupQuery: EntityQuery {
+  // Resolving a stored selection matches by id across every group, so a bound
+  // widget keeps its set; the PICKER (suggested/default) only offers expense
+  // groups.
   func entities(for identifiers: [String]) async throws -> [GroupEntity] {
     loadGroups()
       .filter { identifiers.contains($0.id) }
       .map { GroupEntity(id: $0.id, name: $0.name) }
   }
   func suggestedEntities() async throws -> [GroupEntity] {
-    loadGroups().map { GroupEntity(id: $0.id, name: $0.name) }
+    loadGroups(flow: "expense").map { GroupEntity(id: $0.id, name: $0.name) }
   }
   func defaultResult() async -> GroupEntity? {
-    loadGroups().first.map { GroupEntity(id: $0.id, name: $0.name) }
+    loadGroups(flow: "expense").first.map {
+      GroupEntity(id: $0.id, name: $0.name)
+    }
   }
 }
 
 /// Widget configuration: which category set this instance shows.
 struct SelectGroupIntent: WidgetConfigurationIntent {
-  static var title: LocalizedStringResource = "Quick Add"
+  static var title: LocalizedStringResource = "Quick Expense"
   static var description = IntentDescription(
     "Choose which category set this widget shows.")
 
@@ -803,10 +852,56 @@ struct SelectGroupIntent: WidgetConfigurationIntent {
   init() {}
 }
 
-/// Month-to-date expense per category id (base currency), for the medium rows.
-private func loadCategorySpend() -> [Int: Double] {
+/// The income counterpart of [GroupEntity] — its own type so the income
+/// widget's picker (via [IncomeGroupQuery]) offers only income groups.
+struct IncomeGroupEntity: AppEntity {
+  let id: String
+  let name: String
+
+  static var typeDisplayRepresentation: TypeDisplayRepresentation {
+    "Category set"
+  }
+  var displayRepresentation: DisplayRepresentation {
+    DisplayRepresentation(title: "\(name)")
+  }
+  static var defaultQuery = IncomeGroupQuery()
+}
+
+struct IncomeGroupQuery: EntityQuery {
+  func entities(for identifiers: [String]) async throws -> [IncomeGroupEntity] {
+    loadGroups()
+      .filter { identifiers.contains($0.id) }
+      .map { IncomeGroupEntity(id: $0.id, name: $0.name) }
+  }
+  func suggestedEntities() async throws -> [IncomeGroupEntity] {
+    loadGroups(flow: "income").map {
+      IncomeGroupEntity(id: $0.id, name: $0.name)
+    }
+  }
+  func defaultResult() async -> IncomeGroupEntity? {
+    loadGroups(flow: "income").first.map {
+      IncomeGroupEntity(id: $0.id, name: $0.name)
+    }
+  }
+}
+
+/// Income-widget configuration: which income category set this instance shows.
+struct SelectIncomeGroupIntent: WidgetConfigurationIntent {
+  static var title: LocalizedStringResource = "Quick Income"
+  static var description = IntentDescription(
+    "Choose which income category set this widget shows.")
+
+  @Parameter(title: "Category set") var group: IncomeGroupEntity?
+
+  init() {}
+}
+
+/// Month-to-date total per category id (base currency), for the medium rows.
+/// Reads `category_spend` for the expense widget, `category_income` for the
+/// income widget.
+private func loadCategoryBucket(_ storeKey: String) -> [Int: Double] {
   let defaults = UserDefaults(suiteName: appGroupId)
-  guard let json = defaults?.string(forKey: "category_spend"),
+  guard let json = defaults?.string(forKey: storeKey),
     let data = json.data(using: .utf8),
     let dict = try? JSONSerialization.jsonObject(with: data)
       as? [String: NSNumber]
@@ -829,6 +924,11 @@ struct QuickAddEntry: TimelineEntry {
   let builderShortcutId: String
   /// Running total being assembled in the builder.
   let builderAmount: Double
+  /// "expense" (Quick Expense widget) | "income" (Quick Income widget) — drives
+  /// the logged transaction type and the green "+" income accent.
+  let flow: String
+
+  var isIncome: Bool { flow == "income" }
 
   /// True while the just-tapped button should show its quiet logged state
   /// (dimmed fill + hairline ring; no icons, no checkmarks).
@@ -838,20 +938,22 @@ struct QuickAddEntry: TimelineEntry {
   }
 }
 
-private func loadQuickAddEntry(groupId: String?, at date: Date = Date())
-  -> QuickAddEntry
-{
+private func loadQuickAddEntry(
+  groupId: String?, flow: String, at date: Date = Date()
+) -> QuickAddEntry {
   let defaults = UserDefaults(suiteName: appGroupId)
   let lastAt = defaults?.double(forKey: "last_added_at") ?? 0
+  let bucketKey = flow == "income" ? "category_income" : "category_spend"
   return QuickAddEntry(
     date: date,
     symbol: defaults?.string(forKey: "symbol") ?? "",
     shortcuts: loadShortcuts(groupId: groupId),
-    spend: loadCategorySpend(),
+    spend: loadCategoryBucket(bucketKey),
     lastAddedId: defaults?.string(forKey: "last_added_id") ?? "",
     lastAddedAt: Date(timeIntervalSince1970: lastAt),
     builderShortcutId: defaults?.string(forKey: builderShortcutKey) ?? "",
-    builderAmount: defaults?.double(forKey: builderAmountKey) ?? 0)
+    builderAmount: defaults?.double(forKey: builderAmountKey) ?? 0,
+    flow: flow)
 }
 
 struct QuickAddProvider: AppIntentTimelineProvider {
@@ -859,13 +961,13 @@ struct QuickAddProvider: AppIntentTimelineProvider {
     QuickAddEntry(
       date: Date(), symbol: "$", shortcuts: [], spend: [:], lastAddedId: "",
       lastAddedAt: Date(timeIntervalSince1970: 0), builderShortcutId: "",
-      builderAmount: 0)
+      builderAmount: 0, flow: "expense")
   }
 
   func snapshot(for configuration: SelectGroupIntent, in context: Context) async
     -> QuickAddEntry
   {
-    loadQuickAddEntry(groupId: configuration.group?.id)
+    loadQuickAddEntry(groupId: configuration.group?.id, flow: "expense")
   }
 
   func timeline(for configuration: SelectGroupIntent, in context: Context) async
@@ -873,9 +975,36 @@ struct QuickAddProvider: AppIntentTimelineProvider {
   {
     // A second entry a few seconds out crossfades the logged state away.
     let gid = configuration.group?.id
-    let now = loadQuickAddEntry(groupId: gid)
+    let now = loadQuickAddEntry(groupId: gid, flow: "expense")
     let clear = loadQuickAddEntry(
-      groupId: gid, at: Date().addingTimeInterval(2.6))
+      groupId: gid, flow: "expense", at: Date().addingTimeInterval(2.6))
+    return Timeline(entries: [now, clear], policy: .never)
+  }
+}
+
+/// The income widget's provider — identical to [QuickAddProvider] but binds to
+/// income groups and stamps the entry with the income flow.
+struct QuickIncomeProvider: AppIntentTimelineProvider {
+  func placeholder(in context: Context) -> QuickAddEntry {
+    QuickAddEntry(
+      date: Date(), symbol: "$", shortcuts: [], spend: [:], lastAddedId: "",
+      lastAddedAt: Date(timeIntervalSince1970: 0), builderShortcutId: "",
+      builderAmount: 0, flow: "income")
+  }
+
+  func snapshot(for configuration: SelectIncomeGroupIntent, in context: Context)
+    async -> QuickAddEntry
+  {
+    loadQuickAddEntry(groupId: configuration.group?.id, flow: "income")
+  }
+
+  func timeline(
+    for configuration: SelectIncomeGroupIntent, in context: Context
+  ) async -> Timeline<QuickAddEntry> {
+    let gid = configuration.group?.id
+    let now = loadQuickAddEntry(groupId: gid, flow: "income")
+    let clear = loadQuickAddEntry(
+      groupId: gid, flow: "income", at: Date().addingTimeInterval(2.6))
     return Timeline(entries: [now, clear], policy: .never)
   }
 }
@@ -929,18 +1058,29 @@ struct QuickAddEntryView: View {
   var entry: QuickAddEntry
   @Environment(\.widgetFamily) var family
 
+  private var isIncome: Bool { entry.isIncome }
+
   /// "500 $" — chip amount; abbreviates large (tenge-scale) values to "50К".
+  /// Flow-neutral: the +/− sign is added ONLY on the fixed amount (see
+  /// fixedAmountCaption). The flow itself is carried by the glass rim.
   private func amountCaption(_ value: Double) -> String {
     let number = stepLabel(value)
     return entry.symbol.isEmpty ? number : "\(number) \(entry.symbol)"
   }
 
-  /// Builds the log intent carrying the category display info, so the widget
-  /// can update its recent list optimistically without an app round-trip.
+  /// The fixed-cost amount with its flow sign ("+5000 $" / "−5000 $"). The sign
+  /// appears ONLY here — the badges are otherwise identical across both widgets.
+  private func fixedAmountCaption(_ value: Double) -> String {
+    return (isIncome ? "+" : "−") + amountCaption(value)
+  }
+
+  /// Builds the log intent carrying the category display info + the flow, so the
+  /// widget can update its recent list optimistically without an app round-trip.
   private func quickAddIntent(_ s: Shortcut, _ amount: Double) -> QuickAddIntent {
     QuickAddIntent(
       categoryId: s.categoryId, amount: amount, shortcutId: s.id,
-      categoryName: s.name, colorValue: s.colorValue, iconCode: s.iconCode)
+      categoryName: s.name, colorValue: s.colorValue, iconCode: s.iconCode,
+      flow: entry.flow)
   }
 
   var body: some View {
@@ -980,8 +1120,12 @@ struct QuickAddEntryView: View {
   /// (`homeWidget` marks the URL for the home_widget plugin — without it the
   /// plugin ignores the launch and widgetClicked never fires.)
   private var smallURL: URL? {
-    URL(string: "financeapp://quickadd?homeWidget")
+    URL(string: "financeapp://quickadd?homeWidget\(flowQuery)")
   }
+
+  /// The `&flow=income` deep-link suffix on the income widget (so the app opens
+  /// the quick-add sheet in income mode); empty on the expense widget.
+  private var flowQuery: String { isIncome ? "&flow=income" : "" }
 
   // Cell metrics shared by real cells and placeholders so the grid never
   // shifts. Sized to fill the small widget generously (circle-first design).
@@ -1033,12 +1177,15 @@ struct QuickAddEntryView: View {
   }
 
   private var addCell: some View {
-    VStack(spacing: 4) {
+    // The one visual tell between the widgets: the add "+" is a pleasant green
+    // on the income widget, blue (accent) on the expense widget.
+    let c = isIncome ? incomeGreen : Color.accentColor
+    return VStack(spacing: 4) {
       ZStack {
-        Circle().fill(Color.accentColor.opacity(0.15))
+        Circle().fill(c.opacity(0.15))
         Image(systemName: "plus")
           .font(.system(size: glyphSize, weight: .semibold))
-          .foregroundColor(.accentColor)
+          .foregroundColor(c)
       }
       .frame(width: circleSize, height: circleSize)
       Text(String(localized: "Add"))
@@ -1094,10 +1241,11 @@ struct QuickAddEntryView: View {
   ) -> some View {
     let logged = entry.isJustAdded(shortcut)
     // One-colour style: glyph in the category colour on a faint tint of it
-    // (matches ItemAvatar). The just-logged flash briefly inverts to a solid
-    // fill with a contrasting glyph, then fades back.
+    // (matches ItemAvatar). The just-logged flash briefly inverts to the solid
+    // category colour with a contrasting glyph, then fades back.
     return ZStack {
-      Circle().fill(shortcut.color.opacity(logged ? 1 : 0.16))
+      Circle()
+        .fill(logged ? shortcut.color : shortcut.color.opacity(0.16))
       CategoryGlyph(shortcut: shortcut, size: glyph)
         .foregroundColor(logged ? shortcut.onColor : shortcut.color)
     }
@@ -1115,10 +1263,11 @@ struct QuickAddEntryView: View {
     switch s.mode {
     case "fixed":
       if let amount = s.amount {
-        // No pill: the amount (with its currency symbol) sits in the bottom-
-        // right corner in the category colour, with a soft systemBackground halo
-        // so it reads over the icon. Width-capped so long sums shrink to fit.
-        Text(amountCaption(amount))
+        // The fixed amount (with its +/− flow sign + currency symbol) sits in
+        // the bottom-right corner in the category colour, with a soft
+        // systemBackground halo so it reads over the icon. Width-capped so long
+        // sums shrink to fit.
+        Text(fixedAmountCaption(amount))
           .font(.system(size: diameter * 0.22, weight: .heavy, design: .rounded))
           .foregroundColor(s.color)
           .lineLimit(1)
@@ -1151,8 +1300,8 @@ struct QuickAddEntryView: View {
     }
   }
 
-  /// A category-coloured capsule with a systemBackground ring — the shared
-  /// shape behind the fixed amount and the preset pills.
+  /// A category-coloured capsule with a systemBackground ring — the shared shape
+  /// behind the preset pills.
   private func pillBadge(_ s: Shortcut, ring: CGFloat) -> some View {
     ZStack {
       Capsule().fill(Color(UIColor.systemBackground))
@@ -1168,7 +1317,8 @@ struct QuickAddEntryView: View {
   {
     ConfirmBuilderIntent(
       categoryId: s.categoryId, amount: amount, shortcutId: s.id,
-      categoryName: s.name, colorValue: s.colorValue, iconCode: s.iconCode)
+      categoryName: s.name, colorValue: s.colorValue, iconCode: s.iconCode,
+      flow: entry.flow)
   }
 
   /// Shared takeover header: category identity + close (✕ → back to the grid).
@@ -1236,7 +1386,10 @@ struct QuickAddEntryView: View {
     // Any tap outside a preset button opens the app prefilled with this
     // category (for a non-preset amount). `homeWidget` is required to route.
     .widgetURL(
-      URL(string: "financeapp://quickadd?category=\(s.categoryId)&homeWidget"))
+      URL(
+        string:
+          "financeapp://quickadd?category=\(s.categoryId)&homeWidget\(flowQuery)"
+      ))
   }
 
   private func amountBuilder(_ s: Shortcut) -> some View {
@@ -1311,7 +1464,7 @@ struct QuickAddEntryView: View {
       URL(
         string:
           "financeapp://quickadd?category=\(s.categoryId)"
-          + "&amount=\(Int(amount.rounded()))&homeWidget"))
+          + "&amount=\(Int(amount.rounded()))&homeWidget\(flowQuery)"))
   }
 
   // MARK: medium — three fixed row slots (same grid discipline as small).
@@ -1392,7 +1545,8 @@ struct QuickAddEntryView: View {
     }
   }
 
-  /// The category's month-to-date spend, e.g. "2 700 $" / "250К ₸".
+  /// The category's month-to-date total, e.g. "2 700 $" spent / "250К ₸"
+  /// received. Sign-free — the flow is carried by the glass rim.
   private func spentCaption(_ value: Double) -> String {
     return abbreviatedMoney(value, symbol: entry.symbol)
   }
@@ -1430,12 +1584,13 @@ struct QuickAddEntryView: View {
     }
   }
 
-  /// Quiet tinted capsule that logs the amount instantly.
+  /// Quiet category-tinted capsule that logs the amount instantly. The fixed
+  /// amount (withSymbol) carries the +/− flow sign; bare preset numbers don't.
   private func amountChip(
     _ shortcut: Shortcut, _ amount: Double, withSymbol: Bool = true
   ) -> some View {
     Button(intent: quickAddIntent(shortcut, amount)) {
-      Text(withSymbol ? amountCaption(amount) : stepLabel(amount))
+      Text(withSymbol ? fixedAmountCaption(amount) : stepLabel(amount))
         .font(.system(size: 13, weight: .semibold, design: .rounded))
         .foregroundColor(shortcut.color)
         .padding(.vertical, 7)
@@ -1450,7 +1605,8 @@ struct QuickAddEntryView: View {
     Link(
       destination: URL(
         string:
-          "financeapp://quickadd?category=\(shortcut.categoryId)&homeWidget")!
+          "financeapp://quickadd?category=\(shortcut.categoryId)&homeWidget"
+          + flowQuery)!
     ) {
       Image(systemName: systemName)
         .font(.system(size: 12, weight: .semibold))
@@ -1476,8 +1632,28 @@ struct QuickAddWidget: Widget {
       QuickAddEntryView(entry: entry)
         .containerBackground(Color(UIColor.systemBackground), for: .widget)
     }
-    .configurationDisplayName("Quick Add")
+    .configurationDisplayName("Quick Expense")
     .description("Log a spend in one tap. Configure categories in the app.")
+    .supportedFamilies([.systemSmall, .systemMedium])
+  }
+}
+
+/// The income counterpart of [QuickAddWidget] — a separate gallery tile that
+/// logs income (green "+" accent). Shares [QuickAddEntryView]; the entry's
+/// income flow flips the accent and the logged transaction type.
+struct QuickIncomeWidget: Widget {
+  let kind = "QuickIncomeWidget"
+
+  var body: some WidgetConfiguration {
+    AppIntentConfiguration(
+      kind: kind, intent: SelectIncomeGroupIntent.self,
+      provider: QuickIncomeProvider()
+    ) { entry in
+      QuickAddEntryView(entry: entry)
+        .containerBackground(Color(UIColor.systemBackground), for: .widget)
+    }
+    .configurationDisplayName("Quick Income")
+    .description("Log income in one tap. Configure categories in the app.")
     .supportedFamilies([.systemSmall, .systemMedium])
   }
 }

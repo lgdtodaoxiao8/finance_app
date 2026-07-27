@@ -38,6 +38,7 @@ Future<void> seedData() async {
             color: const Value(4282682111),
             iconColor: const Value(4278190080),
             iconCodePoint: Value(Icons.fastfood_rounded.codePoint),
+            kind: const Value('expense'),
           ),
         )
         ..insert(
@@ -47,6 +48,7 @@ Future<void> seedData() async {
             color: const Value(4294953540),
             iconColor: const Value(4278190080),
             iconCodePoint: Value(Icons.attach_money_rounded.codePoint),
+            kind: const Value('income'),
           ),
         );
     });

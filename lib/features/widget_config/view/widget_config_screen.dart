@@ -4,6 +4,7 @@ import 'package:finance_app/core/widgets/item_avatar.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
+import 'package:finance_app/features/widget_config/data/widget_flow.dart';
 import 'package:finance_app/features/widget_config/data/widget_group.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:finance_app/features/widget_config/view/shortcut_editor_sheet.dart';
@@ -37,6 +38,7 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
   List<Category> _categories = const [];
   List<WidgetShortcut> _shortcuts = [];
   String _symbol = '';
+  WidgetFlow _flow = WidgetFlow.expense;
   bool _loading = true;
 
   @override
@@ -56,6 +58,7 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
     setState(() {
       _categories = categories;
       _symbol = base?.currencySymbol ?? '';
+      _flow = group.flow;
       // Drop shortcuts whose category was deleted.
       final ids = categories.map((c) => c.categoryId).toSet();
       _shortcuts = group.shortcuts
@@ -65,9 +68,15 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
     });
   }
 
-  /// "500 $" — the same compact money style the native widget renders.
+  /// "500 $" — the compact money style the native widget renders (sign-free;
+  /// used for preset amounts).
   String _amountCaption(double v) =>
       _symbol.isEmpty ? _shortAmount(v) : '${_shortAmount(v)} $_symbol';
+
+  /// The fixed-cost amount with its +/− flow sign ("+500 $" / "−500 $"). The
+  /// sign appears ONLY on the fixed amount.
+  String _fixedCaption(double v) =>
+      '${_flow.isIncome ? '+' : '−'}${_amountCaption(v)}';
 
   Category? _categoryFor(int id) {
     for (final c in _categories) {
@@ -93,8 +102,14 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
 
   Future<void> _addCategory() async {
     final pinnedIds = _shortcuts.map((s) => s.categoryId).toSet();
+    // Only categories of this widget's flow: the Quick Expense widget offers
+    // expense categories, the Quick Income widget income ones.
     final available = _categories
-        .where((c) => !pinnedIds.contains(c.categoryId))
+        .where(
+          (c) =>
+              !pinnedIds.contains(c.categoryId) &&
+              c.isIncome == _flow.isIncome,
+        )
         .toList();
     final l = AppLocalizations.of(context);
     if (available.isEmpty) {
@@ -131,6 +146,7 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
       context,
       shortcut: shortcut,
       category: category,
+      isIncome: _flow.isIncome,
     );
     if (result == null || !mounted) return;
     setState(() {
@@ -173,7 +189,8 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
                 _WidgetPreview(
                   shortcuts: _shortcuts,
                   categoryFor: _categoryFor,
-                  amountCaption: _amountCaption,
+                  amountCaption: _fixedCaption,
+                  isIncome: _flow.isIncome,
                 ),
                 const SizedBox(height: 24),
                 Text(
@@ -257,7 +274,7 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
           amountLabel:
               shortcut.mode == WidgetShortcutMode.fixed &&
                   shortcut.amount != null
-              ? _amountCaption(shortcut.amount!)
+              ? _fixedCaption(shortcut.amount!)
               : null,
         ),
         title: Text(
@@ -292,7 +309,7 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
   String _modeSummary(AppLocalizations l, WidgetShortcut s) {
     return switch (s.mode) {
       WidgetShortcutMode.fixed when s.amount != null =>
-        '${l.widgetShortcutModeFixed} · ${_amountCaption(s.amount!)}',
+        '${l.widgetShortcutModeFixed} · ${_fixedCaption(s.amount!)}',
       WidgetShortcutMode.fixed => l.widgetShortcutModeFixed,
       WidgetShortcutMode.presets when s.presets.isNotEmpty =>
         '${l.widgetShortcutModePresets} · '
@@ -312,11 +329,13 @@ class _WidgetPreview extends StatefulWidget {
     required this.shortcuts,
     required this.categoryFor,
     required this.amountCaption,
+    required this.isIncome,
   });
 
   final List<WidgetShortcut> shortcuts;
   final Category? Function(int) categoryFor;
   final String Function(double) amountCaption;
+  final bool isIncome;
 
   @override
   State<_WidgetPreview> createState() => _WidgetPreviewState();
@@ -357,6 +376,10 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
             onSelectionChanged: (s) => setState(() => _medium = s.first),
           ),
         ),
+        if (widget.isIncome) ...[
+          const SizedBox(height: 12),
+          const Center(child: _IncomeFlowBadge()),
+        ],
         const SizedBox(height: 16),
         SizedBox(
           height: 170,
@@ -448,7 +471,10 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
   }
 
   Widget _addCell() {
-    final accent = Theme.of(context).colorScheme.primary;
+    // The one visual tell: green "+" on income, blue on expense.
+    final accent = widget.isIncome
+        ? kIncomeGreen
+        : Theme.of(context).colorScheme.primary;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -572,6 +598,8 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
   double _chipWidth(String label) => _textWidth(label, 12) + 12 * 0.85 * 2 + 2;
 
   List<Widget> _rowChips(WidgetShortcut s, Color fill, double available) {
+    // Chips keep the category colour; the flow is carried by the glass rim. The
+    // fixed amount carries the +/− sign, bare preset numbers don't.
     String short(double v) => _shortAmount(v);
     return switch (s.mode) {
       WidgetShortcutMode.fixed when s.amount != null => [
@@ -600,6 +628,43 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
       }(),
       _ => [AmountChip(label: '+', color: fill)],
     };
+  }
+}
+
+/// A small green "↑ Income" pill shown above the income widget's preview so the
+/// config screen reads unmistakably as the income widget.
+class _IncomeFlowBadge extends StatelessWidget {
+  const _IncomeFlowBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: kIncomeGreen.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Down arrow = income (money in), consistent with the app's cards.
+          const Icon(
+            Icons.arrow_downward_rounded,
+            size: 15,
+            color: kIncomeGreen,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            AppLocalizations.of(context).widgetFlowIncome,
+            style: kTextStyle.copyWith(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: kIncomeGreen,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -12,6 +12,7 @@ import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_interactivity.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
+import 'package:finance_app/features/widget_config/data/widget_flow.dart';
 import 'package:finance_app/features/widget_config/view/quick_add_sheet.dart';
 import 'package:finance_app/router/router.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -125,10 +126,16 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
     if (isQuickAdd) {
       final categoryId = int.tryParse(uri.queryParameters['category'] ?? '');
       final amount = double.tryParse(uri.queryParameters['amount'] ?? '');
+      final flow = WidgetFlow.fromName(uri.queryParameters['flow']);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final context = _navigatorKey.currentContext;
         if (context != null) {
-          QuickAddSheet.show(context, categoryId: categoryId, amount: amount);
+          QuickAddSheet.show(
+            context,
+            categoryId: categoryId,
+            amount: amount,
+            flow: flow,
+          );
         }
       });
       return;

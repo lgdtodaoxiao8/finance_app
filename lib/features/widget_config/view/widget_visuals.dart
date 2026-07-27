@@ -7,7 +7,12 @@
 /// horizontal pills, "ask each time" = a "+".
 library;
 
+import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+
+/// The pleasant green of the income widget's add "+" and its in-app flow badge
+/// (mirrors Swift's `incomeGreen`). The expense add "+" uses the accent (blue).
+const Color kIncomeGreen = AppColors.positive;
 
 /// Which mode badge sits on the circle's bottom-right corner.
 enum ModeBadge {
@@ -41,7 +46,9 @@ class ModeCircle extends StatelessWidget {
   final double diameter;
   final ModeBadge badge;
 
-  /// The corner text for [ModeBadge.amount] (amount + currency symbol).
+  /// The corner text for [ModeBadge.amount] — the fixed amount with its currency
+  /// symbol and +/− flow sign, built by the caller. The badges are otherwise
+  /// identical across income and expense (flow is carried by the glass rim).
   final String? amountLabel;
 
   @override
@@ -106,6 +113,9 @@ class ModeCircle extends StatelessWidget {
           ),
         ];
       case ModeBadge.amount:
+        // The fixed amount (with its +/− sign + currency symbol) in the corner,
+        // in the category colour, with a soft surface halo so it reads over the
+        // icon. Width-capped so long sums shrink to fit.
         return [
           Positioned(
             right: -2,

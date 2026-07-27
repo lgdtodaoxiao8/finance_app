@@ -15,21 +15,30 @@ import 'package:home_widget/home_widget.dart';
 /// the app on iOS 17, so the widget uses Link/widgetURL for those).
 const String _pendingKey = 'pending_quickadd';
 
-/// One entry queued by a widget button: which category to log into and how
-/// much. Older builds queued bare numbers (`[5, 10]`); those are still parsed
-/// and fall back to the first category.
+/// One entry queued by a widget button: which category to log into, how much,
+/// and whether it's income or expense. Older builds queued bare numbers
+/// (`[5, 10]`) or `{categoryId, amount}` with no flow; those are still parsed
+/// and fall back to the first category / expense.
 class _PendingQuickAdd {
-  const _PendingQuickAdd(this.categoryId, this.amount);
+  const _PendingQuickAdd(this.categoryId, this.amount, this.type);
 
   final int? categoryId;
   final double amount;
 
+  /// 'income' | 'expense' — the quick-income widget queues `flow: 'income'`.
+  final String type;
+
   static _PendingQuickAdd? parse(dynamic raw) {
-    if (raw is num) return _PendingQuickAdd(null, raw.toDouble());
+    if (raw is num) return _PendingQuickAdd(null, raw.toDouble(), 'expense');
     if (raw is Map) {
       final amount = (raw['amount'] as num?)?.toDouble() ?? 0;
       if (amount <= 0) return null;
-      return _PendingQuickAdd((raw['categoryId'] as num?)?.toInt(), amount);
+      final flow = raw['flow'] == 'income' ? 'income' : 'expense';
+      return _PendingQuickAdd(
+        (raw['categoryId'] as num?)?.toInt(),
+        amount,
+        flow,
+      );
     }
     return null;
   }
@@ -75,7 +84,7 @@ Future<void> drainPendingQuickAdds() async {
       amount: entry.amount,
       date: DateTime.now(),
       note: 'Quick add',
-      type: 'expense',
+      type: entry.type,
     );
   }
 

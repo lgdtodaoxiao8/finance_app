@@ -4,16 +4,23 @@ import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
+import 'package:finance_app/features/widget_config/data/widget_flow.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
-/// Fast, low-friction expense entry surfaced from the home-screen widget (the
-/// "custom amount" / "ask each time" paths) and reusable anywhere a one-tap log
-/// is wanted. Logs an expense to the first account in the base currency.
+/// Fast, low-friction transaction entry surfaced from the home-screen widget
+/// (the "custom amount" / "ask each time" / "+" paths) and reusable anywhere a
+/// one-tap log is wanted. Logs to the first account in the base currency; the
+/// [flow] decides whether it's an expense or an income.
 class QuickAddSheet extends StatefulWidget {
-  const QuickAddSheet({super.key, this.categoryId, this.amount});
+  const QuickAddSheet({
+    super.key,
+    this.categoryId,
+    this.amount,
+    this.flow = WidgetFlow.expense,
+  });
 
   /// Pre-selected category (e.g. from a widget deep link). Null → user picks.
   final int? categoryId;
@@ -22,17 +29,23 @@ class QuickAddSheet extends StatefulWidget {
   /// when the user taps "exact"). Null/≤0 → the field starts empty.
   final double? amount;
 
+  /// Whether this logs an expense (default) or an income — the income widget
+  /// opens the sheet in income mode (green accent, `type: 'income'`).
+  final WidgetFlow flow;
+
   /// Opens the sheet as a modal bottom sheet.
   static Future<void> show(
     BuildContext context, {
     int? categoryId,
     double? amount,
+    WidgetFlow flow = WidgetFlow.expense,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => QuickAddSheet(categoryId: categoryId, amount: amount),
+      builder: (_) =>
+          QuickAddSheet(categoryId: categoryId, amount: amount, flow: flow),
     );
   }
 
@@ -69,10 +82,14 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   }
 
   Future<void> _load() async {
-    final categories = await getIt<CategoryRepository>().getAll();
+    final all = await getIt<CategoryRepository>().getAll();
     final accounts = await getIt<AccountRepository>().getAll();
     final base = await getIt<CurrencyRepository>().getBase();
     if (!mounted) return;
+    // Only categories matching this sheet's flow (income sheet → income cats).
+    final categories = all
+        .where((c) => c.isIncome == widget.flow.isIncome)
+        .toList();
     setState(() {
       _categories = categories;
       _base = base;
@@ -99,6 +116,8 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   bool get _ready =>
       _base != null && _account != null && _categories.isNotEmpty;
 
+  bool get _isIncome => widget.flow.isIncome;
+
   double? get _amount {
     final raw = _amountController.text.trim().replaceAll(',', '.');
     final value = double.tryParse(raw);
@@ -117,7 +136,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
       amount: amount,
       date: DateTime.now(),
       note: 'Quick add',
-      type: 'expense',
+      type: widget.flow.transactionType,
     );
     await getIt<WidgetService>().publishOnce();
     if (!mounted) return;
@@ -183,9 +202,27 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
       children: [
         _grabber(),
         const SizedBox(height: 16),
-        Text(
-          l.quickAddTitle,
-          style: kTextStyle.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
+        Row(
+          children: [
+            if (_isIncome) ...[
+              // Income = a down arrow (money coming in), matching the app's
+              // stat cards / type picker convention.
+              const Icon(
+                Icons.arrow_downward_rounded,
+                size: 20,
+                color: AppColors.positive,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              _isIncome ? l.quickIncomeTitle : l.quickAddTitle,
+              style: kTextStyle.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _isIncome ? AppColors.positive : null,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         Text(
@@ -223,6 +260,9 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
         SizedBox(
           width: double.infinity,
           child: FilledButton(
+            style: _isIncome
+                ? FilledButton.styleFrom(backgroundColor: AppColors.positive)
+                : null,
             onPressed: (_amount != null && !_saving) ? _save : null,
             child: _saving
                 ? const SizedBox(

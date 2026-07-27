@@ -43,7 +43,9 @@ class Accounts extends Table with SyncColumns {
       integer().named('icon_code_point').nullable()();
 }
 
-/// Spending / income categories with their own color + icon.
+/// Spending / income categories with their own color + icon. Each category is
+/// hard-typed as [kind] 'expense' or 'income': it can only be used for that
+/// kind of transaction, and each quick-add widget only offers its own kind.
 @DataClassName('CategoryRow')
 class Categories extends Table with SyncColumns {
   IntColumn get id => integer().autoIncrement()();
@@ -52,6 +54,10 @@ class Categories extends Table with SyncColumns {
   IntColumn get iconColor => integer().named('icon_color').nullable()();
   IntColumn get iconCodePoint =>
       integer().named('icon_code_point').nullable()();
+
+  /// 'expense' | 'income'. Defaults to expense so existing rows and inserts
+  /// that predate typing stay valid.
+  TextColumn get kind => text().withDefault(const Constant('expense'))();
 }
 
 /// A single financial operation: expense, income or transfer.
@@ -123,7 +129,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -147,6 +153,21 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3) {
         // Synced app preferences (theme, language, week start, …).
         await m.createTable(settings);
+      }
+      if (from < 4) {
+        // Hard income/expense typing on categories. New column defaults to
+        // 'expense'; backfill categories that are used mostly in income
+        // transactions so existing income categories (Salary, …) type right.
+        await m.addColumn(categories, categories.kind);
+        await customStatement(
+          "UPDATE categories SET kind = 'income' WHERE id IN ("
+          '  SELECT category_id FROM transactions'
+          '  WHERE category_id IS NOT NULL'
+          '  GROUP BY category_id'
+          "  HAVING SUM(CASE WHEN type = 'income' THEN 1 ELSE 0 END) >"
+          "         SUM(CASE WHEN type = 'expense' THEN 1 ELSE 0 END)"
+          ')',
+        );
       }
     },
   );

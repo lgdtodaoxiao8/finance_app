@@ -48,6 +48,7 @@ class WidgetSnapshot {
     required this.topCategories,
     required this.recent,
     required this.spendByCategoryId,
+    required this.incomeByCategoryId,
   });
 
   final double income;
@@ -61,8 +62,12 @@ class WidgetSnapshot {
   final List<WidgetRecent> recent;
 
   /// Month-to-date expense per category id (base currency) — lets the medium
-  /// quick-add widget show how much each pinned category already cost.
+  /// quick-add (expense) widget show how much each pinned category already cost.
   final Map<int, double> spendByCategoryId;
+
+  /// Month-to-date income per category id (base currency) — the income widget's
+  /// mirror of [spendByCategoryId] ("received this month" per source).
+  final Map<int, double> incomeByCategoryId;
 }
 
 /// Builds the widget snapshot for the current month window (mirrors the app's
@@ -90,6 +95,7 @@ WidgetSnapshot buildWidgetSnapshot(
   final colors = <String, int>{};
   final icons = <String, int>{};
   final spendById = <int, double>{};
+  final incomeById = <int, double>{};
   for (final t in filtered.where((t) => t.isExpense)) {
     final name = t.categoryName ?? 'Uncategorized';
     byCategory.update(
@@ -101,6 +107,15 @@ WidgetSnapshot buildWidgetSnapshot(
     icons[name] ??= t.categoryIconCode ?? 0;
     if (t.categoryId != null) {
       spendById.update(
+        t.categoryId!,
+        (v) => v + t.amountInBase,
+        ifAbsent: () => t.amountInBase,
+      );
+    }
+  }
+  for (final t in filtered.where((t) => t.isIncome)) {
+    if (t.categoryId != null) {
+      incomeById.update(
         t.categoryId!,
         (v) => v + t.amountInBase,
         ifAbsent: () => t.amountInBase,
@@ -141,5 +156,6 @@ WidgetSnapshot buildWidgetSnapshot(
     topCategories: categories.take(maxCategories).toList(),
     recent: recent,
     spendByCategoryId: spendById,
+    incomeByCategoryId: incomeById,
   );
 }

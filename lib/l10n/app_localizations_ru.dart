@@ -836,6 +836,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нажмите пресет, чтобы записать трату мгновенно.';
 
   @override
+  String get widgetPresetsHintIncome =>
+      'Нажмите пресет, чтобы записать доход мгновенно.';
+
+  @override
+  String get categoryType => 'Тип';
+
+  @override
   String get widgetOpenHint =>
       'Сумма набирается прямо в виджете и сразу записывается.';
 
@@ -919,9 +926,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String get quickAddTitle => 'Быстрое добавление';
 
   @override
+  String get quickIncomeTitle => 'Быстрый доход';
+
+  @override
   String get quickAddSaved => 'Сохранено';
 
   @override
   String get quickAddIncompleteSetup =>
       'Сначала добавьте категорию, счёт и базовую валюту.';
+
+  @override
+  String get widgetFlowExpense => 'Расход';
+
+  @override
+  String get widgetFlowIncome => 'Доход';
+
+  @override
+  String get widgetFlowQuestion => 'Что записывает виджет?';
+
+  @override
+  String get widgetFlowExpenseHint => 'Деньги уходят — трата.';
+
+  @override
+  String get widgetFlowIncomeHint =>
+      'Деньги приходят — зарплата, подарок, возврат.';
 }

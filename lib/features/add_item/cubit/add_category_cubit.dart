@@ -11,14 +11,15 @@ part 'add_category_state.dart';
 /// Creates a category, or edits [initial] when given (same screen, same
 /// rules — one colour drives the whole look).
 class AddCategoryCubit extends Cubit<AddCategoryState> {
-  AddCategoryCubit(this._repository, {Category? initial})
+  AddCategoryCubit(this._repository, {Category? initial, String? initialKind})
     : _editingId = initial?.categoryId,
       super(
         initial == null
-            ? const AddCategoryState()
+            ? AddCategoryState(kind: initialKind ?? 'expense')
             : AddCategoryState(
                 color: initial.categoryColor,
                 icon: initial.categoryIcon,
+                kind: initial.categoryKind,
               ),
       );
 
@@ -29,6 +30,7 @@ class AddCategoryCubit extends Cubit<AddCategoryState> {
 
   void setColor(Color color) => emit(state.copyWith(color: color));
   void setIcon(IconData icon) => emit(state.copyWith(icon: icon));
+  void setKind(String kind) => emit(state.copyWith(kind: kind));
 
   Future<void> save(String name) async {
     emit(state.copyWith(sending: true));
@@ -44,6 +46,7 @@ class AddCategoryCubit extends Cubit<AddCategoryState> {
           // backward compatibility.
           iconColor: argb,
           iconCodePoint: state.icon.codePoint,
+          kind: state.kind,
         );
         id = editingId;
         // The home-screen widget bakes category name/colour/icon into its
@@ -55,6 +58,7 @@ class AddCategoryCubit extends Cubit<AddCategoryState> {
           color: argb,
           iconColor: argb,
           iconCodePoint: state.icon.codePoint,
+          kind: state.kind,
         );
       }
       emit(state.copyWith(sending: false, savedId: id));

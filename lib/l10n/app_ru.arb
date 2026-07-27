@@ -323,6 +323,8 @@
   "widgetShortcutModeOpen": "Каждый раз",
   "widgetFixedAmountHint": "Одно касание записывает ровно эту сумму.",
   "widgetPresetsHint": "Нажмите пресет, чтобы записать трату мгновенно.",
+  "widgetPresetsHintIncome": "Нажмите пресет, чтобы записать доход мгновенно.",
+  "categoryType": "Тип",
   "widgetOpenHint": "Сумма набирается прямо в виджете и сразу записывается.",
   "widgetStepsTitle": "Шаги суммы",
   "widgetStepsHint": "Оставьте пустым — подстроятся под ваши траты автоматически.",
@@ -350,6 +352,12 @@
   "widgetAddPreset": "Добавить сумму",
   "selectCategory": "Выберите категорию",
   "quickAddTitle": "Быстрое добавление",
+  "quickIncomeTitle": "Быстрый доход",
   "quickAddSaved": "Сохранено",
-  "quickAddIncompleteSetup": "Сначала добавьте категорию, счёт и базовую валюту."
+  "quickAddIncompleteSetup": "Сначала добавьте категорию, счёт и базовую валюту.",
+  "widgetFlowExpense": "Расход",
+  "widgetFlowIncome": "Доход",
+  "widgetFlowQuestion": "Что записывает виджет?",
+  "widgetFlowExpenseHint": "Деньги уходят — трата.",
+  "widgetFlowIncomeHint": "Деньги приходят — зарплата, подарок, возврат."
 }

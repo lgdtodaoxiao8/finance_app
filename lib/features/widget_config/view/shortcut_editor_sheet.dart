@@ -14,15 +14,21 @@ class ShortcutEditorSheet extends StatefulWidget {
     super.key,
     required this.shortcut,
     required this.category,
+    this.isIncome = false,
   });
 
   final WidgetShortcut shortcut;
   final Category category;
 
+  /// Income group: the mode illustrations turn green (+ "+" sign) and the hints
+  /// speak of income, matching the widget the shortcut lands on.
+  final bool isIncome;
+
   static Future<WidgetShortcut?> show(
     BuildContext context, {
     required WidgetShortcut shortcut,
     required Category category,
+    bool isIncome = false,
   }) {
     return showModalBottomSheet<WidgetShortcut>(
       context: context,
@@ -31,6 +37,7 @@ class ShortcutEditorSheet extends StatefulWidget {
       builder: (_) => ShortcutEditorSheet(
         shortcut: shortcut,
         category: category,
+        isIncome: isIncome,
       ),
     );
   }
@@ -159,6 +166,7 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
                     mode: m,
                     selected: _mode == m,
                     category: widget.category,
+                    isIncome: widget.isIncome,
                     onTap: () => setState(() => _mode = m),
                   ),
                   const SizedBox(height: 8),
@@ -277,12 +285,14 @@ class _ModeCard extends StatelessWidget {
     required this.mode,
     required this.selected,
     required this.category,
+    required this.isIncome,
     required this.onTap,
   });
 
   final WidgetShortcutMode mode;
   final bool selected;
   final Category category;
+  final bool isIncome;
   final VoidCallback onTap;
 
   @override
@@ -296,7 +306,9 @@ class _ModeCard extends StatelessWidget {
       ),
       WidgetShortcutMode.presets => (
         l.widgetShortcutModePresets,
-        l.widgetPresetsHint,
+        // Only the presets hint frames the action as a spend; income gets a
+        // "log the income" variant.
+        isIncome ? l.widgetPresetsHintIncome : l.widgetPresetsHint,
       ),
       WidgetShortcutMode.open => (
         l.widgetShortcutModeOpen,
@@ -378,7 +390,8 @@ class _ModeCard extends StatelessWidget {
     final fill = category.categoryColor;
     final icon = category.categoryIcon;
     final (badge, amountLabel) = switch (mode) {
-      WidgetShortcutMode.fixed => (ModeBadge.amount, '100'),
+      // The fixed sample carries the +/− flow sign, like the widget.
+      WidgetShortcutMode.fixed => (ModeBadge.amount, isIncome ? '+100' : '−100'),
       WidgetShortcutMode.presets => (ModeBadge.presets, null),
       WidgetShortcutMode.open => (ModeBadge.plus, null),
     };

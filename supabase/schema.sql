@@ -20,10 +20,14 @@ create table if not exists public.categories (
   color           bigint,
   icon_color      bigint,
   icon_code_point bigint,
+  -- 'expense' | 'income' — the category's hard type.
+  kind            text    not null default 'expense',
   updated_at      bigint  not null default 0,
   deleted         boolean not null default false,
   primary key (user_id, uuid)
 );
+-- Idempotent for deployments created before category typing was added.
+alter table public.categories add column if not exists kind text not null default 'expense';
 
 -- ============================================================== accounts ====
 create table if not exists public.accounts (

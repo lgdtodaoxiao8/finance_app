@@ -323,6 +323,8 @@
   "widgetShortcutModeOpen": "Ask each time",
   "widgetFixedAmountHint": "One tap logs this exact amount.",
   "widgetPresetsHint": "Tap a preset to log it instantly.",
+  "widgetPresetsHintIncome": "Tap a preset to log the income instantly.",
+  "categoryType": "Type",
   "widgetOpenHint": "Tap builds the amount right on the widget, then logs it.",
   "widgetStepsTitle": "Amount steps",
   "widgetStepsHint": "Leave empty to adapt to your spending automatically.",
@@ -350,6 +352,12 @@
   "widgetAddPreset": "Add amount",
   "selectCategory": "Select a category",
   "quickAddTitle": "Quick add",
+  "quickIncomeTitle": "Quick income",
   "quickAddSaved": "Saved",
-  "quickAddIncompleteSetup": "Add a category, an account and a base currency first."
+  "quickAddIncompleteSetup": "Add a category, an account and a base currency first.",
+  "widgetFlowExpense": "Expense",
+  "widgetFlowIncome": "Income",
+  "widgetFlowQuestion": "What should this widget log?",
+  "widgetFlowExpenseHint": "Money going out — a spend.",
+  "widgetFlowIncomeHint": "Money coming in — a paycheck, a gift, a refund."
 }

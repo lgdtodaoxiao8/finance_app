@@ -18,6 +18,7 @@ void main() {
       color: 1,
       iconColor: 2,
       iconCodePoint: 3,
+      kind: 'expense',
     );
 
     final row = await (db.select(
@@ -36,6 +37,7 @@ void main() {
       color: 1,
       iconColor: 2,
       iconCodePoint: 3,
+      kind: 'expense',
     );
     final row = await (db.select(
       db.categories,

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:finance_app/core/preferences/app_preferences.dart';
+import 'package:finance_app/features/widget_config/data/widget_flow.dart';
 import 'package:finance_app/features/widget_config/data/widget_group.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,6 +54,38 @@ void main() {
         'presets': [],
       });
       expect(restored.mode, WidgetShortcutMode.open);
+    });
+  });
+
+  group('WidgetGroup flow', () {
+    test('round-trips the income flow through JSON', () {
+      const group = WidgetGroup(
+        id: 'inc',
+        name: 'Salary',
+        flow: WidgetFlow.income,
+      );
+      final restored = WidgetGroup.fromJson(group.toJson());
+      expect(restored.flow, WidgetFlow.income);
+      expect(restored.id, 'inc');
+      expect(restored.name, 'Salary');
+    });
+
+    test('legacy JSON with no flow defaults to expense', () {
+      final restored = WidgetGroup.fromJson({
+        'id': 'default',
+        'name': '',
+        'shortcuts': [],
+      });
+      expect(restored.flow, WidgetFlow.expense);
+    });
+
+    test('WidgetFlow.fromName maps names and falls back to expense', () {
+      expect(WidgetFlow.fromName('income'), WidgetFlow.income);
+      expect(WidgetFlow.fromName('expense'), WidgetFlow.expense);
+      expect(WidgetFlow.fromName(null), WidgetFlow.expense);
+      expect(WidgetFlow.fromName('bogus'), WidgetFlow.expense);
+      expect(WidgetFlow.income.transactionType, 'income');
+      expect(WidgetFlow.expense.transactionType, 'expense');
     });
   });
 

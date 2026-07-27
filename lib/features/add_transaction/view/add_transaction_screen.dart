@@ -175,7 +175,16 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
           final cubit = context.read<AddTransactionCubit>();
           final keyboardSpace = MediaQuery.viewInsetsOf(context).bottom;
           final accountMaps = [for (final a in state.accounts) a.toMap()];
-          final categoryMaps = [for (final c in state.categories) c.toMap()];
+          // Categories are hard-typed: the expense tab only lists expense
+          // categories, the income tab only income ones.
+          final expenseCatMaps = [
+            for (final c in state.categories)
+              if (!c.isIncome) c.toMap(),
+          ];
+          final incomeCatMaps = [
+            for (final c in state.categories)
+              if (c.isIncome) c.toMap(),
+          ];
 
           Future<int> addNewAccount() =>
               _addNew('/add-account', cubit.reloadAccounts);
@@ -203,7 +212,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                         initialAccountId: state.accountId,
                         initialCategoryId: state.categoryId,
                         accountsList: accountMaps,
-                        categoriesList: categoryMaps,
+                        categoriesList: expenseCatMaps,
                         onSelectAccount: cubit.setAccount,
                         onSelectCategory: cubit.setCategory,
                       ),
@@ -212,7 +221,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
                         addNewAccount: addNewAccount,
                         initialCategoryId: state.categoryId,
                         initialAccountId: state.accountId,
-                        categoriesList: categoryMaps,
+                        categoriesList: incomeCatMaps,
                         accountsList: accountMaps,
                         onSelectCategory: cubit.setCategory,
                         onSelectAccount: cubit.setAccount,

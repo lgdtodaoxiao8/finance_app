@@ -894,6 +894,16 @@ class $CategoriesTable extends Categories
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('expense'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     uuid,
@@ -903,6 +913,7 @@ class $CategoriesTable extends Categories
     color,
     iconColor,
     iconCodePoint,
+    kind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -958,6 +969,12 @@ class $CategoriesTable extends Categories
         ),
       );
     }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
     return context;
   }
 
@@ -995,6 +1012,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.int,
         data['${effectivePrefix}icon_code_point'],
       ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
     );
   }
 
@@ -1012,6 +1033,10 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
   final int? color;
   final int? iconColor;
   final int? iconCodePoint;
+
+  /// 'expense' | 'income'. Defaults to expense so existing rows and inserts
+  /// that predate typing stay valid.
+  final String kind;
   const CategoryRow({
     this.uuid,
     this.updatedAt,
@@ -1020,6 +1045,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     this.color,
     this.iconColor,
     this.iconCodePoint,
+    required this.kind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1043,6 +1069,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     if (!nullToAbsent || iconCodePoint != null) {
       map['icon_code_point'] = Variable<int>(iconCodePoint);
     }
+    map['kind'] = Variable<String>(kind);
     return map;
   }
 
@@ -1063,6 +1090,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
       iconCodePoint: iconCodePoint == null && nullToAbsent
           ? const Value.absent()
           : Value(iconCodePoint),
+      kind: Value(kind),
     );
   }
 
@@ -1079,6 +1107,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
       color: serializer.fromJson<int?>(json['color']),
       iconColor: serializer.fromJson<int?>(json['iconColor']),
       iconCodePoint: serializer.fromJson<int?>(json['iconCodePoint']),
+      kind: serializer.fromJson<String>(json['kind']),
     );
   }
   @override
@@ -1092,6 +1121,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
       'color': serializer.toJson<int?>(color),
       'iconColor': serializer.toJson<int?>(iconColor),
       'iconCodePoint': serializer.toJson<int?>(iconCodePoint),
+      'kind': serializer.toJson<String>(kind),
     };
   }
 
@@ -1103,6 +1133,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     Value<int?> color = const Value.absent(),
     Value<int?> iconColor = const Value.absent(),
     Value<int?> iconCodePoint = const Value.absent(),
+    String? kind,
   }) => CategoryRow(
     uuid: uuid.present ? uuid.value : this.uuid,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -1113,6 +1144,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
     iconCodePoint: iconCodePoint.present
         ? iconCodePoint.value
         : this.iconCodePoint,
+    kind: kind ?? this.kind,
   );
   CategoryRow copyWithCompanion(CategoriesCompanion data) {
     return CategoryRow(
@@ -1125,6 +1157,7 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
       iconCodePoint: data.iconCodePoint.present
           ? data.iconCodePoint.value
           : this.iconCodePoint,
+      kind: data.kind.present ? data.kind.value : this.kind,
     );
   }
 
@@ -1137,14 +1170,23 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
           ..write('name: $name, ')
           ..write('color: $color, ')
           ..write('iconColor: $iconColor, ')
-          ..write('iconCodePoint: $iconCodePoint')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('kind: $kind')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(uuid, updatedAt, id, name, color, iconColor, iconCodePoint);
+  int get hashCode => Object.hash(
+    uuid,
+    updatedAt,
+    id,
+    name,
+    color,
+    iconColor,
+    iconCodePoint,
+    kind,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1155,7 +1197,8 @@ class CategoryRow extends DataClass implements Insertable<CategoryRow> {
           other.name == this.name &&
           other.color == this.color &&
           other.iconColor == this.iconColor &&
-          other.iconCodePoint == this.iconCodePoint);
+          other.iconCodePoint == this.iconCodePoint &&
+          other.kind == this.kind);
 }
 
 class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
@@ -1166,6 +1209,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   final Value<int?> color;
   final Value<int?> iconColor;
   final Value<int?> iconCodePoint;
+  final Value<String> kind;
   const CategoriesCompanion({
     this.uuid = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -1174,6 +1218,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     this.color = const Value.absent(),
     this.iconColor = const Value.absent(),
     this.iconCodePoint = const Value.absent(),
+    this.kind = const Value.absent(),
   });
   CategoriesCompanion.insert({
     this.uuid = const Value.absent(),
@@ -1183,6 +1228,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     this.color = const Value.absent(),
     this.iconColor = const Value.absent(),
     this.iconCodePoint = const Value.absent(),
+    this.kind = const Value.absent(),
   });
   static Insertable<CategoryRow> custom({
     Expression<String>? uuid,
@@ -1192,6 +1238,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     Expression<int>? color,
     Expression<int>? iconColor,
     Expression<int>? iconCodePoint,
+    Expression<String>? kind,
   }) {
     return RawValuesInsertable({
       if (uuid != null) 'uuid': uuid,
@@ -1201,6 +1248,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
       if (color != null) 'color': color,
       if (iconColor != null) 'icon_color': iconColor,
       if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
+      if (kind != null) 'kind': kind,
     });
   }
 
@@ -1212,6 +1260,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     Value<int?>? color,
     Value<int?>? iconColor,
     Value<int?>? iconCodePoint,
+    Value<String>? kind,
   }) {
     return CategoriesCompanion(
       uuid: uuid ?? this.uuid,
@@ -1221,6 +1270,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
       color: color ?? this.color,
       iconColor: iconColor ?? this.iconColor,
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      kind: kind ?? this.kind,
     );
   }
 
@@ -1248,6 +1298,9 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
     if (iconCodePoint.present) {
       map['icon_code_point'] = Variable<int>(iconCodePoint.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
     return map;
   }
 
@@ -1260,7 +1313,8 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
           ..write('name: $name, ')
           ..write('color: $color, ')
           ..write('iconColor: $iconColor, ')
-          ..write('iconCodePoint: $iconCodePoint')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('kind: $kind')
           ..write(')'))
         .toString();
   }
@@ -3517,6 +3571,7 @@ typedef $$CategoriesTableCreateCompanionBuilder =
       Value<int?> color,
       Value<int?> iconColor,
       Value<int?> iconCodePoint,
+      Value<String> kind,
     });
 typedef $$CategoriesTableUpdateCompanionBuilder =
     CategoriesCompanion Function({
@@ -3527,6 +3582,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
       Value<int?> color,
       Value<int?> iconColor,
       Value<int?> iconCodePoint,
+      Value<String> kind,
     });
 
 final class $$CategoriesTableReferences
@@ -3599,6 +3655,11 @@ class $$CategoriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> transactionsRefs(
     Expression<bool> Function($$TransactionsTableFilterComposer f) f,
   ) {
@@ -3668,6 +3729,11 @@ class $$CategoriesTableOrderingComposer
     column: $table.iconCodePoint,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CategoriesTableAnnotationComposer
@@ -3701,6 +3767,9 @@ class $$CategoriesTableAnnotationComposer
     column: $table.iconCodePoint,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
 
   Expression<T> transactionsRefs<T extends Object>(
     Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
@@ -3763,6 +3832,7 @@ class $$CategoriesTableTableManager
                 Value<int?> color = const Value.absent(),
                 Value<int?> iconColor = const Value.absent(),
                 Value<int?> iconCodePoint = const Value.absent(),
+                Value<String> kind = const Value.absent(),
               }) => CategoriesCompanion(
                 uuid: uuid,
                 updatedAt: updatedAt,
@@ -3771,6 +3841,7 @@ class $$CategoriesTableTableManager
                 color: color,
                 iconColor: iconColor,
                 iconCodePoint: iconCodePoint,
+                kind: kind,
               ),
           createCompanionCallback:
               ({
@@ -3781,6 +3852,7 @@ class $$CategoriesTableTableManager
                 Value<int?> color = const Value.absent(),
                 Value<int?> iconColor = const Value.absent(),
                 Value<int?> iconCodePoint = const Value.absent(),
+                Value<String> kind = const Value.absent(),
               }) => CategoriesCompanion.insert(
                 uuid: uuid,
                 updatedAt: updatedAt,
@@ -3789,6 +3861,7 @@ class $$CategoriesTableTableManager
                 color: color,
                 iconColor: iconColor,
                 iconCodePoint: iconCodePoint,
+                kind: kind,
               ),
           withReferenceMapper: (p0) => p0
               .map(

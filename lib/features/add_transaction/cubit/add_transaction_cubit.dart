@@ -71,7 +71,8 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
             currencies: currencies,
             accountId: accounts.isNotEmpty ? accounts.first.id : null,
             accountDestinationId: accounts.length > 1 ? accounts[1].id : null,
-            categoryId: categories.isNotEmpty ? categories.first.id : null,
+            // Default tab is expense → pick the first expense category.
+            categoryId: _pickCategory('expense', categories),
             currencyId: currencies.isNotEmpty ? currencies.first.id : null,
             date: DateTime.now(),
           ),
@@ -95,8 +96,34 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
         type: type,
         typeIndex: index,
         accountDestinationId: destination,
+        // Keep the selected category valid for the tab: expense tab → an expense
+        // category, income tab → an income one.
+        categoryId: _pickCategory(
+          type,
+          state.categories,
+          preferred: state.categoryId,
+        ),
       ),
     );
+  }
+
+  /// A category id valid for [type] — keeps [preferred] if it matches the type's
+  /// kind, else falls back to the first matching category (null if none).
+  static int? _pickCategory(
+    String type,
+    List<Category> cats, {
+    int? preferred,
+  }) {
+    if (type == 'transfer') {
+      return preferred ?? (cats.isEmpty ? null : cats.first.categoryId);
+    }
+    final wantIncome = type == 'income';
+    final matching = cats.where((c) => c.isIncome == wantIncome);
+    if (preferred != null &&
+        matching.any((c) => c.categoryId == preferred)) {
+      return preferred;
+    }
+    return matching.isEmpty ? null : matching.first.categoryId;
   }
 
   void setAccount(int id) => emit(state.copyWith(accountId: id));

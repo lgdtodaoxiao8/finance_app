@@ -12,6 +12,7 @@ abstract class CategoryRepository {
     required int color,
     required int iconColor,
     required int iconCodePoint,
+    required String kind,
   });
 
   /// Number of transactions using this category — used to block deletion of a
@@ -22,6 +23,7 @@ abstract class CategoryRepository {
     required int color,
     required int iconColor,
     required int iconCodePoint,
+    required String kind,
   });
 
   Future<int> transactionCount(int categoryId);
@@ -45,6 +47,7 @@ class DriftCategoryRepository implements CategoryRepository {
       row.iconCodePoint ?? Icons.help_outline.codePoint,
       fontFamily: 'MaterialIcons',
     ),
+    categoryKind: row.kind,
   );
 
   @override
@@ -59,6 +62,7 @@ class DriftCategoryRepository implements CategoryRepository {
     required int color,
     required int iconColor,
     required int iconCodePoint,
+    required String kind,
   }) {
     return _db
         .into(_db.categories)
@@ -68,6 +72,7 @@ class DriftCategoryRepository implements CategoryRepository {
             color: Value(color),
             iconColor: Value(iconColor),
             iconCodePoint: Value(iconCodePoint),
+            kind: Value(kind),
           ),
         );
   }
@@ -79,6 +84,7 @@ class DriftCategoryRepository implements CategoryRepository {
     required int color,
     required int iconColor,
     required int iconCodePoint,
+    required String kind,
   }) async {
     await (_db.update(_db.categories)..where((c) => c.id.equals(id))).write(
       CategoriesCompanion(
@@ -86,6 +92,7 @@ class DriftCategoryRepository implements CategoryRepository {
         color: Value(color),
         iconColor: Value(iconColor),
         iconCodePoint: Value(iconCodePoint),
+        kind: Value(kind),
         // Stamped so cloud sync (LWW on updated_at) picks the edit up.
         updatedAt: Value(nowMs()),
       ),

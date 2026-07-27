@@ -37,8 +37,12 @@ class WidgetService {
   static const String iosWidgetName = 'FinanceWidget';
   static const String androidWidgetName = 'FinanceWidgetProvider';
 
-  /// The configurable quick-add widget (its own WidgetKit kind).
+  /// The configurable quick-add (expense) widget (its own WidgetKit kind).
   static const String iosQuickAddWidgetName = 'QuickAddWidget';
+
+  /// The configurable quick-income widget — a separate gallery tile logging
+  /// income instead of expense (its own WidgetKit kind).
+  static const String iosQuickIncomeWidgetName = 'QuickIncomeWidget';
 
   /// iOS App Group shared between the app and the widget extension.
   /// Must match the App Group capability added to both the Runner and the
@@ -98,7 +102,8 @@ class WidgetService {
     final groups = _preferences.getWidgetGroups();
     final categories = await _categoryRepository.getAll();
     final byId = {for (final c in categories) c.categoryId: c};
-    final magnitudes = _expenseMagnitudes();
+    final expenseMagnitudes = _magnitudes(income: false);
+    final incomeMagnitudes = _magnitudes(income: true);
     try {
       final writes = <Future<void>>[
         HomeWidget.saveWidgetData<double>('income', snapshot.income),
@@ -132,18 +137,28 @@ class WidgetService {
               },
           ]),
         ),
-        // The list of groups the widget's "Edit Widget" picker offers.
+        // The list of groups the widget's "Edit Widget" picker offers, tagged
+        // with their flow so each widget kind can offer only its own groups.
         HomeWidget.saveWidgetData<String>(
           'widget_groups',
           jsonEncode([
-            for (final g in groups) {'id': g.id, 'name': g.name},
+            for (final g in groups)
+              {'id': g.id, 'name': g.name, 'flow': g.flow.name},
           ]),
         ),
-        // Month-to-date spend per category id, for the medium quick-add rows.
+        // Month-to-date spend per category id, for the medium expense rows.
         HomeWidget.saveWidgetData<String>(
           'category_spend',
           jsonEncode({
             for (final e in snapshot.spendByCategoryId.entries)
+              e.key.toString(): e.value,
+          }),
+        ),
+        // Month-to-date income per category id, for the medium income rows.
+        HomeWidget.saveWidgetData<String>(
+          'category_income',
+          jsonEncode({
+            for (final e in snapshot.incomeByCategoryId.entries)
               e.key.toString(): e.value,
           }),
         ),
@@ -152,7 +167,13 @@ class WidgetService {
       // also under the legacy `shortcuts` key so an unconfigured instance
       // still shows something.
       for (final g in groups) {
-        final json = _resolveShortcutsJson(g.shortcuts, byId, magnitudes);
+        // Income groups' amount-builder steps adapt to income magnitudes, not
+        // spending.
+        final json = _resolveShortcutsJson(
+          g.shortcuts,
+          byId,
+          g.flow.isIncome ? incomeMagnitudes : expenseMagnitudes,
+        );
         writes.add(
           HomeWidget.saveWidgetData<String>('shortcuts.${g.id}', json),
         );
@@ -166,6 +187,7 @@ class WidgetService {
         androidName: androidWidgetName,
       );
       await HomeWidget.updateWidget(iOSName: iosQuickAddWidgetName);
+      await HomeWidget.updateWidget(iOSName: iosQuickIncomeWidgetName);
     } catch (e) {
       // Native side not configured yet (e.g. no widget extension) — safe no-op.
       debugPrint('WidgetService._publish skipped: $e');
@@ -239,14 +261,19 @@ class WidgetService {
     return jsonEncode(out);
   }
 
-  /// Per-category and global median expense (base currency) — the magnitude the
-  /// amount-builder steps adapt to. Per-category kicks in only with enough
-  /// history (≥3 expenses); otherwise the global median stands in.
-  ({Map<int, double> byCategory, double global}) _expenseMagnitudes() {
+  /// Per-category and global median transaction size (base currency) for the
+  /// given flow — the magnitude the amount-builder steps adapt to. Per-category
+  /// kicks in only with enough history (≥3 transactions); otherwise the global
+  /// median stands in. Pass [income] true for income groups so their steps
+  /// scale to what the user actually earns, not spends.
+  ({Map<int, double> byCategory, double global}) _magnitudes({
+    required bool income,
+  }) {
     final byCat = <int, List<double>>{};
     final all = <double>[];
     for (final t in _transactions) {
-      if (!t.isExpense || t.isCanceled) continue;
+      final matches = income ? t.isIncome : t.isExpense;
+      if (!matches || t.isCanceled) continue;
       final a = t.amountInBase.abs();
       if (a <= 0) continue;
       all.add(a);

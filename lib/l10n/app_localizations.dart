@@ -1640,6 +1640,18 @@ abstract class AppLocalizations {
   /// **'Tap a preset to log it instantly.'**
   String get widgetPresetsHint;
 
+  /// No description provided for @widgetPresetsHintIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a preset to log the income instantly.'**
+  String get widgetPresetsHintIncome;
+
+  /// No description provided for @categoryType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get categoryType;
+
   /// No description provided for @widgetOpenHint.
   ///
   /// In en, this message translates to:
@@ -1796,6 +1808,12 @@ abstract class AppLocalizations {
   /// **'Quick add'**
   String get quickAddTitle;
 
+  /// No description provided for @quickIncomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick income'**
+  String get quickIncomeTitle;
+
   /// No description provided for @quickAddSaved.
   ///
   /// In en, this message translates to:
@@ -1807,6 +1825,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a category, an account and a base currency first.'**
   String get quickAddIncompleteSetup;
+
+  /// No description provided for @widgetFlowExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get widgetFlowExpense;
+
+  /// No description provided for @widgetFlowIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get widgetFlowIncome;
+
+  /// No description provided for @widgetFlowQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'What should this widget log?'**
+  String get widgetFlowQuestion;
+
+  /// No description provided for @widgetFlowExpenseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Money going out — a spend.'**
+  String get widgetFlowExpenseHint;
+
+  /// No description provided for @widgetFlowIncomeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Money coming in — a paycheck, a gift, a refund.'**
+  String get widgetFlowIncomeHint;
 }
 
 class _AppLocalizationsDelegate
