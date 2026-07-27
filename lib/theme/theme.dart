@@ -124,10 +124,15 @@ final ThemeData themeFromSeed = ThemeData(
 /// Manrope with NO baked-in colour, so text inherits the ambient theme colour
 /// (dark-on-light in light mode, light-on-dark in dark mode). Widgets that need
 /// a specific colour still override via `.copyWith(color: …)`.
-// No baked-in overflow: text wraps to show in full rather than truncating with
-// "…" anywhere in the app. Widgets that genuinely must fit a fixed box handle
-// it locally (e.g. the amount formatters).
-final TextStyle kTextStyle = GoogleFonts.manrope();
+// overflow: visible — text is always drawn in FULL, never truncated with "…",
+// clipped, or faded anywhere in the app. Removing overflow entirely was wrong:
+// text then inherited the ancestor DefaultTextStyle (clip for most widgets,
+// FADE for Material chips), which still cut it off. `visible` overrides those.
+// Widgets that genuinely must fit a fixed box handle it locally (amount
+// formatters; the fixed-size widget preview).
+final TextStyle kTextStyle = GoogleFonts.manrope(
+  textStyle: const TextStyle(overflow: TextOverflow.visible),
+);
 
 // --------------------------------------------------------------------- dark --
 // Dark colour tokens. Widgets that already read Theme.of(context) / Material
