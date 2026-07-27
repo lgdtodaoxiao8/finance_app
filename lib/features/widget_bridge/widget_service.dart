@@ -8,6 +8,7 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/widget_bridge/widget_snapshot.dart';
 import 'package:finance_app/features/widget_config/data/amount_steps.dart';
+import 'package:finance_app/features/widget_config/data/widget_flow.dart';
 import 'package:finance_app/features/widget_config/data/widget_shortcut.dart';
 import 'package:finance_app/models/main_model.dart';
 // foundation also exports a `Category` annotation; hide it so ours wins.
@@ -172,6 +173,7 @@ class WidgetService {
         final json = _resolveShortcutsJson(
           g.shortcuts,
           byId,
+          g.flow,
           g.flow.isIncome ? incomeMagnitudes : expenseMagnitudes,
         );
         writes.add(
@@ -226,18 +228,26 @@ class WidgetService {
   /// the compact JSON the native widget renders (colour + icon come from the
   /// category, so they always reflect the latest edits).
   ///
+  /// Enforces the hard income/expense typing: a shortcut is only rendered if its
+  /// category's kind matches the group's [flow]. So a widget can never offer —
+  /// and thus never log — a category of the wrong kind, even for a stale group
+  /// that predates typing or one whose membership arrived via sync.
+  ///
   /// "Ask each time" shortcuts also carry the amount-builder [steps]: the user's
   /// custom values if set, otherwise a currency-adaptive ladder derived from how
   /// much they actually spend in that category (see [autoAmountSteps]).
   String _resolveShortcutsJson(
     List<WidgetShortcut> shortcuts,
     Map<int, Category> byId,
+    WidgetFlow flow,
     ({Map<int, double> byCategory, double global}) magnitudes,
   ) {
     final out = <Map<String, dynamic>>[];
     for (final s in shortcuts) {
       final category = byId[s.categoryId];
       if (category == null) continue;
+      // Skip categories of the wrong kind for this widget's flow.
+      if (category.isIncome != flow.isIncome) continue;
       final steps = s.mode == WidgetShortcutMode.open
           ? (s.presets.isNotEmpty
                 ? s.presets
