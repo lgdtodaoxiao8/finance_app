@@ -347,14 +347,22 @@ class _ThisMonthCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            AppLocalizations.of(context).inOutSummary(
-              AmountText.maskString(compactMoney(income, symbol)),
-              AmountText.maskString(compactMoney(expense, symbol)),
-            ),
-            style: const TextStyle(
-              fontSize: 10.5,
-              color: AppColors.textTertiary,
+          // Full breakdown on one line: scales down to fit the tile width rather
+          // than wrapping (which overflowed the fixed tile) or truncating.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              AppLocalizations.of(context).inOutSummary(
+                AmountText.maskString(compactMoney(income, symbol)),
+                AmountText.maskString(compactMoney(expense, symbol)),
+              ),
+              maxLines: 1,
+              softWrap: false,
+              style: const TextStyle(
+                fontSize: 10.5,
+                color: AppColors.textTertiary,
+              ),
             ),
           ),
         ],
@@ -392,11 +400,17 @@ class _TopCategoryCard extends StatelessWidget {
             title: AppLocalizations.of(context).topCategory,
           ),
           const Spacer(),
-          Text(
-            name ?? '—',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              name ?? '—',
+              maxLines: 1,
+              softWrap: false,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           Text(
@@ -463,16 +477,20 @@ class _AiCoachCard extends StatelessWidget {
                 score: showScore ?? -1,
                 dim: !premium,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       premium && score == null ? 'Run' : (showLabel),
-                      style: TextStyle(
-                        fontSize: 14,
+                      // Short AI label ("На правильном пути"): a smaller ring +
+                      // font let it sit on two lines in FULL, no clipping.
+                      style: const TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
+                        height: 1.15,
+                      ).copyWith(
                         color: premium
                             ? Theme.of(context).colorScheme.onSurface
                             : AppColors.textTertiary,
@@ -600,14 +618,14 @@ class _ScoreRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 46,
-      width: 46,
+      height: 42,
+      width: 42,
       child: Stack(
         alignment: Alignment.center,
         children: [
           SizedBox(
-            height: 46,
-            width: 46,
+            height: 42,
+            width: 42,
             child: CircularProgressIndicator(
               value: score < 0 ? 0.75 : score / 100,
               strokeWidth: 5,

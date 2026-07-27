@@ -197,7 +197,7 @@
   "percentOfSpending": "{pct}% of spending",
   "@percentOfSpending": { "placeholders": { "pct": { "type": "int" } } },
   "projectedMonthEnd": "projected month-end",
-  "aiReadOnSpending": "AI read on your spending + a tip",
+  "aiReadOnSpending": "AI read on your spending",
   "tapToAnalyze": "Tap to analyze",
   "previewUnlock": "Preview · unlock",
   "overspending": "Overspending",

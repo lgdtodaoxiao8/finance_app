@@ -502,7 +502,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get projectedMonthEnd => 'прогноз на конец месяца';
 
   @override
-  String get aiReadOnSpending => 'Разбор трат от ИИ + совет';
+  String get aiReadOnSpending => 'Разбор трат от ИИ';
 
   @override
   String get tapToAnalyze => 'Нажмите для анализа';

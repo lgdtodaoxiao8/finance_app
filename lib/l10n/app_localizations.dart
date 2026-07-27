@@ -1049,7 +1049,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiReadOnSpending.
   ///
   /// In en, this message translates to:
-  /// **'AI read on your spending + a tip'**
+  /// **'AI read on your spending'**
   String get aiReadOnSpending;
 
   /// No description provided for @tapToAnalyze.

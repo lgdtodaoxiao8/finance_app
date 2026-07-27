@@ -500,7 +500,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projectedMonthEnd => 'projected month-end';
 
   @override
-  String get aiReadOnSpending => 'AI read on your spending + a tip';
+  String get aiReadOnSpending => 'AI read on your spending';
 
   @override
   String get tapToAnalyze => 'Tap to analyze';

@@ -197,7 +197,7 @@
   "percentOfSpending": "{pct}% всех трат",
   "@percentOfSpending": { "placeholders": { "pct": { "type": "int" } } },
   "projectedMonthEnd": "прогноз на конец месяца",
-  "aiReadOnSpending": "Разбор трат от ИИ + совет",
+  "aiReadOnSpending": "Разбор трат от ИИ",
   "tapToAnalyze": "Нажмите для анализа",
   "previewUnlock": "Превью · открыть",
   "overspending": "Перерасход",
