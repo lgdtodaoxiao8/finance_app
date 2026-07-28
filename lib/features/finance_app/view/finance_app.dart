@@ -12,8 +12,8 @@ import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_interactivity.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
+import 'package:finance_app/features/add_transaction/add_transaction.dart';
 import 'package:finance_app/features/widget_config/data/widget_flow.dart';
-import 'package:finance_app/features/widget_config/view/quick_add_sheet.dart';
 import 'package:finance_app/router/router.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -105,10 +105,11 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
     getIt<SyncService>().sync().catchError((_) {});
   }
 
-  /// Routes a home-widget deep link.
-  /// - `*://quickadd?category=ID[&amount=N]` opens the fast quick-add sheet,
-  ///   prefilled with the category (and any amount already built on the widget).
-  /// - `*://add` opens the full add-transaction screen.
+  /// Routes a home-widget deep link — both open the unified add-transaction
+  /// screen ([AddTransaction]); one mechanism for every entry point.
+  /// - `*://quickadd?category=ID[&amount=N][&flow=income]` opens it pre-filled
+  ///   with the category, any amount already built on the widget, and the flow.
+  /// - `*://add` opens it blank.
   void _handleWidgetLaunch(Uri? uri) {
     if (uri == null) return;
     // Drop the duplicate that arrives from both the initial-launch check and
@@ -128,15 +129,14 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
       final amount = double.tryParse(uri.queryParameters['amount'] ?? '');
       final flow = WidgetFlow.fromName(uri.queryParameters['flow']);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final context = _navigatorKey.currentContext;
-        if (context != null) {
-          QuickAddSheet.show(
-            context,
+        _navigatorKey.currentState?.pushNamed(
+          '/add-transaction',
+          arguments: AddTxArgs(
             categoryId: categoryId,
             amount: amount,
-            flow: flow,
-          );
-        }
+            type: flow.transactionType,
+          ),
+        );
       });
       return;
     }

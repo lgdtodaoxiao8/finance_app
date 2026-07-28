@@ -360,5 +360,12 @@
   "widgetFlowIncome": "Доход",
   "widgetFlowQuestion": "Что записывает виджет?",
   "widgetFlowExpenseHint": "Деньги уходят — трата.",
-  "widgetFlowIncomeHint": "Деньги приходят — зарплата, подарок, возврат."
+  "widgetFlowIncomeHint": "Деньги приходят — зарплата, подарок, возврат.",
+  "today": "сегодня",
+  "txOn": "на",
+  "txFrom": "с",
+  "txTo": "на",
+  "sentenceNote": "заметка",
+  "chooseCategory": "выбрать категорию",
+  "chooseAccount": "выбрать счёт"
 }

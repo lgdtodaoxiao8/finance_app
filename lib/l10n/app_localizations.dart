@@ -1861,6 +1861,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Money coming in — a paycheck, a gift, a refund.'**
   String get widgetFlowIncomeHint;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get today;
+
+  /// No description provided for @txOn.
+  ///
+  /// In en, this message translates to:
+  /// **'on'**
+  String get txOn;
+
+  /// No description provided for @txFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'from'**
+  String get txFrom;
+
+  /// No description provided for @txTo.
+  ///
+  /// In en, this message translates to:
+  /// **'to'**
+  String get txTo;
+
+  /// No description provided for @sentenceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'note'**
+  String get sentenceNote;
+
+  /// No description provided for @chooseCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'choose category'**
+  String get chooseCategory;
+
+  /// No description provided for @chooseAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'choose account'**
+  String get chooseAccount;
 }
 
 class _AppLocalizationsDelegate

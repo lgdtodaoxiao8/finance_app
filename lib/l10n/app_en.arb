@@ -361,5 +361,12 @@
   "widgetFlowIncome": "Income",
   "widgetFlowQuestion": "What should this widget log?",
   "widgetFlowExpenseHint": "Money going out — a spend.",
-  "widgetFlowIncomeHint": "Money coming in — a paycheck, a gift, a refund."
+  "widgetFlowIncomeHint": "Money coming in — a paycheck, a gift, a refund.",
+  "today": "today",
+  "txOn": "on",
+  "txFrom": "from",
+  "txTo": "to",
+  "sentenceNote": "note",
+  "chooseCategory": "choose category",
+  "chooseAccount": "choose account"
 }

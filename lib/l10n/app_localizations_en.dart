@@ -951,4 +951,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get widgetFlowIncomeHint =>
       'Money coming in — a paycheck, a gift, a refund.';
+
+  @override
+  String get today => 'today';
+
+  @override
+  String get txOn => 'on';
+
+  @override
+  String get txFrom => 'from';
+
+  @override
+  String get txTo => 'to';
+
+  @override
+  String get sentenceNote => 'note';
+
+  @override
+  String get chooseCategory => 'choose category';
+
+  @override
+  String get chooseAccount => 'choose account';
 }

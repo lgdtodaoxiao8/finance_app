@@ -19,7 +19,11 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
     this._currencyRepository,
     this._transactionRepository, {
     TransactionDetails? existing,
+    String? presetType,
+    int? presetCategoryId,
   }) : _existing = existing,
+       _presetType = presetType,
+       _presetCategoryId = presetCategoryId,
        super(const AddTransactionState()) {
     load();
   }
@@ -31,6 +35,11 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
 
   /// The transaction being edited, or null when creating a new one.
   final TransactionDetails? _existing;
+
+  /// Prefill for a brand-new transaction opened from a widget quick-add: the
+  /// flow's type ('expense'/'income') and a pre-selected category.
+  final String? _presetType;
+  final int? _presetCategoryId;
 
   Future<void> load() async {
     try {
@@ -63,16 +72,23 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
           ),
         );
       } else {
+        // New transaction — default to expense, or a widget-supplied preset.
+        final type = _presetType ?? 'expense';
         emit(
           state.copyWith(
             status: AddTransactionStatus.ready,
             accounts: accounts,
             categories: categories,
             currencies: currencies,
+            type: type,
+            typeIndex: _typeIndex[type] ?? 0,
             accountId: accounts.isNotEmpty ? accounts.first.id : null,
             accountDestinationId: accounts.length > 1 ? accounts[1].id : null,
-            // Default tab is expense → pick the first expense category.
-            categoryId: _pickCategory('expense', categories),
+            categoryId: _pickCategory(
+              type,
+              categories,
+              preferred: _presetCategoryId,
+            ),
             currencyId: currencies.isNotEmpty ? currencies.first.id : null,
             date: DateTime.now(),
           ),

@@ -955,4 +955,25 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get widgetFlowIncomeHint =>
       'Деньги приходят — зарплата, подарок, возврат.';
+
+  @override
+  String get today => 'сегодня';
+
+  @override
+  String get txOn => 'на';
+
+  @override
+  String get txFrom => 'с';
+
+  @override
+  String get txTo => 'на';
+
+  @override
+  String get sentenceNote => 'заметка';
+
+  @override
+  String get chooseCategory => 'выбрать категорию';
+
+  @override
+  String get chooseAccount => 'выбрать счёт';
 }
