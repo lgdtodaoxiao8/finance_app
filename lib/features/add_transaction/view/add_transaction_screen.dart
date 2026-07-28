@@ -327,26 +327,29 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
       onTap: () => _pickDate(context, state, cubit),
     );
 
+    Widget accountToken(int? id, {required bool destination}) {
+      final acc = _account(state, id);
+      return _token(
+        label: acc?.accountName ?? l.chooseAccount,
+        color: neutral,
+        icon: acc?.accountIcon,
+        iconColor: muted,
+        onTap: () =>
+            _pickAccount(context, state, cubit, destination: destination),
+      );
+    }
+
     List<Widget> line1;
     List<Widget> line2;
 
     if (state.type == 'transfer') {
       line1 = [
         _connector('${l.txFrom} ', muted),
-        _token(
-          label: _account(state, state.accountId)?.accountName ?? l.chooseAccount,
-          color: neutral,
-          onTap: () => _pickAccount(context, state, cubit, destination: false),
-        ),
+        accountToken(state.accountId, destination: false),
       ];
       line2 = [
         _connector('${l.txTo} ', muted),
-        _token(
-          label: _account(state, state.accountDestinationId)?.accountName ??
-              l.chooseAccount,
-          color: neutral,
-          onTap: () => _pickAccount(context, state, cubit, destination: true),
-        ),
+        accountToken(state.accountDestinationId, destination: true),
         _connector(', ', muted),
         dateToken,
       ];
@@ -364,11 +367,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
           : [_connector('${l.txOn} ', muted), categoryToken];
       line2 = [
         _connector('${isIncome ? l.txTo : l.txFrom} ', muted),
-        _token(
-          label: _account(state, state.accountId)?.accountName ?? l.chooseAccount,
-          color: neutral,
-          onTap: () => _pickAccount(context, state, cubit, destination: false),
-        ),
+        accountToken(state.accountId, destination: false),
         _connector(', ', muted),
         dateToken,
       ];
@@ -393,6 +392,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
     required String label,
     required Color color,
     IconData? icon,
+    Color? iconColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -402,7 +402,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 19, color: color),
+            Icon(icon, size: 19, color: iconColor ?? color),
             const SizedBox(width: 3),
           ],
           Text(label, style: _dotted(color)),
