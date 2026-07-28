@@ -7,6 +7,7 @@ import 'package:finance_app/features/ai/data/ai_insight.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Premium AI screen: sends a spending summary to the ai-insights Edge Function
 /// and renders the coach's analysis.
@@ -139,7 +140,7 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
           IconButton(
             tooltip: AppLocalizations.of(context).reAnalyze,
             onPressed: _loading ? null : () => _load(force: true),
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(AppIcons.refresh),
           ),
         ],
       ),
@@ -287,9 +288,9 @@ class _InsightCard extends StatelessWidget {
   };
 
   IconData get _icon => switch (insight.tone) {
-    'positive' => Icons.trending_up_rounded,
-    'warning' => Icons.warning_amber_rounded,
-    _ => Icons.lightbulb_outline_rounded,
+    'positive' => AppIcons.trending_up,
+    'warning' => AppIcons.warning_amber,
+    _ => AppIcons.lightbulb,
   };
 
   @override
@@ -355,7 +356,7 @@ class _TipCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
+          const Icon(AppIcons.auto_awesome, color: Colors.white, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -425,7 +426,7 @@ class _ErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons.cloud_off_rounded,
+              AppIcons.cloud_off,
               size: 40,
               color: AppColors.textTertiary,
             ),

@@ -1,5 +1,6 @@
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// A selling point shown on the paywall.
 class PremiumFeature {
@@ -14,32 +15,32 @@ class PremiumFeature {
 /// the paywall, the settings upgrade card and any teasers stay in sync.
 List<PremiumFeature> premiumFeatures(AppLocalizations l) => [
   PremiumFeature(
-    Icons.psychology_rounded,
+    AppIcons.psychology,
     l.featureAiCoachTitle,
     l.featureAiCoachBody,
   ),
   PremiumFeature(
-    Icons.trending_up_rounded,
+    AppIcons.trending_up,
     l.featureForecastTitle,
     l.featureForecastBody,
   ),
   PremiumFeature(
-    Icons.speed_rounded,
+    AppIcons.speed,
     l.featureHealthTitle,
     l.featureHealthBody,
   ),
   PremiumFeature(
-    Icons.cloud_sync_rounded,
+    AppIcons.cloud_sync,
     l.featureSyncTitle,
     l.featureSyncBody,
   ),
   PremiumFeature(
-    Icons.chat_bubble_outline_rounded,
+    AppIcons.chat_bubble,
     l.featureAskTitle,
     l.featureAskBody,
   ),
   PremiumFeature(
-    Icons.notifications_active_rounded,
+    AppIcons.notifications_active,
     l.featureAlertsTitle,
     l.featureAlertsBody,
   ),

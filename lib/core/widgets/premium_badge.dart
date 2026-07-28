@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Small gradient "PREMIUM" pill used to flag paywalled features and slides.
 class PremiumBadge extends StatelessWidget {
@@ -23,7 +24,7 @@ class PremiumBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.auto_awesome_rounded, size: 13, color: Colors.white),
+          const Icon(AppIcons.auto_awesome, size: 13, color: Colors.white),
           const SizedBox(width: 5),
           Text(
             label,

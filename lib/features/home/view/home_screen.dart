@@ -21,6 +21,7 @@ import 'package:finance_app/theme/theme.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -197,7 +198,7 @@ class _SummaryRow extends StatelessWidget {
               amount: income,
               symbol: symbol,
               color: Colors.green[600]!,
-              icon: Icons.arrow_downward_rounded,
+              icon: AppIcons.arrow_downward,
             ),
           ),
           const SizedBox(width: 10),
@@ -207,7 +208,7 @@ class _SummaryRow extends StatelessWidget {
               amount: expense,
               symbol: symbol,
               color: Theme.of(context).colorScheme.error,
-              icon: Icons.arrow_upward_rounded,
+              icon: AppIcons.arrow_upward,
             ),
           ),
           const SizedBox(width: 10),
@@ -309,7 +310,7 @@ class _SpendingCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 28),
               child: AppEmptyState(
-                icon: Icons.pie_chart_outline_rounded,
+                icon: AppIcons.pie_chart,
                 title: l.noExpenses,
                 subtitle: l.noExpensesSubtitle,
               ),

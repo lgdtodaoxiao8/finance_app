@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Read model for a transaction joined with its account, destination account,
 /// category and currency — the shape returned by the list/analytics JOIN.
@@ -79,7 +80,7 @@ class TransactionDetails extends Equatable {
 
   IconData get categoryIcon => categoryIconCode != null
       ? IconData(categoryIconCode!, fontFamily: 'MaterialIcons')
-      : Icons.help_outline;
+      : AppIcons.help;
 
   factory TransactionDetails.fromMap(Map<String, dynamic> map) {
     final rawDate = map['date'] as String?;

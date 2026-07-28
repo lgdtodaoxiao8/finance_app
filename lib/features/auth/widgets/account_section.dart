@@ -6,6 +6,7 @@ import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Settings card for the account: sign-in prompt, or signed-in identity with a
 /// quiet automatic-sync status. Sync itself is invisible — it runs on its own.
@@ -25,7 +26,7 @@ class AccountSection extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(
-                  Icons.cloud_off_rounded,
+                  AppIcons.cloud_off,
                   color: AppColors.textTertiary,
                 ),
                 const SizedBox(width: 12),
@@ -63,7 +64,7 @@ class _SignedOut extends StatelessWidget {
     return _Card(
       child: Row(
         children: [
-          const Icon(Icons.cloud_sync_rounded, color: AppColors.primary),
+          const Icon(AppIcons.cloud_sync, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -104,7 +105,7 @@ class _SignedIn extends StatelessWidget {
                 radius: 20,
                 backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                 child: const Icon(
-                  Icons.person_rounded,
+                  AppIcons.person,
                   color: AppColors.primary,
                 ),
               ),
@@ -151,7 +152,7 @@ class _SignedIn extends StatelessWidget {
                     )
                   else
                     const Icon(
-                      Icons.cloud_done_rounded,
+                      AppIcons.cloud_done,
                       size: 20,
                       color: AppColors.positive,
                     ),

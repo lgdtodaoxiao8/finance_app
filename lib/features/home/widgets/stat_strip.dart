@@ -10,6 +10,7 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// A horizontally-scrollable strip of at-a-glance stat chips for this month.
 /// Free, local. Designed to invite a sideways scroll.
@@ -85,7 +86,7 @@ class _StatStripState extends State<StatStrip> {
     setState(() {
       _stats = [
         _Stat(
-          Icons.savings_rounded,
+          AppIcons.savings,
           savingsRate == null ? '—' : '$savingsRate%',
           _StatKind.saved,
           savingsRate != null && savingsRate >= 0
@@ -93,25 +94,25 @@ class _StatStripState extends State<StatStrip> {
               : AppColors.negative,
         ),
         _Stat(
-          Icons.today_rounded,
+          AppIcons.today,
           AmountText.maskString(compactMoney(avgPerDay, _symbol)),
           _StatKind.perDay,
           AppColors.primary,
         ),
         _Stat(
-          Icons.local_fire_department_rounded,
+          AppIcons.local_fire_department,
           AmountText.maskString(compactMoney(biggest, _symbol)),
           _StatKind.biggest,
           const Color(0xFFF5A623),
         ),
         _Stat(
-          Icons.receipt_long_rounded,
+          AppIcons.receipt_long,
           '$count',
           _StatKind.thisMonth,
           const Color(0xFF7C3AED),
         ),
         _Stat(
-          Icons.event_available_rounded,
+          AppIcons.event_available,
           '${activeDays.length}',
           _StatKind.activeDays,
           AppColors.positive,

@@ -4,6 +4,7 @@ import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// User preferences card: theme, language, start of week and privacy. Every
 /// change is written through [SettingsService], so it persists locally and
@@ -23,7 +24,7 @@ class PreferencesSection extends StatelessWidget {
           title: l.sectionPreferences,
           children: [
             _Row(
-              icon: Icons.brightness_6_rounded,
+              icon: AppIcons.brightness_6,
               label: l.theme,
               child: _Segmented<AppThemeMode>(
                 value: s.themeMode,
@@ -36,7 +37,7 @@ class PreferencesSection extends StatelessWidget {
               ),
             ),
             _Row(
-              icon: Icons.translate_rounded,
+              icon: AppIcons.translate,
               label: l.language,
               child: _Segmented<String?>(
                 value: s.languageCode,
@@ -49,7 +50,7 @@ class PreferencesSection extends StatelessWidget {
               ),
             ),
             _Row(
-              icon: Icons.calendar_view_week_rounded,
+              icon: AppIcons.calendar_view_week,
               label: l.weekStart,
               child: _Segmented<bool>(
                 value: s.weekStartsMonday,
@@ -64,7 +65,7 @@ class PreferencesSection extends StatelessWidget {
               value: s.hideAmounts,
               onChanged: service.setHideAmounts,
               contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.visibility_off_rounded),
+              secondary: const Icon(AppIcons.visibility_off),
               title: Text(
                 l.hideAmounts,
                 style: const TextStyle(

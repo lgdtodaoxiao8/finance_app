@@ -4,6 +4,7 @@ import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 class SetBaseCurrency extends StatefulWidget {
   const SetBaseCurrency({super.key});
@@ -184,7 +185,7 @@ class _SaveButton extends StatelessWidget {
               )
             : state.success
             ? const Icon(
-                Icons.check_rounded,
+                AppIcons.check,
                 key: ValueKey('success'),
                 color: Colors.white,
               )

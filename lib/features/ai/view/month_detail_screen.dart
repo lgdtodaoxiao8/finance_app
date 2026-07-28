@@ -7,6 +7,7 @@ import 'package:finance_app/features/ai/view/insight_widgets.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Detail for the free "This month" card: income/expense/net, how it compares
 /// to last month, savings rate, and a category breakdown. All local, no API.
@@ -210,7 +211,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
       child: Row(
         children: [
           Icon(
-            up ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+            up ? AppIcons.trending_up : AppIcons.trending_down,
             color: up ? AppColors.negative : AppColors.positive,
           ),
           const SizedBox(width: 12),

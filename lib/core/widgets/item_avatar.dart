@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// The app-wide visual for a user-created item (category, account): the icon
 /// drawn in its colour on a soft tint of the SAME colour — one colour drives
@@ -44,7 +45,7 @@ class ItemAvatar extends StatelessWidget {
               ),
             )
           : Icon(
-              icon ?? Icons.category_rounded,
+              icon ?? AppIcons.category,
               size: diameter * 0.5,
               color: color,
             ),

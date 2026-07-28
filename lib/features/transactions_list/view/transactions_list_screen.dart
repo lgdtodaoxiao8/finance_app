@@ -11,6 +11,7 @@ import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 class TransactionsListScreen extends StatelessWidget {
   const TransactionsListScreen({super.key});
@@ -60,7 +61,7 @@ class _TransactionsListView extends StatelessWidget {
             // screen writes a transaction.
             onPressed: () =>
                 Navigator.of(context).pushNamed('/add-transaction'),
-            icon: const Icon(Icons.add_circle_outline_rounded),
+            icon: const Icon(AppIcons.add_circle),
           ),
         ],
       ),
@@ -110,7 +111,7 @@ class _TransactionsListView extends StatelessWidget {
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: AppEmptyState(
-                    icon: Icons.receipt_long_rounded,
+                    icon: AppIcons.receipt_long,
                     title: l.noTransactions,
                     subtitle: l.nothingInPeriod,
                   ),

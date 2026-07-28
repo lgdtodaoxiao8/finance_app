@@ -7,6 +7,7 @@ import 'package:finance_app/features/widget_config/view/widget_config_screen.dar
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Lists the quick-add widget groups (named category sets). Each home-screen
 /// widget instance binds to one group via iOS "Edit Widget", so two widgets
@@ -93,7 +94,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
                   backgroundColor: AppColors.negative.withValues(alpha: 0.12),
                   // Up arrow = expense (money out), matching the app.
                   child: const Icon(
-                    Icons.arrow_upward_rounded,
+                    AppIcons.arrow_upward,
                     color: AppColors.negative,
                   ),
                 ),
@@ -106,7 +107,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
                   backgroundColor: AppColors.positive.withValues(alpha: 0.14),
                   // Down arrow = income (money in), matching the app.
                   child: const Icon(
-                    Icons.arrow_downward_rounded,
+                    AppIcons.arrow_downward,
                     color: AppColors.positive,
                   ),
                 ),
@@ -235,7 +236,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: _addGroup,
-            icon: const Icon(Icons.add),
+            icon: const Icon(AppIcons.add),
             label: Text(l.widgetAddGroup),
           ),
         ],
@@ -256,7 +257,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
         backgroundColor: accent.withValues(alpha: isIncome ? 0.14 : 0.12),
         child: Icon(
           // Down arrow = income (money in); expense keeps the neutral glyph.
-          isIncome ? Icons.arrow_downward_rounded : Icons.widgets_rounded,
+          isIncome ? AppIcons.arrow_downward : AppIcons.widgets,
           size: 18,
           color: accent,
         ),
@@ -279,15 +280,15 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
           // The default group is always available and can't be renamed/deleted.
           if (!isDefault) ...[
             IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 20),
+              icon: const Icon(AppIcons.edit, size: 20),
               onPressed: () => _rename(g),
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, size: 20),
+              icon: const Icon(AppIcons.delete, size: 20),
               onPressed: () => _delete(g),
             ),
           ],
-          const Icon(Icons.chevron_right_rounded),
+          const Icon(AppIcons.chevron_right),
         ],
       ),
     );

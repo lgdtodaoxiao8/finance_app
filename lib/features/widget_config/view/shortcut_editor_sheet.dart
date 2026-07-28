@@ -5,6 +5,7 @@ import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Configures one widget shortcut: its behavior (fixed / presets / open) and
 /// the amount(s) involved. Returns the edited [WidgetShortcut], or null on
@@ -295,7 +296,7 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
             const SizedBox(width: 8),
             IconButton.filledTonal(
               onPressed: _presetsFull ? null : _addPreset,
-              icon: const Icon(Icons.add),
+              icon: const Icon(AppIcons.add),
             ),
           ],
         ),
@@ -396,7 +397,7 @@ class _ModeCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Icon(
-                selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+                selected ? AppIcons.check_circle : AppIcons.circle,
                 size: 20,
                 color: selected
                     ? theme.colorScheme.primary

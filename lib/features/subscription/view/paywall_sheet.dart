@@ -5,6 +5,7 @@ import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Bottom sheet that pitches premium and sends the user to the web to buy.
 ///
@@ -181,7 +182,7 @@ class _Footer extends StatelessWidget {
             height: 54,
             child: ElevatedButton.icon(
               onPressed: onUpgrade,
-              icon: const Icon(Icons.open_in_new_rounded, size: 20),
+              icon: const Icon(AppIcons.open_in_new, size: 20),
               label: Text(
                 AppLocalizations.of(context).continueOnWeb,
                 style: const TextStyle(

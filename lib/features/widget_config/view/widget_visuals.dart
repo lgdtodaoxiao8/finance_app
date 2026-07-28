@@ -9,6 +9,7 @@ library;
 
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// The pleasant green of the income widget's add "+" and its in-app flow badge
 /// (mirrors Swift's `incomeGreen`). The expense add "+" uses the accent (blue).
@@ -93,7 +94,7 @@ class ModeCircle extends StatelessWidget {
                 color: fill,
                 border: Border.all(color: surface, width: 1.5),
               ),
-              child: Icon(Icons.add, size: b * 0.62, color: Colors.white),
+              child: Icon(AppIcons.add, size: b * 0.62, color: Colors.white),
             ),
           ),
         ];

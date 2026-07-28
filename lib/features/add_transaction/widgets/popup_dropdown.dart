@@ -1,6 +1,7 @@
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 enum Tables {
   currency,
@@ -166,7 +167,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
           child: Row(
             children: [
               Icon(
-                Icons.add_circle_outline_rounded,
+                AppIcons.add_circle,
                 size: 25,
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -299,7 +300,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                         ),
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down_rounded, size: 25),
+                    const Icon(AppIcons.arrow_drop_down, size: 25),
                     const SizedBox(width: 10),
                   ],
                 ),

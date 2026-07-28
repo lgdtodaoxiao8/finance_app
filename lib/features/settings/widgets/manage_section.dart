@@ -1,6 +1,7 @@
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// A white card with a titled header, an "add" action, and a list of rows
 /// (or a loading/empty placeholder). Shared by the account/category sections.
@@ -48,7 +49,7 @@ class ManageSection extends StatelessWidget {
                 tooltip: AppLocalizations.of(context).add,
                 onPressed: onAdd,
                 icon: Icon(
-                  Icons.add_circle_outline_rounded,
+                  AppIcons.add_circle,
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
@@ -119,7 +120,7 @@ class ManageTile extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               onPressed: onDelete,
               icon: Icon(
-                Icons.delete_outline_rounded,
+                AppIcons.delete,
                 size: 22,
                 color: Colors.grey[500],
               ),
