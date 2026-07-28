@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 class PopupDropdownSimple extends StatelessWidget {
   const PopupDropdownSimple({
@@ -119,7 +120,7 @@ class PopupDropdownSimple extends StatelessWidget {
                       ),
                     ),
 
-                    const Icon(Icons.arrow_drop_down_rounded, size: 25),
+                    const Icon(AppIcons.arrow_drop_down, size: 25),
                     const SizedBox(width: 10),
                   ],
                 ),

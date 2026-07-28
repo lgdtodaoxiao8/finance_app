@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/sync/sync_metadata.dart';
 import 'package:finance_app/models/main_model.dart';
-import 'package:flutter/material.dart';
 import 'package:finance_app/core/app_icons.dart';
 
 abstract class AccountRepository {
@@ -39,9 +38,8 @@ class DriftAccountRepository implements AccountRepository {
     accountId: row.id,
     accountName: row.name ?? '',
     currencyId: row.currencyId ?? 0,
-    accountIcon: IconData(
+    accountIcon: AppIcons.data(
       row.iconCodePoint ?? AppIcons.account_balance_wallet.codePoint,
-      fontFamily: 'MaterialIcons',
     ),
   );
 

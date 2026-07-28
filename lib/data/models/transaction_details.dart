@@ -79,7 +79,7 @@ class TransactionDetails extends Equatable {
       : Colors.white;
 
   IconData get categoryIcon => categoryIconCode != null
-      ? IconData(categoryIconCode!, fontFamily: 'MaterialIcons')
+      ? AppIcons.data(categoryIconCode!)
       : AppIcons.help;
 
   factory TransactionDetails.fromMap(Map<String, dynamic> map) {

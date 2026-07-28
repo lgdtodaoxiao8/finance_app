@@ -1,5 +1,6 @@
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 extension BoolToInt on bool {
   int toInt() => this ? 1 : 0;
@@ -181,11 +182,7 @@ class Account implements RootData {
     accountId: map['id'],
     accountName: map['name'],
     currencyId: map['currency_id'],
-    accountIcon: IconData(
-      map['icon_code_point'],
-      fontFamily: 'MaterialIcons',
-      fontPackage: null,
-    ),
+    accountIcon: AppIcons.data(map['icon_code_point']),
   );
 }
 
@@ -290,11 +287,7 @@ class Category implements RootData {
     categoryName: map['name'],
     categoryColor: Color(map['color']),
     categoryIconColor: Color(map['icon_color']),
-    categoryIcon: IconData(
-      map['icon_code_point'],
-      fontFamily: 'MaterialIcons',
-      fontPackage: null,
-    ),
+    categoryIcon: AppIcons.data(map['icon_code_point']),
     categoryKind: map['kind'] as String? ?? 'expense',
   );
 }

@@ -44,9 +44,8 @@ class DriftCategoryRepository implements CategoryRepository {
     categoryName: row.name ?? '',
     categoryColor: Color(row.color ?? Colors.grey.toARGB32()),
     categoryIconColor: Color(row.iconColor ?? Colors.white.toARGB32()),
-    categoryIcon: IconData(
+    categoryIcon: AppIcons.data(
       row.iconCodePoint ?? AppIcons.help.codePoint,
-      fontFamily: 'MaterialIcons',
     ),
     categoryKind: row.kind,
   );

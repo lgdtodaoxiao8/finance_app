@@ -107,11 +107,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                       )
                     else if (widget.tableType == Tables.account)
                       Icon(
-                        IconData(
-                          value['icon_code_point'],
-                          fontFamily: 'MaterialIcons',
-                          fontPackage: null,
-                        ),
+                        AppIcons.data(value['icon_code_point']),
                         size: 25,
                         color: const Color(0xFF40434A),
                       )
@@ -126,11 +122,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                         ),
                         padding: const EdgeInsets.all(8),
                         child: Icon(
-                          IconData(
-                            value['icon_code_point'],
-                            fontFamily: 'MaterialIcons',
-                            fontPackage: null,
-                          ),
+                          AppIcons.data(value['icon_code_point']),
                           size: 25,
                           color: Color(value['color']),
                         ),
@@ -260,11 +252,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                             )
                           : widget.tableType == Tables.account
                           ? Icon(
-                              IconData(
-                                selected['icon_code_point'],
-                                fontFamily: 'MaterialIcons',
-                                fontPackage: null,
-                              ),
+                              AppIcons.data(selected['icon_code_point']),
                               size: 25,
                               color: const Color(0xFF40434A),
                             )
@@ -278,11 +266,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                               padding: const EdgeInsets.all(7),
                               margin: const EdgeInsets.only(top: 4),
                               child: Icon(
-                                IconData(
-                                  selected['icon_code_point'],
-                                  fontFamily: 'MaterialIcons',
-                                  fontPackage: null,
-                                ),
+                                AppIcons.data(selected['icon_code_point']),
                                 size: 23,
                                 color: Color(selected['color']),
                               ),

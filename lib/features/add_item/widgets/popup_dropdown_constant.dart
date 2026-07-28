@@ -1,6 +1,7 @@
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 class PopupDropdownConstant extends StatefulWidget {
   const PopupDropdownConstant({
@@ -247,7 +248,7 @@ class _PopupDropdownConstantState extends State<PopupDropdownConstant> {
                       const Spacer(),
                     ],
 
-                    const Icon(Icons.arrow_drop_down_rounded, size: 25),
+                    const Icon(AppIcons.arrow_drop_down, size: 25),
                     const SizedBox(width: 10),
                   ],
                 ),

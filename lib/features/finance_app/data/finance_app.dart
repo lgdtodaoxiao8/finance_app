@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:finance_app/assets/currencies/currencies_list.dart';
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/di/injector.dart';
-import 'package:flutter/material.dart';
+import 'package:finance_app/core/app_icons.dart';
 
 /// Seeds the currency list and a couple of default categories on first run.
 ///
@@ -37,7 +37,7 @@ Future<void> seedData() async {
             name: const Value('Food'),
             color: const Value(4282682111),
             iconColor: const Value(4278190080),
-            iconCodePoint: Value(Icons.fastfood_rounded.codePoint),
+            iconCodePoint: Value(AppIcons.fastfood.codePoint),
             kind: const Value('expense'),
           ),
         )
@@ -47,7 +47,7 @@ Future<void> seedData() async {
             name: const Value('Salary'),
             color: const Value(4294953540),
             iconColor: const Value(4278190080),
-            iconCodePoint: Value(Icons.attach_money_rounded.codePoint),
+            iconCodePoint: Value(AppIcons.attach_money.codePoint),
             kind: const Value('income'),
           ),
         );
