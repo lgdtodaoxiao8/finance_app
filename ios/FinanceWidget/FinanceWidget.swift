@@ -651,7 +651,7 @@ struct Shortcut: Identifiable {
   /// light ones) — computed from the fill, NOT the category's icon colour,
   /// which is free-form and often clashes (e.g. black on saturated blue).
   let onColor: Color
-  /// MaterialIcons codepoint of the category icon.
+  /// Material Symbols codepoint of the category icon.
   let iconCode: Int
   let mode: String  // "fixed" | "presets" | "open"
   let amount: Double?
@@ -1011,16 +1011,18 @@ struct QuickIncomeProvider: AppIntentTimelineProvider {
 
 // MARK: Quick-add UI
 
-/// Registers the bundled MaterialIcons font once (UIAppFonts is unreliable in
-/// widget extensions, so fall back to manual CoreText registration).
-private let materialIconsAvailable: Bool = {
-  if UIFont(name: "MaterialIcons-Regular", size: 12) != nil { return true }
+/// Registers the bundled Material Symbols Rounded font once (UIAppFonts is
+/// unreliable in widget extensions, so fall back to manual CoreText
+/// registration). It's a variable font whose default instance is FILL 0, i.e.
+/// the rounded-outlined style the app uses.
+private let symbolsFontAvailable: Bool = {
+  if UIFont(name: "MaterialSymbolsRounded-Regular", size: 12) != nil { return true }
   guard
     let url = Bundle.main.url(
-      forResource: "MaterialIcons-Regular", withExtension: "otf")
+      forResource: "MaterialSymbolsRounded", withExtension: "ttf")
   else { return false }
   CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
-  return UIFont(name: "MaterialIcons-Regular", size: 12) != nil
+  return UIFont(name: "MaterialSymbolsRounded-Regular", size: 12) != nil
 }()
 
 /// A Material icon glyph from the bundled font; falls back to the item's
@@ -1031,11 +1033,11 @@ struct Glyph: View {
   let size: CGFloat
 
   var body: some View {
-    if materialIconsAvailable, iconCode > 0,
+    if symbolsFontAvailable, iconCode > 0,
       let scalar = UnicodeScalar(iconCode)
     {
       Text(String(Character(scalar)))
-        .font(.custom("MaterialIcons-Regular", size: size))
+        .font(.custom("MaterialSymbolsRounded-Regular", size: size))
     } else {
       Text(String(fallback.prefix(1)).uppercased())
         .font(.system(size: size * 0.78, weight: .semibold, design: .rounded))
