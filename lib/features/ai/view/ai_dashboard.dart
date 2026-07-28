@@ -18,7 +18,7 @@ import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Home "Insights" section: a grid of at-a-glance cards. Everything numeric is
 /// computed locally for this month (free, instant); the AI Coach card shows a
@@ -138,7 +138,7 @@ class _AiDashboardState extends State<AiDashboard> {
             Row(
               children: [
                 const Icon(
-                  AppIcons.auto_awesome,
+                  PhosphorIconsFill.sparkle,
                   size: 18,
                   color: AppColors.primary,
                 ),
@@ -272,7 +272,7 @@ class _CardHead extends StatelessWidget {
         ),
         if (locked)
           const Icon(
-            AppIcons.lock,
+            PhosphorIconsFill.lock,
             size: 14,
             color: AppColors.textTertiary,
           ),
@@ -310,7 +310,7 @@ class _ThisMonthCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardHead(
-            icon: AppIcons.calendar_today,
+            icon: PhosphorIconsFill.calendarBlank,
             accent: AppColors.primary,
             title: AppLocalizations.of(context).thisMonthTitle,
           ),
@@ -396,7 +396,7 @@ class _TopCategoryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardHead(
-            icon: AppIcons.donut_large,
+            icon: PhosphorIconsFill.chartDonut,
             accent: color,
             title: AppLocalizations.of(context).topCategory,
           ),
@@ -466,7 +466,7 @@ class _AiCoachCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardHead(
-            icon: AppIcons.psychology,
+            icon: PhosphorIconsFill.brain,
             accent: AppColors.primary,
             title: AppLocalizations.of(context).aiCoach,
             locked: !premium,
@@ -549,7 +549,7 @@ class _ForecastCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _CardHead(
-            icon: AppIcons.trending_up,
+            icon: PhosphorIconsFill.trendUp,
             accent: AppColors.positive,
             title: AppLocalizations.of(context).forecast,
             locked: !premium,
@@ -558,7 +558,7 @@ class _ForecastCard extends StatelessWidget {
           Row(
             children: [
               Icon(
-                positive ? AppIcons.north_east : AppIcons.south_east,
+                positive ? PhosphorIconsFill.arrowUpRight : PhosphorIconsFill.arrowDownRight,
                 size: 20,
                 color: color,
               ),

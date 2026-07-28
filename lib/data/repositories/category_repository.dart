@@ -4,6 +4,7 @@ import 'package:finance_app/core/sync/sync_metadata.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 abstract class CategoryRepository {
   Future<List<Category>> getAll();
@@ -44,8 +45,8 @@ class DriftCategoryRepository implements CategoryRepository {
     categoryName: row.name ?? '',
     categoryColor: Color(row.color ?? Colors.grey.toARGB32()),
     categoryIconColor: Color(row.iconColor ?? Colors.white.toARGB32()),
-    categoryIcon: AppIcons.data(
-      row.iconCodePoint ?? AppIcons.help.codePoint,
+    categoryIcon: appIconData(
+      row.iconCodePoint ?? PhosphorIconsFill.question.codePoint,
     ),
     categoryKind: row.kind,
   );

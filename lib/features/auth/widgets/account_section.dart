@@ -6,7 +6,7 @@ import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Settings card for the account: sign-in prompt, or signed-in identity with a
 /// quiet automatic-sync status. Sync itself is invisible — it runs on its own.
@@ -26,7 +26,7 @@ class AccountSection extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(
-                  AppIcons.cloud_off,
+                  PhosphorIconsFill.cloudSlash,
                   color: AppColors.textTertiary,
                 ),
                 const SizedBox(width: 12),
@@ -64,7 +64,7 @@ class _SignedOut extends StatelessWidget {
     return _Card(
       child: Row(
         children: [
-          const Icon(AppIcons.cloud_sync, color: AppColors.primary),
+          const Icon(PhosphorIconsFill.cloudArrowUp, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -105,7 +105,7 @@ class _SignedIn extends StatelessWidget {
                 radius: 20,
                 backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                 child: const Icon(
-                  AppIcons.person,
+                  PhosphorIconsFill.user,
                   color: AppColors.primary,
                 ),
               ),
@@ -152,7 +152,7 @@ class _SignedIn extends StatelessWidget {
                     )
                   else
                     const Icon(
-                      AppIcons.cloud_done,
+                      PhosphorIconsFill.cloudCheck,
                       size: 20,
                       color: AppColors.positive,
                     ),

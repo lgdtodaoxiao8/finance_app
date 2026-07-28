@@ -10,7 +10,7 @@ import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Creates an account — or edits one when it's passed as the route argument.
 /// Live preview header (avatar + name), currency, icon — the same flow
@@ -94,7 +94,7 @@ class _AddAccountViewState extends State<_AddAccountView> {
       builder: (context, state) {
         final cubit = context.read<AddAccountCubit>();
         final accent = Theme.of(context).colorScheme.primary;
-        final icon = state.icon ?? AppIcons.account_balance_wallet;
+        final icon = state.icon ?? PhosphorIconsFill.wallet;
         final editing = widget.initial != null;
         return Scaffold(
           appBar: AppBar(

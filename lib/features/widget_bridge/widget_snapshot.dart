@@ -14,7 +14,7 @@ class WidgetCategory {
   final double value;
   final int colorValue;
 
-  /// Material Symbols codepoint — the widget renders the real glyph.
+  /// Phosphor icon codepoint — the widget renders the real glyph.
   final int iconCode;
 }
 

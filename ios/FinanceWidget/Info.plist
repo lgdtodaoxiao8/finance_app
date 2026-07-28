@@ -10,7 +10,7 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialIcons-Regular.otf</string>
-		<string>MaterialSymbolsRounded.ttf</string>
+		<string>Phosphor-Fill.ttf</string>
 	</array>
 </dict>
 </plist>

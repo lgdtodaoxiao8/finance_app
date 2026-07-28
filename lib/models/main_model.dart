@@ -182,7 +182,7 @@ class Account implements RootData {
     accountId: map['id'],
     accountName: map['name'],
     currencyId: map['currency_id'],
-    accountIcon: AppIcons.data(map['icon_code_point']),
+    accountIcon: appIconData(map['icon_code_point']),
   );
 }
 
@@ -287,7 +287,7 @@ class Category implements RootData {
     categoryName: map['name'],
     categoryColor: Color(map['color']),
     categoryIconColor: Color(map['icon_color']),
-    categoryIcon: AppIcons.data(map['icon_code_point']),
+    categoryIcon: appIconData(map['icon_code_point']),
     categoryKind: map['kind'] as String? ?? 'expense',
   );
 }

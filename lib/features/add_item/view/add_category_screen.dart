@@ -9,7 +9,7 @@ import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Creates a category — or edits one when it's passed as the route argument.
 /// One colour drives the whole look: the icon takes it saturated, the circle
@@ -112,12 +112,12 @@ class _AddCategoryViewState extends State<_AddCategoryView> {
                           ButtonSegment(
                             value: 'expense',
                             label: Text(l.expense),
-                            icon: const Icon(AppIcons.arrow_upward),
+                            icon: const Icon(PhosphorIconsFill.arrowUp),
                           ),
                           ButtonSegment(
                             value: 'income',
                             label: Text(l.income),
-                            icon: const Icon(AppIcons.arrow_downward),
+                            icon: const Icon(PhosphorIconsFill.arrowDown),
                           ),
                         ],
                         selected: {state.kind},

@@ -5,7 +5,7 @@ import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Configures one widget shortcut: its behavior (fixed / presets / open) and
 /// the amount(s) involved. Returns the edited [WidgetShortcut], or null on
@@ -296,7 +296,7 @@ class _ShortcutEditorSheetState extends State<ShortcutEditorSheet> {
             const SizedBox(width: 8),
             IconButton.filledTonal(
               onPressed: _presetsFull ? null : _addPreset,
-              icon: const Icon(AppIcons.add),
+              icon: const Icon(PhosphorIconsFill.plus),
             ),
           ],
         ),
@@ -397,7 +397,7 @@ class _ModeCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Icon(
-                selected ? AppIcons.check_circle : AppIcons.circle,
+                selected ? PhosphorIconsFill.checkCircle : PhosphorIconsFill.circle,
                 size: 20,
                 color: selected
                     ? theme.colorScheme.primary

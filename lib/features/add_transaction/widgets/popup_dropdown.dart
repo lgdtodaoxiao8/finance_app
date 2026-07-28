@@ -2,6 +2,7 @@ import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 enum Tables {
   currency,
@@ -107,7 +108,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                       )
                     else if (widget.tableType == Tables.account)
                       Icon(
-                        AppIcons.data(value['icon_code_point']),
+                        appIconData(value['icon_code_point']),
                         size: 25,
                         color: const Color(0xFF40434A),
                       )
@@ -122,7 +123,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                         ),
                         padding: const EdgeInsets.all(8),
                         child: Icon(
-                          AppIcons.data(value['icon_code_point']),
+                          appIconData(value['icon_code_point']),
                           size: 25,
                           color: Color(value['color']),
                         ),
@@ -159,7 +160,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
           child: Row(
             children: [
               Icon(
-                AppIcons.add_circle,
+                PhosphorIconsFill.plusCircle,
                 size: 25,
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -252,7 +253,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                             )
                           : widget.tableType == Tables.account
                           ? Icon(
-                              AppIcons.data(selected['icon_code_point']),
+                              appIconData(selected['icon_code_point']),
                               size: 25,
                               color: const Color(0xFF40434A),
                             )
@@ -266,7 +267,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                               padding: const EdgeInsets.all(7),
                               margin: const EdgeInsets.only(top: 4),
                               child: Icon(
-                                AppIcons.data(selected['icon_code_point']),
+                                appIconData(selected['icon_code_point']),
                                 size: 23,
                                 color: Color(selected['color']),
                               ),
@@ -284,7 +285,7 @@ class _PopupDropdownState extends State<PopupDropdown> {
                         ),
                       ),
                     ),
-                    const Icon(AppIcons.arrow_drop_down, size: 25),
+                    const Icon(PhosphorIconsFill.caretDown, size: 25),
                     const SizedBox(width: 10),
                   ],
                 ),

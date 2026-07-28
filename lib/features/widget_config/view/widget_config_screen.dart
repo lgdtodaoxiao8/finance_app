@@ -13,7 +13,7 @@ import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 String _shortAmount(double v) => v == v.roundToDouble()
     ? v.toStringAsFixed(0)
@@ -226,7 +226,7 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: _addCategory,
-                  icon: const Icon(AppIcons.add),
+                  icon: const Icon(PhosphorIconsFill.plus),
                   label: Text(l.widgetAddCategory),
                 ),
               ],
@@ -265,7 +265,7 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
         onTap: () => _editShortcut(shortcut, isNew: false),
         leading: ModeCircle(
           fill: fill,
-          icon: category?.categoryIcon ?? AppIcons.category,
+          icon: category?.categoryIcon ?? PhosphorIconsFill.squaresFour,
           diameter: 40,
           badge: switch (shortcut.mode) {
             WidgetShortcutMode.fixed => ModeBadge.amount,
@@ -293,12 +293,12 @@ class _WidgetConfigScreenState extends State<WidgetConfigScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(AppIcons.delete),
+              icon: const Icon(PhosphorIconsFill.trash),
               onPressed: () => _remove(shortcut),
             ),
             ReorderableDragStartListener(
               index: index,
-              child: const Icon(AppIcons.drag_handle),
+              child: const Icon(PhosphorIconsFill.dotsSixVertical),
             ),
           ],
         ),
@@ -433,7 +433,7 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
         children: [
           ModeCircle(
             fill: fill,
-            icon: category?.categoryIcon ?? AppIcons.category,
+            icon: category?.categoryIcon ?? PhosphorIconsFill.squaresFour,
             diameter: _circle,
             badge: badge,
             amountLabel: s.mode == WidgetShortcutMode.fixed && s.amount != null
@@ -486,7 +486,7 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
             shape: BoxShape.circle,
             color: accent.withValues(alpha: 0.15),
           ),
-          child: Icon(AppIcons.add, size: _circle * 0.46, color: accent),
+          child: Icon(PhosphorIconsFill.plus, size: _circle * 0.46, color: accent),
         ),
         const SizedBox(height: 4),
         Text(
@@ -560,7 +560,7 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
           children: [
             ModeCircle(
               fill: fill,
-              icon: category?.categoryIcon ?? AppIcons.category,
+              icon: category?.categoryIcon ?? PhosphorIconsFill.squaresFour,
               diameter: 34,
               badge: ModeBadge.none,
             ),
@@ -650,7 +650,7 @@ class _IncomeFlowBadge extends StatelessWidget {
         children: [
           // Down arrow = income (money in), consistent with the app's cards.
           const Icon(
-            AppIcons.arrow_downward,
+            PhosphorIconsFill.arrowDown,
             size: 15,
             color: kIncomeGreen,
           ),

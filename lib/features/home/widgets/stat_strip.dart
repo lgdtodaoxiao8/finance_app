@@ -10,7 +10,7 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// A horizontally-scrollable strip of at-a-glance stat chips for this month.
 /// Free, local. Designed to invite a sideways scroll.
@@ -86,7 +86,7 @@ class _StatStripState extends State<StatStrip> {
     setState(() {
       _stats = [
         _Stat(
-          AppIcons.savings,
+          PhosphorIconsFill.piggyBank,
           savingsRate == null ? '—' : '$savingsRate%',
           _StatKind.saved,
           savingsRate != null && savingsRate >= 0
@@ -94,25 +94,25 @@ class _StatStripState extends State<StatStrip> {
               : AppColors.negative,
         ),
         _Stat(
-          AppIcons.today,
+          PhosphorIconsFill.calendarDots,
           AmountText.maskString(compactMoney(avgPerDay, _symbol)),
           _StatKind.perDay,
           AppColors.primary,
         ),
         _Stat(
-          AppIcons.local_fire_department,
+          PhosphorIconsFill.fire,
           AmountText.maskString(compactMoney(biggest, _symbol)),
           _StatKind.biggest,
           const Color(0xFFF5A623),
         ),
         _Stat(
-          AppIcons.receipt_long,
+          PhosphorIconsFill.receipt,
           '$count',
           _StatKind.thisMonth,
           const Color(0xFF7C3AED),
         ),
         _Stat(
-          AppIcons.event_available,
+          PhosphorIconsFill.calendarCheck,
           '${activeDays.length}',
           _StatKind.activeDays,
           AppColors.positive,

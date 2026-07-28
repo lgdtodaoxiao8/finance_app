@@ -4,7 +4,7 @@ import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// User preferences card: theme, language, start of week and privacy. Every
 /// change is written through [SettingsService], so it persists locally and
@@ -24,7 +24,7 @@ class PreferencesSection extends StatelessWidget {
           title: l.sectionPreferences,
           children: [
             _Row(
-              icon: AppIcons.brightness_6,
+              icon: PhosphorIconsFill.circleHalf,
               label: l.theme,
               child: _Segmented<AppThemeMode>(
                 value: s.themeMode,
@@ -37,7 +37,7 @@ class PreferencesSection extends StatelessWidget {
               ),
             ),
             _Row(
-              icon: AppIcons.translate,
+              icon: PhosphorIconsFill.translate,
               label: l.language,
               child: _Segmented<String?>(
                 value: s.languageCode,
@@ -50,7 +50,7 @@ class PreferencesSection extends StatelessWidget {
               ),
             ),
             _Row(
-              icon: AppIcons.calendar_view_week,
+              icon: PhosphorIconsFill.calendar,
               label: l.weekStart,
               child: _Segmented<bool>(
                 value: s.weekStartsMonday,
@@ -65,7 +65,7 @@ class PreferencesSection extends StatelessWidget {
               value: s.hideAmounts,
               onChanged: service.setHideAmounts,
               contentPadding: EdgeInsets.zero,
-              secondary: const Icon(AppIcons.visibility_off),
+              secondary: const Icon(PhosphorIconsFill.eyeSlash),
               title: Text(
                 l.hideAmounts,
                 style: const TextStyle(

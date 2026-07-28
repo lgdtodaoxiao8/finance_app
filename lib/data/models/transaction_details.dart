@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Read model for a transaction joined with its account, destination account,
 /// category and currency — the shape returned by the list/analytics JOIN.
@@ -79,8 +80,8 @@ class TransactionDetails extends Equatable {
       : Colors.white;
 
   IconData get categoryIcon => categoryIconCode != null
-      ? AppIcons.data(categoryIconCode!)
-      : AppIcons.help;
+      ? appIconData(categoryIconCode!)
+      : PhosphorIconsFill.question;
 
   factory TransactionDetails.fromMap(Map<String, dynamic> map) {
     final rawDate = map['date'] as String?;

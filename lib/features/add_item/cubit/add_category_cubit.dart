@@ -5,7 +5,7 @@ import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 part 'add_category_state.dart';
 

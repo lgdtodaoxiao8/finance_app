@@ -5,7 +5,7 @@ import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Settings entry point to premium: a gradient upsell when free, a calm
 /// "active" state when subscribed.
@@ -116,7 +116,7 @@ class _ActiveCard extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(AppIcons.verified, color: AppColors.positive),
+            const Icon(PhosphorIconsFill.sealCheck, color: AppColors.positive),
           ],
         ),
       ),

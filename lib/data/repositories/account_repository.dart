@@ -3,6 +3,7 @@ import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/sync/sync_metadata.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/core/app_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 abstract class AccountRepository {
   Future<List<Account>> getAll();
@@ -38,8 +39,8 @@ class DriftAccountRepository implements AccountRepository {
     accountId: row.id,
     accountName: row.name ?? '',
     currencyId: row.currencyId ?? 0,
-    accountIcon: AppIcons.data(
-      row.iconCodePoint ?? AppIcons.account_balance_wallet.codePoint,
+    accountIcon: appIconData(
+      row.iconCodePoint ?? PhosphorIconsFill.wallet.codePoint,
     ),
   );
 
