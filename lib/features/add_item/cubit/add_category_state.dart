@@ -3,7 +3,7 @@ part of 'add_category_cubit.dart';
 class AddCategoryState extends Equatable {
   const AddCategoryState({
     this.color = const Color(0xFF1E88E5),
-    this.icon = PhosphorIconsFill.shoppingBag,
+    this.icon = SolarIconsBold.bag4,
     this.kind = 'expense',
     this.sending = false,
     this.savedId,

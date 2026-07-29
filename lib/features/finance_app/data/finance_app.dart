@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:finance_app/assets/currencies/currencies_list.dart';
 import 'package:finance_app/core/database/app_database.dart';
 import 'package:finance_app/core/di/injector.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Seeds the currency list and a couple of default categories on first run.
 ///
@@ -37,7 +37,7 @@ Future<void> seedData() async {
             name: const Value('Food'),
             color: const Value(4282682111),
             iconColor: const Value(4278190080),
-            iconCodePoint: Value(PhosphorIconsFill.hamburger.codePoint),
+            iconCodePoint: Value(SolarIconsBold.chefHat.codePoint),
             kind: const Value('expense'),
           ),
         )
@@ -47,7 +47,7 @@ Future<void> seedData() async {
             name: const Value('Salary'),
             color: const Value(4294953540),
             iconColor: const Value(4278190080),
-            iconCodePoint: Value(PhosphorIconsFill.currencyDollar.codePoint),
+            iconCodePoint: Value(SolarIconsBold.moneyBag.codePoint),
             kind: const Value('income'),
           ),
         );

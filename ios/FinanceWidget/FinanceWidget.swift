@@ -1011,17 +1011,17 @@ struct QuickIncomeProvider: AppIntentTimelineProvider {
 
 // MARK: Quick-add UI
 
-/// Registers the bundled Phosphor Fill icon font once (UIAppFonts is unreliable
-/// in widget extensions, so fall back to manual CoreText registration). Subset
-/// to just the app's category/account icon codepoints to fit the widget memory
+/// Registers the bundled Solar Bold icon font once (UIAppFonts is unreliable in
+/// widget extensions, so fall back to manual CoreText registration). Subset to
+/// just the app's category/account icon codepoints to fit the widget memory
 /// budget — the full font is far too large for the extension.
 private let iconFontAvailable: Bool = {
-  if UIFont(name: "Phosphor-Fill", size: 12) != nil { return true }
+  if UIFont(name: "SolarIconsBold", size: 12) != nil { return true }
   guard
-    let url = Bundle.main.url(forResource: "Phosphor-Fill", withExtension: "ttf")
+    let url = Bundle.main.url(forResource: "SolarIconsBold", withExtension: "ttf")
   else { return false }
   CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
-  return UIFont(name: "Phosphor-Fill", size: 12) != nil
+  return UIFont(name: "SolarIconsBold", size: 12) != nil
 }()
 
 /// A Material icon glyph from the bundled font; falls back to the item's
@@ -1036,7 +1036,7 @@ struct Glyph: View {
       let scalar = UnicodeScalar(iconCode)
     {
       Text(String(Character(scalar)))
-        .font(.custom("Phosphor-Fill", size: size))
+        .font(.custom("SolarIconsBold", size: size))
     } else {
       Text(String(fallback.prefix(1)).uppercased())
         .font(.system(size: size * 0.78, weight: .semibold, design: .rounded))
