@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// One-colour picker: a curated palette of saturated swatches plus a full
 /// hue-spectrum slider for any shade in between. No alpha control by design —
@@ -93,7 +92,7 @@ class _Swatch extends StatelessWidget {
               : null,
         ),
         child: selected
-            ? const Icon(PhosphorIconsFill.check, size: 18, color: Colors.white)
+            ? const Icon(Icons.check_rounded, size: 18, color: Colors.white)
             : null,
       ),
     );

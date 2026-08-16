@@ -7,7 +7,6 @@ import 'package:finance_app/features/widget_config/view/widget_config_screen.dar
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Lists the quick-add widget groups (named category sets). Each home-screen
 /// widget instance binds to one group via iOS "Edit Widget", so two widgets
@@ -94,7 +93,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
                   backgroundColor: AppColors.negative.withValues(alpha: 0.12),
                   // Up arrow = expense (money out), matching the app.
                   child: const Icon(
-                    PhosphorIconsFill.arrowUp,
+                    Icons.arrow_upward_rounded,
                     color: AppColors.negative,
                   ),
                 ),
@@ -107,7 +106,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
                   backgroundColor: AppColors.positive.withValues(alpha: 0.14),
                   // Down arrow = income (money in), matching the app.
                   child: const Icon(
-                    PhosphorIconsFill.arrowDown,
+                    Icons.arrow_downward_rounded,
                     color: AppColors.positive,
                   ),
                 ),
@@ -236,7 +235,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: _addGroup,
-            icon: const Icon(PhosphorIconsFill.plus),
+            icon: const Icon(Icons.add),
             label: Text(l.widgetAddGroup),
           ),
         ],
@@ -257,7 +256,7 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
         backgroundColor: accent.withValues(alpha: isIncome ? 0.14 : 0.12),
         child: Icon(
           // Down arrow = income (money in); expense keeps the neutral glyph.
-          isIncome ? PhosphorIconsFill.arrowDown : PhosphorIconsFill.squaresFour,
+          isIncome ? Icons.arrow_downward_rounded : Icons.widgets_rounded,
           size: 18,
           color: accent,
         ),
@@ -280,15 +279,15 @@ class _WidgetGroupsScreenState extends State<WidgetGroupsScreen> {
           // The default group is always available and can't be renamed/deleted.
           if (!isDefault) ...[
             IconButton(
-              icon: const Icon(PhosphorIconsFill.pencilSimple, size: 20),
+              icon: const Icon(Icons.edit_outlined, size: 20),
               onPressed: () => _rename(g),
             ),
             IconButton(
-              icon: const Icon(PhosphorIconsFill.trash, size: 20),
+              icon: const Icon(Icons.delete_outline, size: 20),
               onPressed: () => _delete(g),
             ),
           ],
-          const Icon(PhosphorIconsFill.caretRight),
+          const Icon(Icons.chevron_right_rounded),
         ],
       ),
     );

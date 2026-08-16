@@ -9,7 +9,6 @@ import 'package:finance_app/features/accounts/view/account_balances_screen.dart'
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// The third summary tile: all-time net worth. Visibly tappable (arrow + tinted
 /// surface) — opens the per-account balances screen.
@@ -85,7 +84,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
             Row(
               children: [
                 const Icon(
-                  PhosphorIconsFill.wallet,
+                  Icons.account_balance_wallet_rounded,
                   color: AppColors.primary,
                   size: 20,
                 ),
@@ -97,7 +96,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    PhosphorIconsFill.caretRight,
+                    Icons.chevron_right_rounded,
                     size: 15,
                     color: AppColors.primary,
                   ),

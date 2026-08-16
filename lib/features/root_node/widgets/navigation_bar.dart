@@ -2,7 +2,6 @@ import 'package:finance_app/features/root_node/widgets/navigation_bar_button.dar
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class NavigationBar extends StatelessWidget {
   const NavigationBar({
@@ -44,7 +43,7 @@ class NavigationBar extends StatelessWidget {
             NavigationBarButton(
               isActive: currentIndex == 0,
               label: l.navHome,
-              icon: PhosphorIconsFill.house,
+              icon: Icons.home_rounded,
               onTap: () {
                 onChanged(0);
               },
@@ -52,7 +51,7 @@ class NavigationBar extends StatelessWidget {
             NavigationBarButton(
               isActive: currentIndex == 1,
               label: l.navTransactions,
-              icon: PhosphorIconsFill.arrowsDownUp,
+              icon: Icons.swap_vert_rounded,
               onTap: () {
                 onChanged(1);
               },
@@ -60,7 +59,7 @@ class NavigationBar extends StatelessWidget {
             NavigationBarButton(
               isActive: currentIndex == 2,
               label: l.navSettings,
-              icon: PhosphorIconsFill.gearSix,
+              icon: Icons.settings_rounded,
               onTap: () {
                 onChanged(2);
               },

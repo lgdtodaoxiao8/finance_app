@@ -8,7 +8,6 @@ import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Net worth broken down per account, reached by tapping the Total balance
 /// card. Balances are all-time, expressed in the base currency. Local.
@@ -84,7 +83,7 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
           : _accounts.isEmpty
           ? Center(
               child: AppEmptyState(
-                icon: PhosphorIconsFill.wallet,
+                icon: Icons.account_balance_wallet_outlined,
                 title: AppLocalizations.of(context).noAccountsYet,
                 subtitle: AppLocalizations.of(context).addAccountInSettings,
               ),

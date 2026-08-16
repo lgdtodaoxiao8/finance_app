@@ -12,7 +12,6 @@ import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Route arguments for a brand-new transaction opened pre-filled (e.g. from a
 /// home-screen widget quick-add). Distinct from a [TransactionDetails] argument,
@@ -455,7 +454,7 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            hasNote ? PhosphorIconsFill.note : PhosphorIconsFill.plus,
+            hasNote ? Icons.sticky_note_2_outlined : Icons.add,
             size: 17,
             color: muted,
           ),
@@ -751,7 +750,7 @@ class _TopBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onClose,
-            icon: const Icon(PhosphorIconsFill.x),
+            icon: const Icon(Icons.close_rounded),
             style: IconButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -764,7 +763,7 @@ class _TopBar extends StatelessWidget {
               tooltip: AppLocalizations.of(context).delete,
               onPressed: onDelete,
               icon: Icon(
-                PhosphorIconsFill.trash,
+                Icons.delete_outline_rounded,
                 color: Theme.of(context).colorScheme.error,
               ),
             ),
@@ -881,19 +880,19 @@ class _OnboardingGate extends StatelessWidget {
 
     final l = AppLocalizations.of(context);
     if (state.needsBaseCurrency) {
-      icon = PhosphorIconsFill.currencyCircleDollar;
+      icon = Icons.currency_exchange_rounded;
       title = l.setupBaseCurrencyTitle;
       subtitle = l.setupBaseCurrencyBody;
       cta = l.setupBaseCurrencyAction;
       route = '/add-currency';
     } else if (state.needsAccount) {
-      icon = PhosphorIconsFill.wallet;
+      icon = Icons.account_balance_wallet_rounded;
       title = l.setupAccountTitle;
       subtitle = l.setupAccountBody;
       cta = l.setupAccountAction;
       route = '/add-account';
     } else {
-      icon = PhosphorIconsFill.squaresFour;
+      icon = Icons.category_rounded;
       title = l.setupCategoryTitle;
       subtitle = l.setupCategoryBody;
       cta = l.setupCategoryAction;

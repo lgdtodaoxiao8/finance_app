@@ -1,6 +1,5 @@
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// A selling point shown on the paywall.
 class PremiumFeature {
@@ -15,32 +14,32 @@ class PremiumFeature {
 /// the paywall, the settings upgrade card and any teasers stay in sync.
 List<PremiumFeature> premiumFeatures(AppLocalizations l) => [
   PremiumFeature(
-    PhosphorIconsFill.brain,
+    Icons.psychology_rounded,
     l.featureAiCoachTitle,
     l.featureAiCoachBody,
   ),
   PremiumFeature(
-    PhosphorIconsFill.trendUp,
+    Icons.trending_up_rounded,
     l.featureForecastTitle,
     l.featureForecastBody,
   ),
   PremiumFeature(
-    PhosphorIconsFill.gauge,
+    Icons.speed_rounded,
     l.featureHealthTitle,
     l.featureHealthBody,
   ),
   PremiumFeature(
-    PhosphorIconsFill.cloudArrowUp,
+    Icons.cloud_sync_rounded,
     l.featureSyncTitle,
     l.featureSyncBody,
   ),
   PremiumFeature(
-    PhosphorIconsFill.chatCircle,
+    Icons.chat_bubble_outline_rounded,
     l.featureAskTitle,
     l.featureAskBody,
   ),
   PremiumFeature(
-    PhosphorIconsFill.bellRinging,
+    Icons.notifications_active_rounded,
     l.featureAlertsTitle,
     l.featureAlertsBody,
   ),

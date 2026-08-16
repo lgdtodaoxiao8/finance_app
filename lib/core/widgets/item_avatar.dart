@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// The app-wide visual for a user-created item (category, account): the icon
 /// drawn in its colour on a soft tint of the SAME colour — one colour drives
@@ -45,7 +44,7 @@ class ItemAvatar extends StatelessWidget {
               ),
             )
           : Icon(
-              icon ?? PhosphorIconsFill.squaresFour,
+              icon ?? Icons.category_rounded,
               size: diameter * 0.5,
               color: color,
             ),

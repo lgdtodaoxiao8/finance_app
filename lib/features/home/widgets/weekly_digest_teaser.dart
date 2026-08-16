@@ -6,7 +6,6 @@ import 'package:finance_app/features/subscription/view/paywall_sheet.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Full-width premium block on Home: an AI weekly digest of the user's money.
 /// Premium → opens the AI analysis; free → shows the pitch + paywall.
@@ -45,7 +44,7 @@ class WeeklyDigestTeaser extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(
-                PhosphorIconsFill.sparkle,
+                Icons.auto_awesome_rounded,
                 color: Colors.white,
                 size: 26,
               ),
@@ -76,7 +75,7 @@ class WeeklyDigestTeaser extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(PhosphorIconsFill.caretRight, color: Colors.white),
+            const Icon(Icons.chevron_right_rounded, color: Colors.white),
           ],
         ),
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:finance_app/theme/theme.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class PopupDropdownSimple extends StatelessWidget {
   const PopupDropdownSimple({
@@ -120,7 +119,7 @@ class PopupDropdownSimple extends StatelessWidget {
                       ),
                     ),
 
-                    const Icon(PhosphorIconsFill.caretDown, size: 25),
+                    const Icon(Icons.arrow_drop_down_rounded, size: 25),
                     const SizedBox(width: 10),
                   ],
                 ),
