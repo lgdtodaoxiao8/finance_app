@@ -246,6 +246,28 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
   }
 
   // --- amount line ---------------------------------------------------------
+  /// Shared style for the hero amount field (input + hint) so the on-screen
+  /// text and the width measurement below stay in lock-step.
+  static final TextStyle _amountTextStyle = kTextStyle.copyWith(
+    fontSize: 50,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -1.5,
+  );
+
+  /// Width the amount field should occupy so it hugs its text (like the old
+  /// IntrinsicWidth did) without triggering an intrinsic re-measure of the
+  /// TextField. Falls back to the '0' hint width when empty; a few px of slack
+  /// keeps the caret from being clipped after the last glyph.
+  double _amountFieldWidth(BuildContext context) {
+    final text = _amountController.text.isEmpty ? '0' : _amountController.text;
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: _amountTextStyle),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    return painter.width + 3;
+  }
+
   Widget _amountLine(
     BuildContext context,
     AddTransactionState state,
@@ -272,7 +294,13 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
           ),
         ),
         const SizedBox(width: 6),
-        IntrinsicWidth(
+        // Auto-width via a measured SizedBox rather than IntrinsicWidth: an
+        // IntrinsicWidth around a TextField crashes ('_dependents.isEmpty')
+        // when the keyboard reappears (e.g. dismissing the note sheet) and the
+        // still-mounted field gets an intrinsic re-measure on the viewInsets
+        // change. A fixed width relayouts without any intrinsic pass.
+        SizedBox(
+          width: _amountFieldWidth(context),
           child: TextField(
             controller: _amountController,
             focusNode: _amountFocus,
@@ -280,18 +308,10 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             cursorColor: caret,
             onChanged: (_) => setState(() {}),
-            style: kTextStyle.copyWith(
-              fontSize: 50,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -1.5,
-              color: onSurface,
-            ),
+            style: _amountTextStyle.copyWith(color: onSurface),
             decoration: InputDecoration.collapsed(
               hintText: '0',
-              hintStyle: kTextStyle.copyWith(
-                fontSize: 50,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -1.5,
+              hintStyle: _amountTextStyle.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(
                   alpha: 0.4,
                 ),
@@ -618,42 +638,17 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
   }
 
   Future<void> _editNote(BuildContext context) async {
-    final l = AppLocalizations.of(context);
-    final controller = TextEditingController(text: _note);
     _amountFocus.unfocus();
+    // The note field lives in its own StatefulWidget so its
+    // TextEditingController is disposed by that widget's own dispose() — which
+    // runs only after the sheet's exit animation completes and the element
+    // unmounts. Disposing it inline right after `await` fired while the sheet
+    // was still rebuilding during the close transition, so EditableText
+    // re-listened to a disposed controller ("used after being disposed").
     final result = await _sheet<String>(
       context,
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              maxLines: 3,
-              minLines: 1,
-              style: kTextStyle.copyWith(fontSize: 16),
-              decoration: InputDecoration(
-                hintText: l.note,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(kRadiusSm),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-              child: Text(l.done, style: kTextStyle.copyWith(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
+      child: _NoteSheet(initialText: _note),
     );
-    controller.dispose();
     if (result != null) setState(() => _note = result);
   }
 
@@ -682,6 +677,64 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
 }
 
 // --- shared little pieces ---------------------------------------------------
+
+/// The note editor shown in a bottom sheet. Owns its [TextEditingController] so
+/// the controller outlives the sheet's close animation (disposing it inline in
+/// the caller crashed EditableText with "used after being disposed"). Returns
+/// the trimmed note via [Navigator.pop]; barrier-dismiss returns null (no
+/// change).
+class _NoteSheet extends StatefulWidget {
+  const _NoteSheet({required this.initialText});
+
+  final String initialText;
+
+  @override
+  State<_NoteSheet> createState() => _NoteSheetState();
+}
+
+class _NoteSheetState extends State<_NoteSheet> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initialText);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      // The sheet's own context → reactive to the keyboard's viewInsets.
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            maxLines: 3,
+            minLines: 1,
+            style: kTextStyle.copyWith(fontSize: 16),
+            decoration: InputDecoration(
+              hintText: l.note,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(kRadiusSm),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+            child: Text(l.done, style: kTextStyle.copyWith(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.onClose, required this.switcher, required this.onDelete});
