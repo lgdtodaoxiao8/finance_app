@@ -532,6 +532,17 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
       context,
       child: _ChipPicker(
         title: AppLocalizations.of(context).selectCategory,
+        createLabel: AppLocalizations.of(context).setupCategoryAction,
+        onCreate: () async {
+          Navigator.of(context).pop(); // close the picker
+          final created = await Navigator.of(context).pushNamed(
+            '/add-category',
+            arguments: wantIncome ? 'income' : 'expense',
+          );
+          if (created is int && created > 0) {
+            await cubit.reloadCategories(created);
+          }
+        },
         items: [
           for (final c in cats)
             _PickItem(
@@ -562,6 +573,19 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
       context,
       child: _ChipPicker(
         title: AppLocalizations.of(context).chooseAccount,
+        createLabel: AppLocalizations.of(context).setupAccountAction,
+        onCreate: () async {
+          Navigator.of(context).pop(); // close the picker
+          final created = await Navigator.of(context).pushNamed('/add-account');
+          if (created is int && created > 0) {
+            if (destination) {
+              await cubit.reloadAccounts();
+              cubit.setAccountDestination(created);
+            } else {
+              await cubit.reloadAccounts(created);
+            }
+          }
+        },
         items: [
           for (final a in state.accounts)
             _PickItem(
@@ -802,11 +826,18 @@ class _ChipPicker extends StatelessWidget {
     required this.title,
     required this.items,
     required this.onPick,
+    this.onCreate,
+    this.createLabel,
   });
 
   final String title;
   final List<_PickItem> items;
   final void Function(int id) onPick;
+
+  /// When set, a trailing accent "+ create" chip lets the user make a new
+  /// item on the spot; [createLabel] is its text.
+  final VoidCallback? onCreate;
+  final String? createLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -822,9 +853,42 @@ class _ChipPicker extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: [for (final it in items) _chip(context, it)],
+          children: [
+            for (final it in items) _chip(context, it),
+            if (onCreate != null) _createChip(context),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _createChip(BuildContext context) {
+    const accent = AppColors.primary;
+    return GestureDetector(
+      onTap: onCreate,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: accent.withValues(alpha: 0.5), width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add_rounded, size: 17, color: accent),
+            const SizedBox(width: 7),
+            Text(
+              createLabel ?? '',
+              style: kTextStyle.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: accent,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

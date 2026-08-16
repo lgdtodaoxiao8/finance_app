@@ -19,10 +19,17 @@ class AddCategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = ModalRoute.of(context)?.settings.arguments as Category?;
+    // A Category argument edits it; a String argument pre-sets the kind for a
+    // brand-new category (e.g. "income" when created from the income picker).
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final initial = args is Category ? args : null;
+    final initialKind = args is String ? args : null;
     return BlocProvider(
-      create: (_) =>
-          AddCategoryCubit(getIt<CategoryRepository>(), initial: initial),
+      create: (_) => AddCategoryCubit(
+        getIt<CategoryRepository>(),
+        initial: initial,
+        initialKind: initialKind,
+      ),
       child: _AddCategoryView(initial: initial),
     );
   }
