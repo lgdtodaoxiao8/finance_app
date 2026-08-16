@@ -551,32 +551,72 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
     final category = widget.categoryFor(s.categoryId);
     final fill = category?.categoryColor ?? Colors.grey;
     final name = category?.categoryName ?? '';
+    final icon = category?.categoryIcon ?? Icons.category;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final available =
-            constraints.maxWidth - 34 - 10 - 8 - _textWidth(name, 14);
-        return Row(
-          children: [
-            ModeCircle(
-              fill: fill,
-              icon: category?.categoryIcon ?? Icons.category,
-              diameter: 34,
-              badge: ModeBadge.none,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: kTextStyle.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+        final chips = _rowChips(s, fill);
+        // Name beside the icon when it and the chips fit; otherwise the name
+        // tucks small under the icon (ellipsis if it's still too long) so the
+        // presets get the whole line. Mirrors the widget's ViewThatFits.
+        final inlineFits =
+            34 + 10 + _textWidth(name, 14) + 8 + _chipsWidth(s) <=
+            constraints.maxWidth;
+        if (inlineFits) {
+          return Row(
+            children: [
+              ModeCircle(
+                fill: fill,
+                icon: icon,
+                diameter: 34,
+                badge: ModeBadge.none,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: kTextStyle.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
+              ...chips,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ModeCircle(
+                  fill: fill,
+                  icon: icon,
+                  diameter: 30,
+                  badge: ModeBadge.none,
+                ),
+                const SizedBox(height: 1),
+                SizedBox(
+                  width: 46,
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: kTextStyle.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            ..._rowChips(s, fill, available),
+            const Spacer(),
+            ...chips,
           ],
         );
       },
@@ -597,36 +637,42 @@ class _WidgetPreviewState extends State<_WidgetPreview> {
   /// Chip width mirror of [AmountChip]'s padding (fontSize * 0.85 each side).
   double _chipWidth(String label) => _textWidth(label, 12) + 12 * 0.85 * 2 + 2;
 
-  List<Widget> _rowChips(WidgetShortcut s, Color fill, double available) {
+  List<Widget> _rowChips(WidgetShortcut s, Color fill) {
     // Chips keep the category colour; the flow is carried by the glass rim. The
-    // fixed amount carries the +/− sign, bare preset numbers don't.
+    // fixed amount carries the +/− sign, bare preset numbers don't. Up to six
+    // compact preset chips — the name yields to them (moves under the icon)
+    // rather than the chips dropping.
     String short(double v) => _shortAmount(v);
     return switch (s.mode) {
       WidgetShortcutMode.fixed when s.amount != null => [
         AmountChip(label: widget.amountCaption(s.amount!), color: fill),
       ],
-      WidgetShortcutMode.presets when s.presets.isNotEmpty => () {
-        // As many preset chips as fit, mirroring the widget's ViewThatFits.
-        final labels = [for (final p in s.presets) short(p)];
-        final dotsWidth = _chipWidth('…');
-        var count = labels.length > 4 ? 4 : labels.length;
-        while (count > 1) {
-          var total = dotsWidth;
-          for (final l in labels.take(count)) {
-            total += _chipWidth(l) + 5;
-          }
-          if (total <= available) break;
-          count--;
-        }
-        return [
-          for (final l in labels.take(count)) ...[
-            AmountChip(label: l, color: fill),
-            const SizedBox(width: 5),
-          ],
-          AmountChip(label: '…', color: fill),
-        ];
-      }(),
+      WidgetShortcutMode.presets when s.presets.isNotEmpty => [
+        for (final p in s.presets.take(6)) ...[
+          AmountChip(label: short(p), color: fill, fontSize: 11),
+          const SizedBox(width: 4),
+        ],
+        AmountChip(label: '…', color: fill, fontSize: 11),
+      ],
       _ => [AmountChip(label: '+', color: fill)],
+    };
+  }
+
+  /// Total width the row's chips need — mirrors [_rowChips], to decide whether
+  /// the name still fits beside the icon.
+  double _chipsWidth(WidgetShortcut s) {
+    String short(double v) => _shortAmount(v);
+    return switch (s.mode) {
+      WidgetShortcutMode.fixed when s.amount != null =>
+        _chipWidth(widget.amountCaption(s.amount!)),
+      WidgetShortcutMode.presets when s.presets.isNotEmpty => () {
+        var w = _chipWidth('…');
+        for (final p in s.presets.take(6)) {
+          w += _chipWidth(short(p)) + 4;
+        }
+        return w;
+      }(),
+      _ => _chipWidth('+'),
     };
   }
 }

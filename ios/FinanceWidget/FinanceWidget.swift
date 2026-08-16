@@ -1476,7 +1476,7 @@ struct QuickAddEntryView: View {
     // Rows keep their natural height; the block is centered vertically so the
     // top and bottom breathing room match the (uniform) side margins instead
     // of stretching edge-to-edge.
-    VStack(spacing: 9) {
+    VStack(spacing: 7) {
       ForEach(0..<3, id: \.self) { index in
         if index < entry.shortcuts.count {
           rowView(entry.shortcuts[index])
@@ -1511,27 +1511,41 @@ struct QuickAddEntryView: View {
     }
   }
 
-  // Each row is a compact hybrid: icon + name + the category's month-to-date
-  // spend + quick-actions on one line (context + action), and a thin progress
-  // bar underneath — short enough that three rows leave real top/bottom
-  // breathing room instead of filling the widget edge to edge.
+  // Each row shows the category (icon + name) with its quick-actions. The name
+  // is never dropped: when it and the preset chips fit on one line it stays
+  // beside the icon (with a thin month-to-date spend bar underneath); when they
+  // don't, the name tucks under the icon in a small font so all six presets
+  // still fit — ellipsis-truncated only if the name is too long even there.
   private func rowView(_ shortcut: Shortcut) -> some View {
     let logged = entry.isJustAdded(shortcut)
     let spent = entry.spend[shortcut.categoryId] ?? 0
     let fraction = mediumMaxSpend > 0 ? spent / mediumMaxSpend : 0
-    return VStack(spacing: 4) {
+    return ViewThatFits(in: .horizontal) {
+      rowInline(shortcut, spent: spent, logged: logged, fraction: fraction)
+      rowStacked(shortcut, logged: logged)
+    }
+  }
+
+  /// Name beside the icon on one line, month-to-date spend bar under it.
+  private func rowInline(
+    _ shortcut: Shortcut, spent: Double, logged: Bool, fraction: Double
+  ) -> some View {
+    VStack(spacing: 4) {
       HStack(spacing: rowGap) {
         modeCircle(shortcut, diameter: rowCircleSize, glyph: 16)
+        // fixedSize: report the full name width so ViewThatFits falls through
+        // to the stacked layout instead of silently truncating the name here.
         Text(shortcut.name)
           .font(.subheadline.weight(.medium))
           .foregroundColor(.primary)
           .lineLimit(1)
+          .fixedSize()
         Spacer(minLength: 6)
         Text(spentCaption(spent))
           .font(.system(size: 11, weight: .medium, design: .rounded))
           .foregroundColor(.secondary)
           .fixedSize()
-        rowActions(shortcut)
+        rowActions(shortcut, scaled: false)
           .opacity(logged ? 0.35 : 1)
           .fixedSize()
       }
@@ -1548,6 +1562,24 @@ struct QuickAddEntryView: View {
     }
   }
 
+  /// Name tucked small under the icon so the preset chips get the whole line.
+  private func rowStacked(_ shortcut: Shortcut, logged: Bool) -> some View {
+    HStack(spacing: rowGap) {
+      VStack(spacing: 1) {
+        modeCircle(shortcut, diameter: rowCircleSize, glyph: 16)
+        Text(shortcut.name)
+          .font(.system(size: 10, weight: .medium))
+          .foregroundColor(.secondary)
+          .lineLimit(1)
+          .truncationMode(.tail)
+          .frame(maxWidth: rowCircleSize + 22)
+      }
+      Spacer(minLength: 6)
+      rowActions(shortcut, scaled: true)
+        .opacity(logged ? 0.35 : 1)
+    }
+  }
+
   /// The category's month-to-date total, e.g. "2 700 $" spent / "250К ₸"
   /// received. Sign-free — the flow is carried by the glass rim.
   private func spentCaption(_ value: Double) -> String {
@@ -1555,49 +1587,41 @@ struct QuickAddEntryView: View {
   }
 
   @ViewBuilder
-  private func rowActions(_ shortcut: Shortcut) -> some View {
+  private func rowActions(_ shortcut: Shortcut, scaled: Bool) -> some View {
     switch shortcut.mode {
     case "fixed":
       if let amount = shortcut.amount {
         amountChip(shortcut, amount)
       }
     case "presets":
-      // As many preset chips as actually fit next to the category name —
-      // ViewThatFits tries the widest layout first and steps down.
-      ViewThatFits(in: .horizontal) {
-        presetChips(shortcut, showing: 4)
-        presetChips(shortcut, showing: 3)
-        presetChips(shortcut, showing: 2)
-        presetChips(shortcut, showing: 1)
+      // Up to six presets, compact + abbreviated so they all fit. In the tight
+      // (stacked-name) layout each chip shrinks its number instead of dropping.
+      HStack(spacing: 5) {
+        ForEach(Array(shortcut.presets.prefix(6)), id: \.self) { preset in
+          amountChip(
+            shortcut, preset, withSymbol: false, compact: true, scaled: scaled)
+        }
+        linkChip(shortcut, systemName: "ellipsis")
       }
     default:
       linkChip(shortcut, systemName: "plus")
     }
   }
 
-  private func presetChips(_ shortcut: Shortcut, showing: Int) -> some View {
-    HStack(spacing: 6) {
-      // Bare numbers: the currency symbol would repeat on every chip and
-      // costs the width of a whole extra preset.
-      ForEach(Array(shortcut.presets.prefix(showing)), id: \.self) { preset in
-        amountChip(shortcut, preset, withSymbol: false)
-      }
-      // Custom amount → open the app prefilled (Link works in medium).
-      linkChip(shortcut, systemName: "ellipsis")
-    }
-  }
-
   /// Quiet category-tinted capsule that logs the amount instantly. The fixed
   /// amount (withSymbol) carries the +/− flow sign; bare preset numbers don't.
   private func amountChip(
-    _ shortcut: Shortcut, _ amount: Double, withSymbol: Bool = true
+    _ shortcut: Shortcut, _ amount: Double,
+    withSymbol: Bool = true, compact: Bool = false, scaled: Bool = false
   ) -> some View {
     Button(intent: quickAddIntent(shortcut, amount)) {
       Text(withSymbol ? fixedAmountCaption(amount) : stepLabel(amount))
-        .font(.system(size: 13, weight: .semibold, design: .rounded))
+        .font(.system(size: compact ? 12 : 13, weight: .semibold, design: .rounded))
         .foregroundColor(shortcut.color)
-        .padding(.vertical, 7)
-        .padding(.horizontal, 12)
+        .lineLimit(1)
+        .minimumScaleFactor(scaled ? 0.5 : 1)
+        .padding(.vertical, compact ? 4 : 7)
+        .padding(.horizontal, compact ? 8 : 12)
         .background(shortcut.color.opacity(0.13))
         .clipShape(Capsule())
     }
