@@ -33,10 +33,11 @@ class MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -45,7 +46,7 @@ class MiniStat extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 4),
           FittedBox(
@@ -75,6 +76,7 @@ class CategoryBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -93,27 +95,24 @@ class CategoryBarRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   bar.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: cs.onSurface,
                   ),
                 ),
               ),
               Text(
                 '${(bar.share * 100).round()}%',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textTertiary,
-                ),
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
               ),
               const SizedBox(width: 10),
               Text(
                 AmountText.maskString(compactMoney(bar.amount, symbol)),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: cs.onSurface,
                 ),
               ),
             ],
@@ -123,7 +122,10 @@ class CategoryBarRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: Stack(
               children: [
-                Container(height: 6, color: AppColors.field),
+                Container(
+                  height: 6,
+                  color: cs.onSurface.withValues(alpha: 0.08),
+                ),
                 FractionallySizedBox(
                   widthFactor: bar.share.clamp(0.0, 1.0),
                   child: Container(height: 6, color: bar.color),

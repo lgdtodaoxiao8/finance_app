@@ -132,7 +132,9 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
                       AppLocalizations.of(context).noExpensesThisMonthYet,
-                      style: const TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   )
                 else
@@ -144,11 +146,12 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
   }
 
   Widget _hero() {
+    final cs = Theme.of(context).colorScheme;
     final savingsRate = _income > 0 ? (_net / _income) : null;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -156,7 +159,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
         children: [
           Text(
             AppLocalizations.of(context).netThisMonthTitle,
-            style: const TextStyle(fontSize: 13, color: AppColors.textTertiary),
+            style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 6),
           AmountText(
@@ -182,10 +185,7 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
                       context,
                     ).youSpentMorePercent((-savingsRate * 100).round()),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13.5,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 13.5, color: cs.onSurfaceVariant),
             ),
           ],
         ],
@@ -197,13 +197,14 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
     if (_lastMonthExpense == 0) {
       return const SizedBox.shrink();
     }
+    final cs = Theme.of(context).colorScheme;
     final diff = _expense - _lastMonthExpense;
     final pct = (diff / _lastMonthExpense * 100).round();
     final up = diff > 0;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -219,10 +220,10 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
               up
                   ? AppLocalizations.of(context).spendingUpVsLast(pct.abs())
                   : AppLocalizations.of(context).spendingDownVsLast(pct.abs()),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: cs.onSurface,
               ),
             ),
           ),

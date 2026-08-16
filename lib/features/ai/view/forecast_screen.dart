@@ -88,7 +88,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(kRadiusLg),
             boxShadow: kCardShadow,
           ),
@@ -96,9 +96,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
             children: [
               Text(
                 AppLocalizations.of(context).projectedMonthEndBalance,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textTertiary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
@@ -119,9 +119,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
                     ? AppLocalizations.of(context).onTrackGreen
                     : AppLocalizations.of(context).atThisPaceNegative,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13.5,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -160,6 +160,7 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -167,18 +168,15 @@ class _Row extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 14.5,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14.5, color: cs.onSurfaceVariant),
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: cs.onSurface,
             ),
           ),
         ],

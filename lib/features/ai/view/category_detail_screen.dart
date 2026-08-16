@@ -80,7 +80,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           ? Center(
               child: Text(
                 AppLocalizations.of(context).noExpensesThisMonthYet,
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             )
           : ListView(
@@ -92,7 +94,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     horizontal: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(kRadiusLg),
                     boxShadow: kCardShadow,
                   ),
@@ -100,19 +102,19 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                     children: [
                       Text(
                         AppLocalizations.of(context).totalSpentThisMonth,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textTertiary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 6),
                       AmountText(
                         _total,
                         symbol: _symbol,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -120,9 +122,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
                         AppLocalizations.of(
                           context,
                         ).acrossNCategories(_categories.length),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

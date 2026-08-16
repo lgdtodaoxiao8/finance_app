@@ -168,11 +168,11 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
         const SizedBox(height: 20),
         Text(
           result.summary,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             height: 1.4,
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 20),
@@ -200,10 +200,11 @@ class _ScoreHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
       ),
@@ -222,7 +223,7 @@ class _ScoreHero extends StatelessWidget {
                     value: score / 100,
                     strokeWidth: 10,
                     strokeCap: StrokeCap.round,
-                    backgroundColor: AppColors.field,
+                    backgroundColor: cs.onSurface.withValues(alpha: 0.08),
                     valueColor: AlwaysStoppedAnimation(_color),
                   ),
                 ),
@@ -240,10 +241,7 @@ class _ScoreHero extends StatelessWidget {
                     ),
                     Text(
                       AppLocalizations.of(context).outOf100,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textTertiary,
-                      ),
+                      style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -253,20 +251,20 @@ class _ScoreHero extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             AppLocalizations.of(context).financialHealth,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               letterSpacing: 0.4,
               fontWeight: FontWeight.w700,
-              color: AppColors.textTertiary,
+              color: cs.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: cs.onSurface,
             ),
           ),
         ],
@@ -294,11 +292,12 @@ class _InsightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(kRadiusLg),
         boxShadow: kCardShadow,
         border: Border(left: BorderSide(color: _accent, width: 4)),
@@ -314,19 +313,19 @@ class _InsightCard extends StatelessWidget {
               children: [
                 Text(
                   insight.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: cs.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   insight.detail,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     height: 1.45,
-                    color: AppColors.textSecondary,
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -402,7 +401,9 @@ class _Loading extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context).readingYourSpending,
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -424,16 +425,18 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.cloud_off_rounded,
               size: 40,
-              color: AppColors.textTertiary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton(
