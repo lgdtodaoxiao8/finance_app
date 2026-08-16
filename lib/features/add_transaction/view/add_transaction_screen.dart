@@ -321,9 +321,13 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
         const SizedBox(width: 8),
         GestureDetector(
           onTap: () => _pickCurrency(context, state, cubit),
-          child: Text(
-            currency?.currencyCode ?? '',
-            style: _dotted(const Color(0xFF6B7178), size: 16),
+          child: _DashedUnderline(
+            color: const Color(0xFF6B7178).withValues(alpha: 0.8),
+            gap: 4,
+            child: Text(
+              currency?.currencyCode ?? '',
+              style: _tokenStyle(const Color(0xFF6B7178), size: 16),
+            ),
           ),
         ),
       ],
@@ -403,9 +407,12 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
     );
   }
 
-  Widget _connector(String text, Color color) => Text(
-    text,
-    style: kTextStyle.copyWith(fontSize: 22, fontWeight: FontWeight.w500, color: color),
+  Widget _connector(String text, Color color) => Padding(
+    padding: const EdgeInsets.only(bottom: _tokenGap),
+    child: Text(
+      text,
+      style: kTextStyle.copyWith(fontSize: 22, fontWeight: FontWeight.w500, color: color),
+    ),
   );
 
   Widget _token({
@@ -422,25 +429,29 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 19, color: iconColor ?? color),
+            // Match the token's underline gap so icon + text share a baseline.
+            Padding(
+              padding: const EdgeInsets.only(bottom: _tokenGap),
+              child: Icon(icon, size: 19, color: iconColor ?? color),
+            ),
             const SizedBox(width: 3),
           ],
-          Text(label, style: _dotted(color)),
+          _DashedUnderline(
+            color: color.withValues(alpha: 0.8),
+            gap: _tokenGap,
+            child: Text(label, style: _tokenStyle(color)),
+          ),
         ],
       ),
     );
   }
 
-  TextStyle _dotted(Color color, {double size = 22, FontWeight w = FontWeight.w700}) {
-    return kTextStyle.copyWith(
-      fontSize: size,
-      fontWeight: w,
-      color: color,
-      decoration: TextDecoration.underline,
-      decorationStyle: TextDecorationStyle.dotted,
-      decorationColor: color.withValues(alpha: 0.45),
-      decorationThickness: 2,
-    );
+  /// Gap between a token's text and its dotted underline. Shared so tokens,
+  /// their icons, and the plain connectors all sit on the same baseline.
+  static const double _tokenGap = 5;
+
+  TextStyle _tokenStyle(Color color, {double size = 22, FontWeight w = FontWeight.w700}) {
+    return kTextStyle.copyWith(fontSize: size, fontWeight: w, color: color);
   }
 
   Widget _noteAffordance(BuildContext context) {
@@ -700,6 +711,69 @@ class _AddTransactionViewState extends State<_AddTransactionView> {
 }
 
 // --- shared little pieces ---------------------------------------------------
+
+/// A tappable token's dotted underline, drawn as round dots [gap] px BELOW the
+/// text. Flutter's `TextDecoration.underline` can't offset from the baseline
+/// and can't be styled beyond a faint hairline, so it read as cramped and
+/// barely visible; this paints clear, evenly-spaced dots with real breathing
+/// room instead. Sized to the child's width.
+class _DashedUnderline extends StatelessWidget {
+  const _DashedUnderline({
+    required this.color,
+    required this.child,
+    this.gap = 5,
+  });
+
+  final Color color;
+  final Widget child;
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      foregroundPainter: _DottedLinePainter(
+        color: color,
+        dotDiameter: 2.4,
+        dotSpacing: 3.5,
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: gap),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _DottedLinePainter extends CustomPainter {
+  const _DottedLinePainter({
+    required this.color,
+    required this.dotDiameter,
+    required this.dotSpacing,
+  });
+
+  final Color color;
+  final double dotDiameter;
+  final double dotSpacing;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final r = dotDiameter / 2;
+    final y = size.height - r;
+    final step = dotDiameter + dotSpacing;
+    for (double x = r; x <= size.width; x += step) {
+      canvas.drawCircle(Offset(x, y), r, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DottedLinePainter old) =>
+      old.color != color ||
+      old.dotDiameter != dotDiameter ||
+      old.dotSpacing != dotSpacing;
+}
 
 /// The note editor shown in a bottom sheet. Owns its [TextEditingController] so
 /// the controller outlives the sheet's close animation (disposing it inline in
