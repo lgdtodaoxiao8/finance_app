@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:finance_app/core/config/app_config.dart';
 import 'package:finance_app/core/preferences/app_preferences.dart';
 import 'package:finance_app/features/ai/data/ai_insight.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// What went wrong, so the UI can show a localised message. [AiFailure.detail]
@@ -122,6 +123,14 @@ class AiService {
       throw AiFailure(_classify(raw), raw);
     }
   }
+
+  /// Test seams for the two pure helpers (spending fingerprint + error
+  /// classification) so their behaviour can be checked without a live backend.
+  @visibleForTesting
+  String signatureFor(Map<String, dynamic> summary) => _signature(summary);
+
+  @visibleForTesting
+  AiFailureKind classifyError(String raw) => _classify(raw);
 
   /// Maps common provider errors onto a [AiFailureKind] the UI can localise.
   AiFailureKind _classify(String raw) {
