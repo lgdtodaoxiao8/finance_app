@@ -8,6 +8,7 @@ import 'package:finance_app/core/settings/app_settings.dart';
 import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
+import 'package:finance_app/features/subscription/entitlement_service.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
 import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_interactivity.dart';
@@ -59,6 +60,9 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
           publishableKey: AppConfig.supabasePublishableKey,
         );
         getIt<AuthService>().bind();
+        // Mirror the account's premium entitlement into SubscriptionService
+        // (runs for any signed-in user, so a fresh web upgrade is picked up).
+        getIt<EntitlementService>().bind();
         // Re-sync whenever the signed-in account changes.
         getIt<AuthService>().currentUser.addListener(_autoSync);
       } catch (e) {
@@ -94,6 +98,8 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
       // Persist any quick-adds the user queued from the widget while away,
       // then pull down anything that changed on other devices.
       drainPendingQuickAdds();
+      // Catch an entitlement change (e.g. a web upgrade) made while away.
+      getIt<EntitlementService>().refresh();
       _autoSync();
     }
   }

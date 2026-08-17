@@ -70,6 +70,25 @@ create table if not exists public.settings (
   primary key (user_id, key)
 );
 
+-- ========================================================== entitlements ====
+-- The user's premium entitlement. Purchases happen on the website; the billing
+-- webhook writes this row server-side (service role, which bypasses RLS). The
+-- app only READS its own row (see the select-only policy below) to mirror
+-- premium status locally, so a client can never grant itself premium.
+create table if not exists public.entitlements (
+  user_id    uuid        not null default auth.uid() references auth.users (id) on delete cascade,
+  is_premium boolean     not null default false,
+  updated_at timestamptz not null default now(),
+  primary key (user_id)
+);
+
+-- To grant premium to a test account by hand, run (in the SQL editor, which is
+-- service role, so RLS doesn't block the write):
+--   insert into public.entitlements (user_id, is_premium)
+--   values ('<the auth.users id>', true)
+--   on conflict (user_id) do update set is_premium = excluded.is_premium,
+--                                        updated_at = now();
+
 -- ================================================== Row Level Security ======
 -- Each user can only see and touch their own rows.
 alter table public.categories   enable row level security;
@@ -90,3 +109,11 @@ begin
     $f$, t);
   end loop;
 end $$;
+
+-- Entitlement is READ-ONLY for clients: a user may see their own row but never
+-- insert or update it (that's the billing webhook's job, via the service role).
+alter table public.entitlements enable row level security;
+drop policy if exists "read own entitlement" on public.entitlements;
+create policy "read own entitlement" on public.entitlements
+  for select
+  using (user_id = auth.uid());
