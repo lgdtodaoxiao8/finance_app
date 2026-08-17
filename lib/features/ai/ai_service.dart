@@ -15,6 +15,9 @@ enum AiFailureKind {
   /// The OpenAI account has no credit (429 / insufficient_quota).
   noCredit,
 
+  /// The user hit their daily "Ask your money" question quota.
+  dailyLimit,
+
   /// The server's OpenAI key is rejected (401).
   invalidKey,
 
@@ -124,6 +127,48 @@ class AiService {
     }
   }
 
+  /// Answers a free-text money question over the user's own data (the "Ask your
+  /// money" chat). Unlike [insights] this is never cached — every question is
+  /// new — so it always hits the backend and therefore needs a signed-in user.
+  /// [prior] carries the single previous turn so a follow-up stays in context.
+  Future<AiAnswer> ask({
+    required String question,
+    required Map<String, dynamic> summary,
+    ({String question, String answer})? prior,
+  }) async {
+    if (!isAvailable) throw AiFailure(AiFailureKind.backendOff);
+
+    try {
+      final res = await Supabase.instance.client.functions.invoke(
+        'ask-money',
+        body: {
+          'question': question,
+          'summary': summary,
+          'language': summary['language'],
+          if (prior != null)
+            'prior': {'question': prior.question, 'answer': prior.answer},
+        },
+      );
+      final data = res.data;
+      if (data is Map && data['error'] != null) {
+        throw AiFailure(_classify('${data['error']}'), '${data['error']}');
+      }
+      if (data is! Map || data['answer'] is! String) {
+        throw AiFailure(AiFailureKind.badResponse);
+      }
+      return AiAnswer(
+        answer: data['answer'] as String,
+        remaining: (data['remaining'] as num?)?.toInt(),
+      );
+    } on FunctionException catch (e) {
+      final details = e.details;
+      final raw = (details is Map && details['error'] != null)
+          ? details['error'].toString()
+          : 'status ${e.status}';
+      throw AiFailure(_classify(raw), raw);
+    }
+  }
+
   /// Test seams for the two pure helpers (spending fingerprint + error
   /// classification) so their behaviour can be checked without a live backend.
   @visibleForTesting
@@ -135,6 +180,7 @@ class AiService {
   /// Maps common provider errors onto a [AiFailureKind] the UI can localise.
   AiFailureKind _classify(String raw) {
     final lower = raw.toLowerCase();
+    if (lower.contains('daily_limit')) return AiFailureKind.dailyLimit;
     if (lower.contains('insufficient_quota') || lower.contains('429')) {
       return AiFailureKind.noCredit;
     }

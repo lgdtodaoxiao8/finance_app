@@ -567,6 +567,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiErrorBadResponse => 'Unexpected AI response.';
 
   @override
+  String get aiErrorDailyLimit =>
+      'You\'ve reached today\'s question limit. It resets tomorrow.';
+
+  @override
+  String get askYourMoney => 'Ask your money';
+
+  @override
+  String get askYourMoneySubtitle =>
+      'Chat with your finances — \'Can I afford this?\'';
+
+  @override
+  String get askMoneyBadge => 'Ask your money';
+
+  @override
+  String get askMoneyHint => 'Ask about your money…';
+
+  @override
+  String get askMoneyIntroTitle => 'Ask anything about your money';
+
+  @override
+  String get askMoneyIntroSubtitle =>
+      'Answers grounded in your real spending. Ask one question and a single follow-up.';
+
+  @override
+  String get askMoneyTryAsking => 'Try asking';
+
+  @override
+  String get askMoneyStarter1 => 'Where did my money go this month?';
+
+  @override
+  String get askMoneyStarter2 => 'Am I saving enough?';
+
+  @override
+  String get askMoneyStarter3 => 'What\'s my biggest waste?';
+
+  @override
+  String get askMoneyThinking => 'Thinking…';
+
+  @override
+  String get askMoneyFollowUpHint => 'Ask one follow-up';
+
+  @override
+  String get askMoneyNewQuestion => 'New question';
+
+  @override
+  String get askMoneyDone =>
+      'That\'s a question and a follow-up. Start a new one anytime.';
+
+  @override
+  String get askMoneySignInRequired => 'Sign in to chat with your money.';
+
+  @override
+  String askMoneyQuestionsLeft(int count) {
+    return '$count left today';
+  }
+
+  @override
   String get spendingBreakdown => 'Spending breakdown';
 
   @override

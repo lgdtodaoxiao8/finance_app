@@ -224,6 +224,27 @@
   "aiErrorInvalidKey": "Ключ ИИ на сервере недействителен. Задайте его заново: `supabase secrets set OPENAI_API_KEY=...`.",
   "aiErrorKeyNotSet": "ИИ ещё не настроен: задайте OPENAI_API_KEY в секретах Supabase.",
   "aiErrorBadResponse": "Неожиданный ответ ИИ.",
+  "aiErrorDailyLimit": "Вы исчерпали дневной лимит вопросов. Он обновится завтра.",
+
+  "askYourMoney": "Спроси свои деньги",
+  "askYourMoneySubtitle": "Чат с вашими финансами — «Могу ли я это позволить?»",
+  "askMoneyBadge": "Спроси свои деньги",
+  "askMoneyHint": "Спросите про свои деньги…",
+  "askMoneyIntroTitle": "Спросите что угодно о своих деньгах",
+  "askMoneyIntroSubtitle": "Ответы на основе ваших реальных трат. Один вопрос и одно уточнение.",
+  "askMoneyTryAsking": "Попробуйте спросить",
+  "askMoneyStarter1": "Куда ушли деньги в этом месяце?",
+  "askMoneyStarter2": "Достаточно ли я откладываю?",
+  "askMoneyStarter3": "На чём я больше всего теряю?",
+  "askMoneyThinking": "Думаю…",
+  "askMoneyFollowUpHint": "Задайте одно уточнение",
+  "askMoneyNewQuestion": "Новый вопрос",
+  "askMoneyDone": "Это вопрос и уточнение. Начните новый в любой момент.",
+  "askMoneySignInRequired": "Войдите, чтобы общаться со своими деньгами.",
+  "askMoneyQuestionsLeft": "Осталось сегодня: {count}",
+  "@askMoneyQuestionsLeft": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "spendingBreakdown": "Разбивка трат",
   "totalSpentThisMonth": "Всего потрачено в этом месяце",

@@ -10,6 +10,7 @@ import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/ai/view/ai_insights_screen.dart';
+import 'package:finance_app/features/ai/view/ask_money_screen.dart';
 import 'package:finance_app/features/ai/view/category_detail_screen.dart';
 import 'package:finance_app/features/ai/view/forecast_screen.dart';
 import 'package:finance_app/features/ai/view/month_detail_screen.dart';
@@ -154,6 +155,11 @@ class _AiDashboardState extends State<AiDashboard> {
               ],
             ),
             const SizedBox(height: 12),
+            _AskMoneyCard(
+              premium: premium,
+              onOpen: () => _open(context, premium, const AskMoneyScreen()),
+            ),
+            const SizedBox(height: 12),
             _Grid(
               children: [
                 _ThisMonthCard(
@@ -210,6 +216,71 @@ class _AiDashboardState extends State<AiDashboard> {
 }
 
 // ------------------------------------------------------------------ cards ---
+
+class _AskMoneyCard extends StatelessWidget {
+  const _AskMoneyCard({required this.premium, required this.onOpen});
+  final bool premium;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return GestureDetector(
+      onTap: onOpen,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: PremiumBadge.gradient,
+          borderRadius: BorderRadius.circular(kRadiusLg),
+          boxShadow: kCardShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Icon(Icons.forum_rounded, color: Colors.white),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.askYourMoney,
+                    style: const TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    l.askYourMoneySubtitle,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.3,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              premium ? Icons.chevron_right_rounded : Icons.lock_rounded,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _CardShell extends StatelessWidget {
   const _CardShell({required this.onTap, required this.child});

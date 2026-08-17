@@ -1166,6 +1166,108 @@ abstract class AppLocalizations {
   /// **'Unexpected AI response.'**
   String get aiErrorBadResponse;
 
+  /// No description provided for @aiErrorDailyLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached today\'s question limit. It resets tomorrow.'**
+  String get aiErrorDailyLimit;
+
+  /// No description provided for @askYourMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your money'**
+  String get askYourMoney;
+
+  /// No description provided for @askYourMoneySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with your finances — \'Can I afford this?\''**
+  String get askYourMoneySubtitle;
+
+  /// No description provided for @askMoneyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your money'**
+  String get askMoneyBadge;
+
+  /// No description provided for @askMoneyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about your money…'**
+  String get askMoneyHint;
+
+  /// No description provided for @askMoneyIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask anything about your money'**
+  String get askMoneyIntroTitle;
+
+  /// No description provided for @askMoneyIntroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers grounded in your real spending. Ask one question and a single follow-up.'**
+  String get askMoneyIntroSubtitle;
+
+  /// No description provided for @askMoneyTryAsking.
+  ///
+  /// In en, this message translates to:
+  /// **'Try asking'**
+  String get askMoneyTryAsking;
+
+  /// No description provided for @askMoneyStarter1.
+  ///
+  /// In en, this message translates to:
+  /// **'Where did my money go this month?'**
+  String get askMoneyStarter1;
+
+  /// No description provided for @askMoneyStarter2.
+  ///
+  /// In en, this message translates to:
+  /// **'Am I saving enough?'**
+  String get askMoneyStarter2;
+
+  /// No description provided for @askMoneyStarter3.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s my biggest waste?'**
+  String get askMoneyStarter3;
+
+  /// No description provided for @askMoneyThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get askMoneyThinking;
+
+  /// No description provided for @askMoneyFollowUpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask one follow-up'**
+  String get askMoneyFollowUpHint;
+
+  /// No description provided for @askMoneyNewQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'New question'**
+  String get askMoneyNewQuestion;
+
+  /// No description provided for @askMoneyDone.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s a question and a follow-up. Start a new one anytime.'**
+  String get askMoneyDone;
+
+  /// No description provided for @askMoneySignInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to chat with your money.'**
+  String get askMoneySignInRequired;
+
+  /// No description provided for @askMoneyQuestionsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} left today'**
+  String askMoneyQuestionsLeft(int count);
+
   /// No description provided for @spendingBreakdown.
   ///
   /// In en, this message translates to:

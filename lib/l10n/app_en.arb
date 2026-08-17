@@ -224,6 +224,27 @@
   "aiErrorInvalidKey": "The AI key on the server is invalid. Re-set it with `supabase secrets set OPENAI_API_KEY=...`.",
   "aiErrorKeyNotSet": "AI isn't set up yet: set OPENAI_API_KEY in Supabase secrets.",
   "aiErrorBadResponse": "Unexpected AI response.",
+  "aiErrorDailyLimit": "You've reached today's question limit. It resets tomorrow.",
+
+  "askYourMoney": "Ask your money",
+  "askYourMoneySubtitle": "Chat with your finances — 'Can I afford this?'",
+  "askMoneyBadge": "Ask your money",
+  "askMoneyHint": "Ask about your money…",
+  "askMoneyIntroTitle": "Ask anything about your money",
+  "askMoneyIntroSubtitle": "Answers grounded in your real spending. Ask one question and a single follow-up.",
+  "askMoneyTryAsking": "Try asking",
+  "askMoneyStarter1": "Where did my money go this month?",
+  "askMoneyStarter2": "Am I saving enough?",
+  "askMoneyStarter3": "What's my biggest waste?",
+  "askMoneyThinking": "Thinking…",
+  "askMoneyFollowUpHint": "Ask one follow-up",
+  "askMoneyNewQuestion": "New question",
+  "askMoneyDone": "That's a question and a follow-up. Start a new one anytime.",
+  "askMoneySignInRequired": "Sign in to chat with your money.",
+  "askMoneyQuestionsLeft": "{count} left today",
+  "@askMoneyQuestionsLeft": {
+    "placeholders": { "count": { "type": "int" } }
+  },
 
   "spendingBreakdown": "Spending breakdown",
   "totalSpentThisMonth": "Total spent this month",

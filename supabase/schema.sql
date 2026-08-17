@@ -89,6 +89,18 @@ create table if not exists public.entitlements (
 --   on conflict (user_id) do update set is_premium = excluded.is_premium,
 --                                        updated_at = now();
 
+-- ============================================================= ai_usage ====
+-- Per-user, per-day counter for AI chat calls ("Ask your money"). Written ONLY
+-- by the ask-money Edge Function via the service role (bypasses RLS), so a
+-- client can't reset its own count to keep spending. The client may READ its
+-- own row to show remaining quota (see the select-only policy below).
+create table if not exists public.ai_usage (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  day     date not null default current_date,
+  count   int  not null default 0,
+  primary key (user_id, day)
+);
+
 -- ================================================== Row Level Security ======
 -- Each user can only see and touch their own rows.
 alter table public.categories   enable row level security;
@@ -115,5 +127,13 @@ end $$;
 alter table public.entitlements enable row level security;
 drop policy if exists "read own entitlement" on public.entitlements;
 create policy "read own entitlement" on public.entitlements
+  for select
+  using (user_id = auth.uid());
+
+-- AI usage is READ-ONLY for clients (the Edge Function writes it via service
+-- role). A user may see their own daily count but never change it.
+alter table public.ai_usage enable row level security;
+drop policy if exists "read own ai usage" on public.ai_usage;
+create policy "read own ai usage" on public.ai_usage
   for select
   using (user_id = auth.uid());

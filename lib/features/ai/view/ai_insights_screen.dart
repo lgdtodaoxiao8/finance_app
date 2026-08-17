@@ -1,9 +1,8 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/widgets/premium_badge.dart';
-import 'package:finance_app/data/repositories/currency_repository.dart';
-import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/ai/data/ai_insight.dart';
+import 'package:finance_app/features/ai/data/spending_summary.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -37,58 +36,11 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
     }
   }
 
-  /// Builds a compact base-currency spending summary for the model.
-  Future<Map<String, dynamic>> _buildSummary() async {
-    // Read the locale before the awaits — the model must answer in the user's
-    // language, and reading context after an async gap is unsafe.
-    final language = Localizations.localeOf(context).languageCode;
-    final txns = await getIt<TransactionRepository>().getAllWithDetails();
-    final base = await getIt<CurrencyRepository>().getBase();
-
-    double income = 0, expense = 0;
-    final byCategory = <String, double>{};
-    for (final t in txns) {
-      if (t.isIncome) income += t.amountInBase;
-      if (t.isExpense) {
-        expense += t.amountInBase;
-        final name = t.categoryName ?? 'Uncategorized';
-        byCategory[name] = (byCategory[name] ?? 0) + t.amountInBase;
-      }
-    }
-
-    final categories =
-        byCategory.entries
-            .map((e) => {'name': e.key, 'amount': _round(e.value)})
-            .toList()
-          ..sort(
-            (a, b) => (b['amount'] as num).compareTo(a['amount'] as num),
-          );
-
-    final recent = txns.reversed
-        .take(15)
-        .map(
-          (t) => {
-            'category': t.categoryName,
-            'amount': _round(t.amountInBase),
-            'type': t.type,
-            'date': t.date.toIso8601String().split('T').first,
-          },
-        )
-        .toList();
-
-    return {
-      // BCP-47 language the coach must reply in (e.g. 'en', 'ru').
-      'language': language,
-      'baseCurrency': base?.currencyCode ?? '',
-      'income': _round(income),
-      'expense': _round(expense),
-      'balance': _round(income - expense),
-      'byCategory': categories,
-      'recent': recent,
-    };
-  }
-
-  double _round(double v) => (v * 100).roundToDouble() / 100;
+  /// Builds a compact base-currency spending summary for the model. Read the
+  /// locale before the await — the coach answers in the user's language, and
+  /// touching context after an async gap is unsafe.
+  Future<Map<String, dynamic>> _buildSummary() =>
+      buildSpendingSummary(language: Localizations.localeOf(context).languageCode);
 
   /// AiService has no BuildContext, so it reports a [AiFailureKind] and we turn
   /// it into a message in the user's language here.
@@ -99,6 +51,7 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
       AiFailureKind.noCredit => l.aiErrorNoCredit,
       AiFailureKind.invalidKey => l.aiErrorInvalidKey,
       AiFailureKind.keyNotSet => l.aiErrorKeyNotSet,
+      AiFailureKind.dailyLimit => l.aiErrorDailyLimit,
       AiFailureKind.badResponse => l.aiErrorBadResponse,
       AiFailureKind.unknown => l.somethingWentWrongDetail(e.detail ?? ''),
     };

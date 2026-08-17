@@ -569,6 +569,64 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aiErrorBadResponse => 'Неожиданный ответ ИИ.';
 
   @override
+  String get aiErrorDailyLimit =>
+      'Вы исчерпали дневной лимит вопросов. Он обновится завтра.';
+
+  @override
+  String get askYourMoney => 'Спроси свои деньги';
+
+  @override
+  String get askYourMoneySubtitle =>
+      'Чат с вашими финансами — «Могу ли я это позволить?»';
+
+  @override
+  String get askMoneyBadge => 'Спроси свои деньги';
+
+  @override
+  String get askMoneyHint => 'Спросите про свои деньги…';
+
+  @override
+  String get askMoneyIntroTitle => 'Спросите что угодно о своих деньгах';
+
+  @override
+  String get askMoneyIntroSubtitle =>
+      'Ответы на основе ваших реальных трат. Один вопрос и одно уточнение.';
+
+  @override
+  String get askMoneyTryAsking => 'Попробуйте спросить';
+
+  @override
+  String get askMoneyStarter1 => 'Куда ушли деньги в этом месяце?';
+
+  @override
+  String get askMoneyStarter2 => 'Достаточно ли я откладываю?';
+
+  @override
+  String get askMoneyStarter3 => 'На чём я больше всего теряю?';
+
+  @override
+  String get askMoneyThinking => 'Думаю…';
+
+  @override
+  String get askMoneyFollowUpHint => 'Задайте одно уточнение';
+
+  @override
+  String get askMoneyNewQuestion => 'Новый вопрос';
+
+  @override
+  String get askMoneyDone =>
+      'Это вопрос и уточнение. Начните новый в любой момент.';
+
+  @override
+  String get askMoneySignInRequired =>
+      'Войдите, чтобы общаться со своими деньгами.';
+
+  @override
+  String askMoneyQuestionsLeft(int count) {
+    return 'Осталось сегодня: $count';
+  }
+
+  @override
   String get spendingBreakdown => 'Разбивка трат';
 
   @override

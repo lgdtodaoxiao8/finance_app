@@ -136,7 +136,24 @@ void main() {
         ai.classifyError('OPENAI_API_KEY is not set on the server'),
         AiFailureKind.keyNotSet,
       );
+      expect(ai.classifyError('daily_limit'), AiFailureKind.dailyLimit);
       expect(ai.classifyError('some other error'), AiFailureKind.unknown);
+    });
+
+    test('ask throws backendOff when the backend is not configured', () async {
+      final ai = AiService(prefs);
+      if (!ai.isAvailable) {
+        await expectLater(
+          ai.ask(question: 'Can I afford this?', summary: const {'language': 'en'}),
+          throwsA(
+            isA<AiFailure>().having(
+              (e) => e.kind,
+              'kind',
+              AiFailureKind.backendOff,
+            ),
+          ),
+        );
+      }
     });
 
     test('insights serves the cache on a signature match (no network)', () async {

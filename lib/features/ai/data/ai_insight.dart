@@ -1,3 +1,12 @@
+/// One answer from the "Ask your money" chat, plus how many questions remain in
+/// the user's daily quota ([remaining] is null when the server didn't report it).
+class AiAnswer {
+  const AiAnswer({required this.answer, this.remaining});
+
+  final String answer;
+  final int? remaining;
+}
+
 /// A single AI-generated insight card.
 class AiInsight {
   const AiInsight({
