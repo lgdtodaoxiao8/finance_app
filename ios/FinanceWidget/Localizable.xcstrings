@@ -220,6 +220,56 @@
           }
         }
       }
+    },
+    "AI" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ИИ"
+          }
+        }
+      }
+    },
+    "Financial health" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Финансовое здоровье"
+          }
+        }
+      }
+    },
+    "Open the AI coach to see your score" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте AI-коуч, чтобы увидеть балл"
+          }
+        }
+      }
+    },
+    "AI digest" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI-дайджест"
+          }
+        }
+      }
+    },
+    "Your financial-health score and a key insight." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш балл финансового здоровья и ключевой инсайт."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

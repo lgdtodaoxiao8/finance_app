@@ -45,6 +45,10 @@ class WidgetService {
   /// income instead of expense (its own WidgetKit kind).
   static const String iosQuickIncomeWidgetName = 'QuickIncomeWidget';
 
+  /// The informative AI-digest widget — renders the cached AiInsight (score +
+  /// summary). Its own WidgetKit kind.
+  static const String iosAiWidgetName = 'AiInsightWidget';
+
   /// iOS App Group shared between the app and the widget extension.
   /// Must match the App Group capability added to both the Runner and the
   /// widget-extension targets in Xcode.
@@ -164,6 +168,8 @@ class WidgetService {
           }),
         ),
       ];
+      // The AI-digest widget reads the cached insights (score/summary).
+      writes.addAll(_aiWrites());
       // Each group's resolved shortcuts under its own key; the default group
       // also under the legacy `shortcuts` key so an unconfigured instance
       // still shows something.
@@ -190,6 +196,7 @@ class WidgetService {
       );
       await HomeWidget.updateWidget(iOSName: iosQuickAddWidgetName);
       await HomeWidget.updateWidget(iOSName: iosQuickIncomeWidgetName);
+      await HomeWidget.updateWidget(iOSName: iosAiWidgetName);
     } catch (e) {
       // Native side not configured yet (e.g. no widget extension) — safe no-op.
       debugPrint('WidgetService._publish skipped: $e');
@@ -296,6 +303,59 @@ class WidgetService {
       byCategory[cid] = list.length >= 3 ? (median(list) ?? global) : global;
     });
     return (byCategory: byCategory, global: global);
+  }
+
+  /// App-Group writes for the AI-digest widget, read from the cached insights
+  /// ([AiService] populates the cache; the widget only ever renders it, never
+  /// calls the network). No cache → the widget shows an "open the AI coach"
+  /// prompt — and since a non-premium user never has a cache, that doubles as
+  /// the lock.
+  List<Future<void>> _aiWrites() {
+    Map<String, dynamic>? ai;
+    final raw = _preferences.aiInsightsJson;
+    if (raw != null) {
+      try {
+        ai = jsonDecode(raw) as Map<String, dynamic>;
+      } catch (_) {}
+    }
+    final insights = (ai?['insights'] as List?) ?? const [];
+    final top = insights.isNotEmpty
+        ? insights.first as Map<String, dynamic>
+        : null;
+    return [
+      HomeWidget.saveWidgetData<bool>('ai_has', ai != null),
+      HomeWidget.saveWidgetData<double>(
+        'ai_score',
+        (ai?['score'] as num?)?.toDouble() ?? 0,
+      ),
+      HomeWidget.saveWidgetData<String>(
+        'ai_label',
+        (ai?['scoreLabel'] as String?) ?? '',
+      ),
+      HomeWidget.saveWidgetData<String>(
+        'ai_summary',
+        (ai?['summary'] as String?) ?? '',
+      ),
+      HomeWidget.saveWidgetData<String>(
+        'ai_insight',
+        (top?['title'] as String?) ?? '',
+      ),
+      HomeWidget.saveWidgetData<String>(
+        'ai_tone',
+        (top?['tone'] as String?) ?? 'neutral',
+      ),
+    ];
+  }
+
+  /// Republishes just the AI-digest widget — used right after a fresh AI run so
+  /// the widget reflects the new score without waiting for a data change.
+  Future<void> refreshAiWidget() async {
+    try {
+      await Future.wait(_aiWrites());
+      await HomeWidget.updateWidget(iOSName: iosAiWidgetName);
+    } catch (e) {
+      debugPrint('WidgetService.refreshAiWidget skipped: $e');
+    }
   }
 
   Future<void> dispose() async {

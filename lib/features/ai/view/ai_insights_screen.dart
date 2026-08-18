@@ -3,6 +3,7 @@ import 'package:finance_app/core/widgets/premium_badge.dart';
 import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/ai/data/ai_insight.dart';
 import 'package:finance_app/features/ai/data/spending_summary.dart';
+import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -68,6 +69,9 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
       // forced a refresh.
       final result = await _ai.insights(summary, force: force);
       if (mounted) setState(() => _result = result);
+      // The cache just updated — refresh the home-screen AI widget so its score
+      // matches without waiting for the next transaction change.
+      getIt<WidgetService>().refreshAiWidget();
     } on AiFailure catch (e) {
       if (mounted) setState(() => _error = _localizedFailure(e));
     } catch (e) {

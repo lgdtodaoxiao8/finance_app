@@ -357,6 +357,197 @@ struct FinanceWidget: Widget {
   }
 }
 
+// MARK: - AI digest widget (informative — the cached AiInsight score + summary)
+//
+// Purely a renderer of the App-Group cache the app publishes (widgets can't call
+// the network). No cache → a prompt to open the coach; a non-premium account
+// never has a cache, so that doubles as the lock. Adaptive: systemBackground.
+
+private let aiAccent = Color(red: 0.43, green: 0.37, blue: 0.96)
+
+private func scoreColor(_ s: Int) -> Color {
+  if s >= 70 { return positive }
+  if s >= 40 { return Color(red: 0.96, green: 0.65, blue: 0.14) }
+  return Color(red: 0.94, green: 0.30, blue: 0.37)
+}
+
+private func aiToneColor(_ tone: String) -> Color {
+  switch tone {
+  case "positive": return positive
+  case "warning": return Color(red: 0.96, green: 0.65, blue: 0.14)
+  default: return aiAccent
+  }
+}
+
+struct AiEntry: TimelineEntry {
+  let date: Date
+  let has: Bool
+  let score: Int
+  let label: String
+  let summary: String
+  let insight: String
+  let tone: String
+}
+
+private func loadAiEntry() -> AiEntry {
+  let d = UserDefaults(suiteName: appGroupId)
+  return AiEntry(
+    date: Date(),
+    has: d?.bool(forKey: "ai_has") ?? false,
+    score: Int((d?.double(forKey: "ai_score") ?? 0).rounded()),
+    label: d?.string(forKey: "ai_label") ?? "",
+    summary: d?.string(forKey: "ai_summary") ?? "",
+    insight: d?.string(forKey: "ai_insight") ?? "",
+    tone: d?.string(forKey: "ai_tone") ?? "neutral")
+}
+
+struct AiProvider: TimelineProvider {
+  func placeholder(in context: Context) -> AiEntry {
+    AiEntry(
+      date: Date(), has: false, score: 0, label: "", summary: "", insight: "",
+      tone: "neutral")
+  }
+  func getSnapshot(in context: Context, completion: @escaping (AiEntry) -> Void) {
+    completion(loadAiEntry())
+  }
+  func getTimeline(
+    in context: Context, completion: @escaping (Timeline<AiEntry>) -> Void
+  ) {
+    completion(Timeline(entries: [loadAiEntry()], policy: .never))
+  }
+}
+
+struct AiInsightEntryView: View {
+  var entry: AiEntry
+  @Environment(\.widgetFamily) var family
+
+  var body: some View {
+    Group {
+      if !entry.has {
+        emptyView
+      } else if family == .systemSmall {
+        smallView
+      } else {
+        mediumView
+      }
+    }
+    // Premium coach if signed-in premium; otherwise the app opens to Home,
+    // whose gated card routes to the paywall. `homeWidget` is required for the
+    // home_widget plugin to forward the launch.
+    .widgetURL(URL(string: "financeapp://insights?homeWidget"))
+  }
+
+  private var aiLabel: some View {
+    HStack(spacing: 4) {
+      Image(systemName: "sparkles").font(.system(size: 10, weight: .bold))
+      Text("AI").font(.system(size: 11, weight: .heavy))
+    }
+    .foregroundColor(aiAccent)
+  }
+
+  private func ring(_ diameter: CGFloat, scoreFont: CGFloat) -> some View {
+    let c = scoreColor(entry.score)
+    let lw = diameter * 0.10
+    return ZStack {
+      Circle().stroke(Color.primary.opacity(0.10), lineWidth: lw)
+      Circle()
+        .trim(from: 0, to: CGFloat(min(max(entry.score, 0), 100)) / 100)
+        .stroke(c, style: StrokeStyle(lineWidth: lw, lineCap: .round))
+        .rotationEffect(.degrees(-90))
+      Text("\(entry.score)")
+        .font(.system(size: scoreFont, weight: .heavy, design: .rounded))
+        .foregroundColor(c)
+    }
+    .frame(width: diameter, height: diameter)
+  }
+
+  // Small — the ring is the hero: score + label + "financial health".
+  private var smallView: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      aiLabel
+      Spacer(minLength: 4)
+      VStack(spacing: 5) {
+        ring(72, scoreFont: 25)
+        Text(entry.label)
+          .font(.system(size: 12.5, weight: .bold))
+          .foregroundColor(.primary)
+          .multilineTextAlignment(.center)
+          .lineLimit(2)
+          .minimumScaleFactor(0.8)
+        Text("Financial health")
+          .font(.system(size: 9.5))
+          .foregroundColor(.secondary)
+      }
+      .frame(maxWidth: .infinity)
+      Spacer(minLength: 0)
+    }
+  }
+
+  // Medium — ring + summary + one insight line.
+  private var mediumView: some View {
+    HStack(spacing: 16) {
+      ring(88, scoreFont: 27)
+      VStack(alignment: .leading, spacing: 7) {
+        aiLabel
+        Text(entry.summary)
+          .font(.system(size: 14.5, weight: .bold))
+          .foregroundColor(.primary)
+          .lineLimit(3)
+          .fixedSize(horizontal: false, vertical: true)
+        if !entry.insight.isEmpty {
+          HStack(alignment: .top, spacing: 7) {
+            RoundedRectangle(cornerRadius: 2)
+              .fill(aiToneColor(entry.tone))
+              .frame(width: 7, height: 7)
+              .padding(.top, 4)
+            Text(entry.insight)
+              .font(.system(size: 12))
+              .foregroundColor(.secondary)
+              .lineLimit(2)
+          }
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+    }
+  }
+
+  // Empty / locked — no cached digest yet: a prompt to run the coach.
+  private var emptyView: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      aiLabel
+      Spacer(minLength: 0)
+      Image(systemName: "sparkles")
+        .font(.system(size: family == .systemSmall ? 24 : 28))
+        .foregroundColor(aiAccent)
+      Text("Open the AI coach to see your score")
+        .font(.system(size: family == .systemSmall ? 12 : 14, weight: .semibold))
+        .foregroundColor(.primary)
+        .fixedSize(horizontal: false, vertical: true)
+      Spacer(minLength: 0)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+  }
+}
+
+struct AiInsightWidget: Widget {
+  let kind = "AiInsightWidget"
+
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: kind, provider: AiProvider()) { entry in
+      if #available(iOS 17.0, *) {
+        AiInsightEntryView(entry: entry)
+          .containerBackground(Color(UIColor.systemBackground), for: .widget)
+      } else {
+        AiInsightEntryView(entry: entry)
+          .background(Color(UIColor.systemBackground))
+      }
+    }
+    .configurationDisplayName("AI digest")
+    .description("Your financial-health score and a key insight.")
+    .supportedFamilies([.systemSmall, .systemMedium])
+  }
+}
+
 // MARK: - Widget bundle
 
 @main
@@ -365,6 +556,7 @@ struct FinanceWidgets: WidgetBundle {
     FinanceWidget()
     QuickAddWidget()
     QuickIncomeWidget()
+    AiInsightWidget()
   }
 }
 

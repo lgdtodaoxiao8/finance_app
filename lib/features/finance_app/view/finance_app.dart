@@ -14,6 +14,7 @@ import 'package:finance_app/features/sync/sync_service.dart';
 import 'package:finance_app/features/widget_bridge/widget_interactivity.dart';
 import 'package:finance_app/features/widget_bridge/widget_service.dart';
 import 'package:finance_app/features/add_transaction/add_transaction.dart';
+import 'package:finance_app/features/ai/view/ai_insights_screen.dart';
 import 'package:finance_app/features/widget_config/data/widget_flow.dart';
 import 'package:finance_app/router/router.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -144,6 +145,21 @@ class _FinanceAppState extends State<FinanceApp> with WidgetsBindingObserver {
           ),
         );
       });
+      return;
+    }
+    final wantsInsights =
+        uri.host == 'insights' || uri.path.contains('insights');
+    if (wantsInsights) {
+      // Only push the premium coach for a premium account; a non-premium tap
+      // (from the widget's "open the AI coach" prompt) just opens the app to
+      // Home, where the gated card leads to the paywall.
+      if (getIt<SubscriptionService>().isPremium.value) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _navigatorKey.currentState?.push(
+            MaterialPageRoute<void>(builder: (_) => const AiInsightsScreen()),
+          );
+        });
+      }
       return;
     }
     final wantsAdd = uri.host == 'add' || uri.path.contains('add');
