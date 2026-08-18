@@ -8,13 +8,18 @@ import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
+import 'package:finance_app/features/transactions_list/period_grouping.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
-/// A horizontally-scrollable strip of at-a-glance stat chips for this month.
-/// Free, local. Designed to invite a sideways scroll.
+/// A horizontally-scrollable strip of at-a-glance stat chips for the selected
+/// period — kept in step with the summary tiles above it. Free, local.
 class StatStrip extends StatefulWidget {
-  const StatStrip({super.key});
+  const StatStrip({super.key, required this.range});
+
+  /// The period window to summarise (same range the analytics tiles use), so
+  /// the strip never disagrees with them.
+  final DateTimeRange range;
 
   @override
   State<StatStrip> createState() => _StatStripState();
@@ -42,6 +47,14 @@ class _StatStripState extends State<StatStrip> {
 
   void _onSettings() => _recompute(_txns);
 
+  @override
+  void didUpdateWidget(covariant StatStrip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The user switched period (Day/Week/Month/…) — resummarise the last
+    // transactions over the new window.
+    if (oldWidget.range != widget.range) _recompute(_txns);
+  }
+
   // Reactive base-currency symbol. This strip bakes the symbol into its stat
   // labels, so a change must re-run _recompute over the last transactions
   // (Home stays alive in an IndexedStack — a one-shot read would go stale).
@@ -61,16 +74,17 @@ class _StatStripState extends State<StatStrip> {
 
   void _recompute(List<TransactionDetails> txns) {
     _txns = txns;
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month);
+    final range = widget.range;
+    final filtered = filterByRange(txns, range.start, range.end);
 
     double income = 0, expense = 0, biggest = 0;
     var count = 0;
+    // Distinct calendar dates (year+month+day key, so days in different months
+    // never collide the way a bare day-of-month would).
     final activeDays = <int>{};
-    for (final t in txns) {
-      if (t.date.isBefore(monthStart)) continue;
+    for (final t in filtered) {
       count++;
-      activeDays.add(t.date.day);
+      activeDays.add(t.date.year * 10000 + t.date.month * 100 + t.date.day);
       if (t.isIncome) income += t.amountInBase;
       if (t.isExpense) {
         expense += t.amountInBase;
@@ -79,7 +93,8 @@ class _StatStripState extends State<StatStrip> {
     }
     final net = income - expense;
     final savingsRate = income > 0 ? (net / income * 100).round() : null;
-    final avgPerDay = expense / now.day;
+    final days = range.end.difference(range.start).inDays + 1;
+    final avgPerDay = expense / (days < 1 ? 1 : days);
 
     if (!mounted) return;
     setState(() {

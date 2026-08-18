@@ -97,7 +97,7 @@ class _AnalyticsView extends StatelessWidget {
                 symbol: state.baseSymbol,
               ),
               const SizedBox(height: 16),
-              const StatStrip(),
+              StatStrip(range: state.range),
               const SizedBox(height: 16),
               const WeeklyDigestTeaser(),
               const SizedBox(height: 20),
