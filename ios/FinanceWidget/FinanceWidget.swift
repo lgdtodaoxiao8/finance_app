@@ -548,6 +548,441 @@ struct AiInsightWidget: Widget {
   }
 }
 
+// MARK: - Chart widgets (informative — local analytics; adaptive background)
+//
+// Four separate gallery tiles sharing one data loader + one entry: daily-spend
+// bars, a 6-month income/expense trend, a category ring, and a cumulative-spend
+// curve. All render the App-Group snapshot the app publishes (widgets do no
+// computation of their own). Tapping opens the app to Home.
+
+private let chartExpense = Color(red: 0.94, green: 0.30, blue: 0.37)
+
+enum ChartKind { case daily, trend, category, cumulative }
+
+struct ChartEntry: TimelineEntry {
+  let date: Date
+  let symbol: String
+  let daily: [Double]
+  let dailyPrev: [Double]
+  let trendIncome: [Double]
+  let trendExpense: [Double]
+  let categories: [CategoryItem]
+
+  var total: Double { daily.reduce(0, +) }
+}
+
+private func loadDoubleArray(_ key: String) -> [Double] {
+  let d = UserDefaults(suiteName: appGroupId)
+  guard let json = d?.string(forKey: key), let data = json.data(using: .utf8),
+    let arr = try? JSONSerialization.jsonObject(with: data) as? [Any]
+  else { return [] }
+  return arr.compactMap { ($0 as? NSNumber)?.doubleValue }
+}
+
+private func loadCategoryItems() -> [CategoryItem] {
+  let d = UserDefaults(suiteName: appGroupId)
+  var out: [CategoryItem] = []
+  if let json = d?.string(forKey: "categories"), let data = json.data(using: .utf8),
+    let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+  {
+    for item in arr {
+      let colorInt = (item["color"] as? NSNumber)?.intValue ?? 0xFF9E9E_9E
+      out.append(
+        CategoryItem(
+          name: item["name"] as? String ?? "",
+          value: (item["value"] as? NSNumber)?.doubleValue ?? 0,
+          color: colorFromARGB(colorInt),
+          iconCode: (item["iconCode"] as? NSNumber)?.intValue ?? 0))
+    }
+  }
+  return out
+}
+
+private func loadChartEntry() -> ChartEntry {
+  let d = UserDefaults(suiteName: appGroupId)
+  var income: [Double] = []
+  var expense: [Double] = []
+  if let json = d?.string(forKey: "chart_trend"), let data = json.data(using: .utf8),
+    let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+  {
+    for m in arr {
+      income.append((m["income"] as? NSNumber)?.doubleValue ?? 0)
+      expense.append((m["expense"] as? NSNumber)?.doubleValue ?? 0)
+    }
+  }
+  return ChartEntry(
+    date: Date(),
+    symbol: d?.string(forKey: "symbol") ?? "",
+    daily: loadDoubleArray("chart_daily"),
+    dailyPrev: loadDoubleArray("chart_daily_prev"),
+    trendIncome: income,
+    trendExpense: expense,
+    categories: loadCategoryItems())
+}
+
+struct ChartProvider: TimelineProvider {
+  func placeholder(in context: Context) -> ChartEntry {
+    ChartEntry(
+      date: Date(), symbol: "$", daily: [], dailyPrev: [], trendIncome: [],
+      trendExpense: [], categories: [])
+  }
+  func getSnapshot(in context: Context, completion: @escaping (ChartEntry) -> Void) {
+    completion(loadChartEntry())
+  }
+  func getTimeline(
+    in context: Context, completion: @escaping (Timeline<ChartEntry>) -> Void
+  ) {
+    completion(Timeline(entries: [loadChartEntry()], policy: .never))
+  }
+}
+
+private func cumulativeSums(_ arr: [Double]) -> [Double] {
+  var s = 0.0
+  return arr.map {
+    s += $0
+    return s
+  }
+}
+
+private func monthShort(monthsAgo: Int) -> String {
+  let date =
+    Calendar.current.date(byAdding: .month, value: -monthsAgo, to: Date()) ?? Date()
+  let df = DateFormatter()
+  df.setLocalizedDateFormatFromTemplate("LLL")
+  return df.string(from: date)
+}
+
+struct ChartWidgetView: View {
+  var entry: ChartEntry
+  let kind: ChartKind
+  @Environment(\.widgetFamily) var family
+
+  private var isSmall: Bool { family == .systemSmall }
+
+  var body: some View {
+    Group {
+      switch kind {
+      case .daily: dailyView
+      case .trend: trendView
+      case .category: categoryView
+      case .cumulative: cumulativeView
+      }
+    }
+    // Informative — tapping just opens the app to Home. `homeWidget` is required
+    // for the home_widget plugin to forward the launch (it then no-ops).
+    .widgetURL(URL(string: "financeapp://home?homeWidget"))
+  }
+
+  private func header(_ title: String, _ trailing: String, color: Color) -> some View {
+    HStack(alignment: .firstTextBaseline) {
+      Text(title).font(.caption).foregroundColor(.secondary).lineLimit(1)
+      Spacer(minLength: 4)
+      Text(trailing)
+        .font(.system(size: 14, weight: .bold, design: .rounded))
+        .foregroundColor(color)
+        .lineLimit(1)
+    }
+  }
+
+  @ViewBuilder
+  private var emptyHint: some View {
+    Text("No data yet").font(.caption).foregroundColor(.secondary)
+  }
+
+  // MARK: A — daily bars
+
+  private var dailyView: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      header("Spending · 30d", abbreviatedMoney(entry.total, symbol: entry.symbol),
+        color: Color.accentColor)
+      if entry.daily.isEmpty || entry.total == 0 {
+        Spacer(); emptyHint; Spacer()
+      } else {
+        barChart(entry.daily, accent: Color.accentColor, highlightLast: true)
+      }
+    }
+  }
+
+  private func barChart(_ values: [Double], accent: Color, highlightLast: Bool)
+    -> some View
+  {
+    let mx = values.max() ?? 1
+    return GeometryReader { geo in
+      HStack(alignment: .bottom, spacing: 2) {
+        ForEach(values.indices, id: \.self) { i in
+          RoundedRectangle(cornerRadius: 1.5)
+            .fill(
+              (highlightLast && i == values.count - 1)
+                ? accent : accent.opacity(0.45)
+            )
+            .frame(
+              height: Swift.max(2, geo.size.height * CGFloat(mx > 0 ? values[i] / mx : 0)))
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+    }
+  }
+
+  // MARK: B — income/expense trend
+
+  private var trendView: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack {
+        Text("Income & spending").font(.caption).foregroundColor(.secondary)
+          .lineLimit(1)
+        Spacer(minLength: 4)
+        HStack(spacing: 6) {
+          legendDot(positive, "In")
+          legendDot(chartExpense, "Out")
+        }
+      }
+      if entry.trendIncome.isEmpty {
+        Spacer(); emptyHint; Spacer()
+      } else {
+        trendChart
+        if !isSmall {
+          HStack(spacing: 0) {
+            ForEach(entry.trendIncome.indices, id: \.self) { i in
+              Text(monthShort(monthsAgo: entry.trendIncome.count - 1 - i))
+                .font(.system(size: 9)).foregroundColor(.secondary)
+                .frame(maxWidth: .infinity)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private func legendDot(_ c: Color, _ label: String) -> some View {
+    HStack(spacing: 3) {
+      RoundedRectangle(cornerRadius: 2).fill(c).frame(width: 7, height: 7)
+      Text(label).font(.system(size: 9)).foregroundColor(.secondary)
+    }
+  }
+
+  private var trendChart: some View {
+    let mx = Swift.max(
+      entry.trendIncome.max() ?? 1, entry.trendExpense.max() ?? 1, 1)
+    return GeometryReader { geo in
+      HStack(alignment: .bottom, spacing: isSmall ? 4 : 8) {
+        ForEach(entry.trendIncome.indices, id: \.self) { i in
+          HStack(alignment: .bottom, spacing: 2) {
+            trendBar(entry.trendIncome[i], mx, geo.size.height, positive)
+            trendBar(entry.trendExpense[i], mx, geo.size.height, chartExpense)
+          }
+          .frame(maxWidth: .infinity)
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+    }
+  }
+
+  private func trendBar(_ v: Double, _ mx: Double, _ h: CGFloat, _ c: Color)
+    -> some View
+  {
+    RoundedRectangle(cornerRadius: 2).fill(c)
+      .frame(width: isSmall ? 6 : 9, height: Swift.max(2, h * CGFloat(v / mx)))
+  }
+
+  // MARK: C — category ring
+
+  private var categoryView: some View {
+    let cats = Array(entry.categories.prefix(6))
+    let total = cats.reduce(0) { $0 + $1.value }
+    return Group {
+      if cats.isEmpty || total == 0 {
+        VStack(alignment: .leading, spacing: 8) {
+          Text("By category").font(.caption).foregroundColor(.secondary)
+          Spacer(); emptyHint; Spacer()
+        }
+      } else if isSmall {
+        VStack(spacing: 8) {
+          ring(cats, total: total, size: 74)
+          Text(cats[0].name).font(.system(size: 12, weight: .semibold))
+            .foregroundColor(.primary).lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else {
+        HStack(spacing: 16) {
+          ring(cats, total: total, size: 96)
+          VStack(alignment: .leading, spacing: 7) {
+            Text("By category").font(.caption).foregroundColor(.secondary)
+            ForEach(Array(cats.prefix(4).enumerated()), id: \.offset) { _, c in
+              HStack(spacing: 7) {
+                RoundedRectangle(cornerRadius: 2).fill(c.color)
+                  .frame(width: 8, height: 8)
+                Text(c.name).font(.system(size: 12)).foregroundColor(.secondary)
+                  .lineLimit(1)
+                Spacer(minLength: 4)
+                Text("\(Int((c.value / total * 100).rounded()))%")
+                  .font(.system(size: 12, weight: .bold)).foregroundColor(.primary)
+              }
+            }
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      }
+    }
+  }
+
+  private func ring(_ cats: [CategoryItem], total: Double, size: CGFloat)
+    -> some View
+  {
+    var start = 0.0
+    var segs: [(start: Double, frac: Double, color: Color)] = []
+    for c in cats {
+      let frac = total > 0 ? c.value / total : 0
+      segs.append((start, frac, c.color))
+      start += frac
+    }
+    return ZStack {
+      ForEach(segs.indices, id: \.self) { i in
+        Circle()
+          .trim(from: segs[i].start, to: segs[i].start + Swift.max(0, segs[i].frac - 0.006))
+          .stroke(segs[i].color,
+            style: StrokeStyle(lineWidth: size * 0.13, lineCap: .butt))
+          .rotationEffect(.degrees(-90))
+      }
+      VStack(spacing: 0) {
+        Text("total").font(.system(size: 9)).foregroundColor(.secondary)
+        Text(abbreviatedMoney(total, symbol: symbolOrEmpty))
+          .font(.system(size: 13, weight: .bold, design: .rounded))
+          .foregroundColor(.primary).lineLimit(1).minimumScaleFactor(0.6)
+          .frame(maxWidth: size * 0.7)
+      }
+    }
+    .frame(width: size, height: size)
+  }
+
+  private var symbolOrEmpty: String { entry.symbol }
+
+  // MARK: E — cumulative curve
+
+  private var cumulativeView: some View {
+    let cum = cumulativeSums(entry.daily)
+    return VStack(alignment: .leading, spacing: 8) {
+      header("Cumulative · month",
+        abbreviatedMoney(cum.last ?? 0, symbol: entry.symbol), color: chartExpense)
+      if cum.count < 2 || (cum.last ?? 0) == 0 {
+        Spacer(); emptyHint; Spacer()
+      } else {
+        cumulativeChart(cum, cumulativeSums(entry.dailyPrev), accent: chartExpense)
+        if !isSmall {
+          HStack {
+            Text("a month ago").font(.system(size: 9)).foregroundColor(.secondary)
+            Spacer()
+            HStack(spacing: 4) {
+              Text("– –").font(.system(size: 9)).foregroundColor(.secondary)
+              Text("last month").font(.system(size: 9)).foregroundColor(.secondary)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private func cumulativeChart(_ cum: [Double], _ cumPrev: [Double], accent: Color)
+    -> some View
+  {
+    let mx = Swift.max(cum.last ?? 0, cumPrev.last ?? 0, 1)
+    return GeometryReader { geo in
+      let w = geo.size.width
+      let h = geo.size.height
+      let map: ([Double]) -> [CGPoint] = { arr in
+        guard arr.count > 1 else { return [] }
+        return arr.enumerated().map { i, v in
+          CGPoint(
+            x: w * CGFloat(i) / CGFloat(arr.count - 1),
+            y: h * CGFloat(1 - v / mx))
+        }
+      }
+      let cur = map(cum)
+      let prev = map(cumPrev)
+      ZStack {
+        if cur.count > 1 {
+          Path { p in
+            p.move(to: CGPoint(x: 0, y: h))
+            for pt in cur { p.addLine(to: pt) }
+            p.addLine(to: CGPoint(x: w, y: h))
+            p.closeSubpath()
+          }
+          .fill(
+            LinearGradient(
+              colors: [accent.opacity(0.28), accent.opacity(0)],
+              startPoint: .top, endPoint: .bottom))
+          Path { p in
+            p.move(to: cur[0])
+            for pt in cur.dropFirst() { p.addLine(to: pt) }
+          }
+          .stroke(accent, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+        }
+        if prev.count > 1 {
+          Path { p in
+            p.move(to: prev[0])
+            for pt in prev.dropFirst() { p.addLine(to: pt) }
+          }
+          .stroke(
+            Color.secondary.opacity(0.5),
+            style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
+        }
+      }
+    }
+  }
+}
+
+@ViewBuilder
+private func chartContainer<V: View>(_ view: V) -> some View {
+  if #available(iOS 17.0, *) {
+    view.containerBackground(Color(UIColor.systemBackground), for: .widget)
+  } else {
+    view.background(Color(UIColor.systemBackground))
+  }
+}
+
+struct DailyChartWidget: Widget {
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: "DailyChartWidget", provider: ChartProvider()) { e in
+      chartContainer(ChartWidgetView(entry: e, kind: .daily))
+    }
+    .configurationDisplayName("Daily spending")
+    .description("Your spending over the last 30 days.")
+    .supportedFamilies([.systemSmall, .systemMedium])
+  }
+}
+
+struct TrendChartWidget: Widget {
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: "TrendChartWidget", provider: ChartProvider()) { e in
+      chartContainer(ChartWidgetView(entry: e, kind: .trend))
+    }
+    .configurationDisplayName("Income & spending")
+    .description("Income vs spending over the last 6 months.")
+    .supportedFamilies([.systemSmall, .systemMedium])
+  }
+}
+
+struct CategoryChartWidget: Widget {
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: "CategoryChartWidget", provider: ChartProvider()) { e in
+      chartContainer(ChartWidgetView(entry: e, kind: .category))
+    }
+    .configurationDisplayName("By category")
+    .description("Where your money goes this month.")
+    .supportedFamilies([.systemSmall, .systemMedium])
+  }
+}
+
+struct CumulativeChartWidget: Widget {
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: "CumulativeChartWidget", provider: ChartProvider()) { e in
+      chartContainer(ChartWidgetView(entry: e, kind: .cumulative))
+    }
+    .configurationDisplayName("Spending pace")
+    .description("How fast your money goes this month vs last.")
+    .supportedFamilies([.systemSmall, .systemMedium])
+  }
+}
+
 // MARK: - Widget bundle
 
 @main
@@ -557,6 +992,10 @@ struct FinanceWidgets: WidgetBundle {
     QuickAddWidget()
     QuickIncomeWidget()
     AiInsightWidget()
+    DailyChartWidget()
+    TrendChartWidget()
+    CategoryChartWidget()
+    CumulativeChartWidget()
   }
 }
 

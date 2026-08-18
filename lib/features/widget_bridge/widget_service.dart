@@ -49,6 +49,13 @@ class WidgetService {
   /// summary). Its own WidgetKit kind.
   static const String iosAiWidgetName = 'AiInsightWidget';
 
+  /// Informative chart widgets (each its own WidgetKit kind): daily-spend bars,
+  /// income/expense 6-month trend, category ring, cumulative-spend curve.
+  static const String iosDailyChartWidgetName = 'DailyChartWidget';
+  static const String iosTrendChartWidgetName = 'TrendChartWidget';
+  static const String iosCategoryChartWidgetName = 'CategoryChartWidget';
+  static const String iosCumulativeChartWidgetName = 'CumulativeChartWidget';
+
   /// iOS App Group shared between the app and the widget extension.
   /// Must match the App Group capability added to both the Runner and the
   /// widget-extension targets in Xcode.
@@ -170,6 +177,24 @@ class WidgetService {
       ];
       // The AI-digest widget reads the cached insights (score/summary).
       writes.addAll(_aiWrites());
+      // Chart widgets: a rolling 30-day daily-spend array (+ the previous 30
+      // days for the cumulative curve's reference) and a 6-month income/expense
+      // trend. The category ring reuses the `categories` key above.
+      final now = DateTime.now();
+      writes.addAll([
+        HomeWidget.saveWidgetData<String>(
+          'chart_daily',
+          jsonEncode(_dailySpend(from: now.subtract(const Duration(days: 29)))),
+        ),
+        HomeWidget.saveWidgetData<String>(
+          'chart_daily_prev',
+          jsonEncode(_dailySpend(from: now.subtract(const Duration(days: 59)))),
+        ),
+        HomeWidget.saveWidgetData<String>(
+          'chart_trend',
+          jsonEncode(_monthlyTrend(6)),
+        ),
+      ]);
       // Each group's resolved shortcuts under its own key; the default group
       // also under the legacy `shortcuts` key so an unconfigured instance
       // still shows something.
@@ -197,6 +222,10 @@ class WidgetService {
       await HomeWidget.updateWidget(iOSName: iosQuickAddWidgetName);
       await HomeWidget.updateWidget(iOSName: iosQuickIncomeWidgetName);
       await HomeWidget.updateWidget(iOSName: iosAiWidgetName);
+      await HomeWidget.updateWidget(iOSName: iosDailyChartWidgetName);
+      await HomeWidget.updateWidget(iOSName: iosTrendChartWidgetName);
+      await HomeWidget.updateWidget(iOSName: iosCategoryChartWidgetName);
+      await HomeWidget.updateWidget(iOSName: iosCumulativeChartWidgetName);
     } catch (e) {
       // Native side not configured yet (e.g. no widget extension) — safe no-op.
       debugPrint('WidgetService._publish skipped: $e');
@@ -345,6 +374,45 @@ class WidgetService {
         (top?['tone'] as String?) ?? 'neutral',
       ),
     ];
+  }
+
+  /// Daily expense totals (base currency) for a 30-day window starting at
+  /// [from] (index 0 = [from], index 29 = 29 days later). Used by the daily-bars
+  /// and cumulative-curve chart widgets.
+  List<double> _dailySpend({required DateTime from}) {
+    const days = 30;
+    final start = DateTime(from.year, from.month, from.day);
+    final daily = List<double>.filled(days, 0);
+    for (final t in _transactions) {
+      if (!t.isExpense || t.isCanceled) continue;
+      final d = DateTime(t.date.year, t.date.month, t.date.day);
+      final i = d.difference(start).inDays;
+      if (i >= 0 && i < days) daily[i] += t.amountInBase;
+    }
+    return [for (final v in daily) (v * 100).roundToDouble() / 100];
+  }
+
+  /// Income/expense per calendar month for the last [months] months, oldest
+  /// first (the last entry is the current, partial month). For the trend widget.
+  List<Map<String, double>> _monthlyTrend(int months) {
+    final now = DateTime.now();
+    final out = <Map<String, double>>[];
+    for (var m = months - 1; m >= 0; m--) {
+      final monthStart = DateTime(now.year, now.month - m, 1);
+      final monthEnd = DateTime(now.year, now.month - m + 1, 1);
+      double income = 0, expense = 0;
+      for (final t in _transactions) {
+        if (t.isCanceled) continue;
+        if (t.date.isBefore(monthStart) || !t.date.isBefore(monthEnd)) continue;
+        if (t.isIncome) income += t.amountInBase;
+        if (t.isExpense) expense += t.amountInBase;
+      }
+      out.add({
+        'income': (income * 100).roundToDouble() / 100,
+        'expense': (expense * 100).roundToDouble() / 100,
+      });
+    }
+    return out;
   }
 
   /// Republishes just the AI-digest widget — used right after a fresh AI run so

@@ -270,6 +270,166 @@
           }
         }
       }
+    },
+    "Spending · 30d" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Траты · 30 дн"
+          }
+        }
+      }
+    },
+    "Income & spending" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доход и расход"
+          }
+        }
+      }
+    },
+    "By category" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По категориям"
+          }
+        }
+      }
+    },
+    "Cumulative · month" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Накопительно · месяц"
+          }
+        }
+      }
+    },
+    "No data yet" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока нет данных"
+          }
+        }
+      }
+    },
+    "In" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дох"
+          }
+        }
+      }
+    },
+    "Out" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рас"
+          }
+        }
+      }
+    },
+    "total" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "всего"
+          }
+        }
+      }
+    },
+    "a month ago" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "месяц назад"
+          }
+        }
+      }
+    },
+    "last month" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прошлый месяц"
+          }
+        }
+      }
+    },
+    "Daily spending" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Траты по дням"
+          }
+        }
+      }
+    },
+    "Your spending over the last 30 days." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши траты за последние 30 дней."
+          }
+        }
+      }
+    },
+    "Income vs spending over the last 6 months." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доход и расход за последние 6 месяцев."
+          }
+        }
+      }
+    },
+    "Where your money goes this month." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Куда уходят деньги в этом месяце."
+          }
+        }
+      }
+    },
+    "Spending pace" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Темп трат"
+          }
+        }
+      }
+    },
+    "How fast your money goes this month vs last." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как быстро уходят деньги в этом месяце против прошлого."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
