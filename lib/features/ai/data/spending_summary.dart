@@ -140,6 +140,9 @@ class _Bucket {
     'to': to,
     'income': _round(income),
     'expense': _round(expense),
+    // Net for the window (income − expense) so goal / savings-rate maths is
+    // exact without the model having to subtract.
+    'net': _round(income - expense),
     if (withCategories) 'byCategory': categoryList(),
   };
 }
