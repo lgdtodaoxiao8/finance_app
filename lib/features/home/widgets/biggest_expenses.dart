@@ -48,7 +48,8 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
 
   void _recompute(List<TransactionDetails> txns) {
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month);
+    // Rolling month, matching the Home tiles (not a calendar month).
+    final monthStart = DateTime(now.year, now.month - 1, now.day);
     final expenses =
         txns.where((t) => t.isExpense && !t.date.isBefore(monthStart)).toList()
           ..sort((a, b) => b.amountInBase.compareTo(a.amountInBase));

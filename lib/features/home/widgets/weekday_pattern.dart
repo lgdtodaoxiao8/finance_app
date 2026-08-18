@@ -67,7 +67,8 @@ class _WeekdayPatternState extends State<WeekdayPattern> {
 
   void _recompute(List<TransactionDetails> txns) {
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month);
+    // Rolling month, matching the Home tiles (not a calendar month).
+    final monthStart = DateTime(now.year, now.month - 1, now.day);
     final byDay = List.filled(7, 0.0);
     for (final t in txns) {
       if (!t.isExpense || t.date.isBefore(monthStart)) continue;

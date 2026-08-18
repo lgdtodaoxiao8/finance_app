@@ -35,8 +35,10 @@ class _MonthDetailScreenState extends State<MonthDetailScreen> {
     final txns = await getIt<TransactionRepository>().getAllWithDetails();
     final base = await getIt<CurrencyRepository>().getBase();
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month);
-    final lastMonthStart = DateTime(now.year, now.month - 1);
+    // Rolling month + the rolling month before it, matching the Home tiles and
+    // the "This month" card (a calendar month reads income 0 before payday).
+    final monthStart = DateTime(now.year, now.month - 1, now.day);
+    final lastMonthStart = DateTime(now.year, now.month - 2, now.day);
 
     double income = 0, expense = 0, lastExpense = 0;
     final byCategory = <String, double>{};

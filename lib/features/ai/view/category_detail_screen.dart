@@ -32,7 +32,8 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
     final txns = await getIt<TransactionRepository>().getAllWithDetails();
     final base = await getIt<CurrencyRepository>().getBase();
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month);
+    // Rolling month, matching the Home tiles + the Top-category card.
+    final monthStart = DateTime(now.year, now.month - 1, now.day);
 
     double total = 0;
     final byCategory = <String, double>{};

@@ -65,18 +65,22 @@ class _DailySpendChartState extends State<DailySpendChart> {
 
   void _recompute(List<TransactionDetails> txns) {
     final now = DateTime.now();
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final daily = List<double>.filled(daysInMonth, 0);
+    // Rolling month (a month ago → today) so the total matches the summary
+    // tiles, not a calendar month that reads low before payday.
+    final start = DateTime(now.year, now.month - 1, now.day);
+    final windowDays = now.difference(start).inDays + 1;
+    final daily = List<double>.filled(windowDays, 0);
     for (final t in txns) {
       if (!t.isExpense) continue;
-      if (t.date.year == now.year && t.date.month == now.month) {
-        daily[t.date.day - 1] += t.amountInBase;
-      }
+      final d = DateTime(t.date.year, t.date.month, t.date.day);
+      if (d.isBefore(start)) continue;
+      final i = d.difference(start).inDays;
+      if (i >= 0 && i < windowDays) daily[i] += t.amountInBase;
     }
     if (mounted) {
       setState(() {
         _daily = daily;
-        _today = now.day;
+        _today = windowDays; // the last bar is today
       });
     }
   }
