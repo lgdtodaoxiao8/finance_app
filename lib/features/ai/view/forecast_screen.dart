@@ -31,21 +31,23 @@ class _ForecastScreenState extends State<ForecastScreen> {
     final txns = await getIt<TransactionRepository>().getAllWithDetails();
     final base = await getIt<CurrencyRepository>().getBase();
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month);
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final dayOfMonth = now.day;
+    // Rolling month (a month ago → today) — the SAME window the Home tiles and
+    // the "This month" card use, so the forecast agrees with them. A calendar
+    // month read income as 0 before payday, projecting a false loss.
+    final monthStart = DateTime(now.year, now.month - 1, now.day);
+    final windowDays = now.difference(monthStart).inDays;
 
-    double income = 0, expenseSoFar = 0;
+    double income = 0, expense = 0;
     for (final t in txns) {
       if (t.date.isBefore(monthStart)) continue;
       if (t.isIncome) income += t.amountInBase;
-      if (t.isExpense) expenseSoFar += t.amountInBase;
+      if (t.isExpense) expense += t.amountInBase;
     }
 
-    // Extrapolate spending at the current daily rate to the end of the month.
-    final double dailyRate = dayOfMonth == 0 ? 0 : expenseSoFar / dayOfMonth;
-    final double projectedExpense = dailyRate * daysInMonth;
-    final projectedBalance = income - projectedExpense;
+    // Project the run-rate over the window onto a 30-day month.
+    final double dailyExpense = windowDays <= 0 ? 0 : expense / windowDays;
+    final double dailyNet = windowDays <= 0 ? 0 : (income - expense) / windowDays;
+    final projectedBalance = dailyNet * 30;
 
     if (mounted) {
       setState(() {
@@ -53,11 +55,9 @@ class _ForecastScreenState extends State<ForecastScreen> {
         _data = _Forecast(
           symbol: base?.currencySymbol,
           income: income,
-          expenseSoFar: expenseSoFar,
-          projectedExpense: projectedExpense,
+          expense: expense,
+          dailyExpense: dailyExpense,
           projectedBalance: projectedBalance,
-          daysLeft: daysInMonth - dayOfMonth,
-          dailyRate: dailyRate,
         );
       });
     }
@@ -133,20 +133,12 @@ class _ForecastScreenState extends State<ForecastScreen> {
           AmountText.maskString(compactMoney(f.income, f.symbol)),
         ),
         _Row(
-          AppLocalizations.of(context).spentSoFar,
-          AmountText.maskString(compactMoney(f.expenseSoFar, f.symbol)),
-        ),
-        _Row(
-          AppLocalizations.of(context).projectedTotalSpend,
-          AmountText.maskString(compactMoney(f.projectedExpense, f.symbol)),
+          AppLocalizations.of(context).expense,
+          AmountText.maskString(compactMoney(f.expense, f.symbol)),
         ),
         _Row(
           AppLocalizations.of(context).dailySpendRate,
-          AmountText.maskString(compactMoney(f.dailyRate, f.symbol)),
-        ),
-        _Row(
-          AppLocalizations.of(context).daysLeftInMonth,
-          '${f.daysLeft}',
+          AmountText.maskString(compactMoney(f.dailyExpense, f.symbol)),
         ),
       ],
     );
@@ -189,18 +181,14 @@ class _Forecast {
   const _Forecast({
     required this.symbol,
     required this.income,
-    required this.expenseSoFar,
-    required this.projectedExpense,
+    required this.expense,
+    required this.dailyExpense,
     required this.projectedBalance,
-    required this.daysLeft,
-    required this.dailyRate,
   });
 
   final String? symbol;
   final double income;
-  final double expenseSoFar;
-  final double projectedExpense;
+  final double expense;
+  final double dailyExpense;
   final double projectedBalance;
-  final int daysLeft;
-  final double dailyRate;
 }

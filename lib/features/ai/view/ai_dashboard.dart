@@ -75,8 +75,11 @@ class _AiDashboardState extends State<AiDashboard> {
 
   void _recompute(List<TransactionDetails> txns) {
     final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month);
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    // Rolling month (a month ago → today) — the SAME window the analytics tiles
+    // and stat strip use, so this section never contradicts them. A calendar
+    // month read income as 0 before payday and made everything look negative.
+    final monthStart = DateTime(now.year, now.month - 1, now.day);
+    final windowDays = now.difference(monthStart).inDays;
 
     double income = 0, expense = 0;
     final byCategory = <String, double>{};
@@ -101,7 +104,8 @@ class _AiDashboardState extends State<AiDashboard> {
       }
     });
 
-    final dailyRate = now.day == 0 ? 0.0 : expense / now.day;
+    // Project the net run-rate over the window onto a 30-day month.
+    final dailyNet = windowDays <= 0 ? 0.0 : (income - expense) / windowDays;
 
     if (!mounted) return;
     setState(() {
@@ -113,7 +117,7 @@ class _AiDashboardState extends State<AiDashboard> {
       _topColor = topName != null
           ? (colorOf[topName] ?? AppColors.primary)
           : AppColors.primary;
-      _forecast = income - dailyRate * daysInMonth;
+      _forecast = dailyNet * 30;
     });
   }
 
