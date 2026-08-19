@@ -90,19 +90,19 @@ class _AuthScreenState extends State<AuthScreen> {
             _isSignUp
                 ? AppLocalizations.of(context).createYourAccount
                 : AppLocalizations.of(context).welcomeBack,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             AppLocalizations.of(context).authSubtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.4,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 24),
@@ -190,15 +190,20 @@ class _Field extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // The field fill must adapt: the light-mode grey (AppColors.field) stayed
+    // near-white in dark mode, so the (light) input text was invisible on it.
+    final fill = isDark ? AppColorsDark.surfaceHigh : AppColors.field;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: cs.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 6),
@@ -208,10 +213,14 @@ class _Field extends StatelessWidget {
           keyboardType: keyboardType,
           autocorrect: false,
           enableSuggestions: false,
+          style: TextStyle(color: cs.onSurface),
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: TextStyle(
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
             filled: true,
-            fillColor: AppColors.field,
+            fillColor: fill,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
