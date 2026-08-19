@@ -251,28 +251,58 @@ class _RateRow extends StatelessWidget {
   }
 }
 
-/// Prompts for a corrected rate ("1 [code] = X [base]") and applies it. The
-/// controller is disposed only after the dialog fully closes.
+/// Prompts for a corrected rate ("1 [code] = X [base]") and applies it.
 Future<void> _showEditRateDialog(
   BuildContext context,
   Currency currency,
   double current,
   void Function(int id, double rate) onEdit,
 ) async {
-  final l = AppLocalizations.of(context);
-  final controller = TextEditingController(
-    text: current % 1 == 0 ? current.toInt().toString() : current.toString(),
-  );
   final result = await showDialog<double>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text('${l.editRate} · ${currency.currencyCode}'),
+    builder: (_) => _EditRateDialog(currency: currency, current: current),
+  );
+  if (result != null) onEdit(currency.currencyId, result);
+}
+
+/// The edit-rate dialog owns its own text controller and disposes it in its
+/// [dispose] — which runs only after the dialog's exit animation finishes.
+/// (Disposing a controller right after `await showDialog` throws "used after
+/// being disposed" because the field still rebuilds during the close.)
+class _EditRateDialog extends StatefulWidget {
+  const _EditRateDialog({required this.currency, required this.current});
+
+  final Currency currency;
+  final double current;
+
+  @override
+  State<_EditRateDialog> createState() => _EditRateDialogState();
+}
+
+class _EditRateDialogState extends State<_EditRateDialog> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.current % 1 == 0
+        ? widget.current.toInt().toString()
+        : widget.current.toString(),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text('${l.editRate} · ${widget.currency.currencyCode}'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
-            controller: controller,
+            controller: _controller,
             autofocus: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
@@ -285,28 +315,26 @@ Future<void> _showEditRateDialog(
             l.editRateNote,
             style: TextStyle(
               fontSize: 12,
-              color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(ctx),
+          onPressed: () => Navigator.pop(context),
           child: Text(l.cancel),
         ),
         FilledButton(
           onPressed: () {
-            final v = double.tryParse(controller.text.replaceAll(',', '.'));
-            Navigator.pop(ctx, (v != null && v > 0) ? v : null);
+            final v = double.tryParse(_controller.text.replaceAll(',', '.'));
+            Navigator.pop(context, (v != null && v > 0) ? v : null);
           },
           child: Text(l.save),
         ),
       ],
-    ),
-  );
-  controller.dispose();
-  if (result != null) onEdit(currency.currencyId, result);
+    );
+  }
 }
 
 /// The morphing "Save" action for a base-currency change: label → spinner while
