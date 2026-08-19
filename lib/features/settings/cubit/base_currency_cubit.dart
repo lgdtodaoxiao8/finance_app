@@ -42,19 +42,26 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
 
   Future<void> selectCurrency(int id) async {
     emit(state.copyWith(selectedId: id));
-    // Changing the base to a different currency always needs its exchange rate
-    // (so it can also be re-entered/corrected). No rate for the first setup or
-    // when re-picking the current base.
     final base = await _repository.getBase();
     final firstSetup = state.isFirstSetup;
+    final switchingToOther = base?.currencyId != id;
+    final selected = state.currencies.firstWhere(
+      (c) => c.currencyId == id,
+      orElse: () => state.currencies.first,
+    );
+    final hasRate = selected.currencyRateToBase != null;
+    // A rate is only needed to switch base to a RATE-LESS currency. A currency
+    // that already has a rate just rebases everything by that rate — no typing,
+    // which is the "couple of clicks" flow. (Correcting an existing rate is a
+    // separate action, so history stays frozen — see setRate.)
     emit(
       state.copyWith(
-        needToEnterRate: !firstSetup && base?.currencyId != id,
+        needToEnterRate: !firstSetup && switchingToOther && !hasRate,
       ),
     );
-    // First-time setup needs no rate, so committing on selection removes a
-    // redundant tap: picking the currency instantly makes it the base.
-    if (firstSetup) await submit();
+    // Commit immediately (no rate entry) for the first setup and for switching
+    // to a currency that already has a rate — pick it, it becomes the base.
+    if (firstSetup || (switchingToOther && hasRate)) await submit();
   }
 
   void setRate(double? rate) => emit(state.copyWith(rateToBase: rate ?? 0));

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:finance_app/core/database/app_database.dart';
+import 'package:finance_app/core/sync/sync_metadata.dart';
 import 'package:finance_app/models/main_model.dart';
 
 /// Access to currencies and the base-currency / exchange-rate logic.
@@ -147,6 +148,16 @@ class DriftCurrencyRepository implements CurrencyRepository {
           'WHERE rate_to_base IS NOT NULL',
           variables: [Variable<double>(multiplier)],
           updates: {_db.currencies},
+        );
+        // Re-express every transaction's FROZEN rate in the new base too — a
+        // base change is a unit change, so they all scale by the same factor.
+        // (A plain rate correction via setRate leaves these untouched, so
+        // history there stays frozen.) Bump updated_at so it syncs.
+        await _db.customUpdate(
+          'UPDATE transactions SET rate_to_base = rate_to_base * ?, '
+          'updated_at = ? WHERE rate_to_base IS NOT NULL',
+          variables: [Variable<double>(multiplier), Variable<int>(nowMs())],
+          updates: {_db.transactions},
         );
       }
 

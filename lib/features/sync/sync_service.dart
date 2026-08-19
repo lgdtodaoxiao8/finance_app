@@ -99,6 +99,7 @@ class SyncService {
             'note': t.note,
             'type': t.type,
             'is_canceled': t.isCanceled ?? false,
+            'rate_to_base': t.rateToBase,
             'updated_at': t.updatedAt,
             'deleted': false,
           },
@@ -280,6 +281,7 @@ class SyncService {
         note: Value(r['note'] as String?),
         type: Value(r['type'] as String?),
         isCanceled: Value(r['is_canceled'] as bool? ?? false),
+        rateToBase: Value((r['rate_to_base'] as num?)?.toDouble()),
         updatedAt: Value(remoteUpdated),
       );
       if (existing == null) {

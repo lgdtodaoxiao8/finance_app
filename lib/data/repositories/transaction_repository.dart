@@ -57,7 +57,9 @@ class DriftTransactionRepository implements TransactionRepository {
            c.icon_code_point as category_icon_code,
            cur.name as currency_name,
            cur.code as currency_code,
-           cur.rate_to_base as currency_rate_to_base
+           -- The transaction's OWN snapshot rate (frozen at creation); fall back
+           -- to the currency's live rate only for rows that predate the snapshot.
+           COALESCE(t.rate_to_base, cur.rate_to_base) as currency_rate_to_base
     FROM transactions t
     JOIN accounts a ON t.account_id = a.id
     LEFT JOIN accounts a_des ON t.account_destination_id = a_des.id
@@ -92,6 +94,15 @@ class DriftTransactionRepository implements TransactionRepository {
         );
   }
 
+  /// The currency's current rate-to-base — snapshotted onto a transaction so its
+  /// base value freezes at creation time.
+  Future<double?> _currencyRate(int currencyId) async {
+    final row = await (_db.select(
+      _db.currencies,
+    )..where((c) => c.id.equals(currencyId))).getSingleOrNull();
+    return row?.rateToBase;
+  }
+
   @override
   Future<int> add({
     required int accountId,
@@ -102,7 +113,8 @@ class DriftTransactionRepository implements TransactionRepository {
     required DateTime date,
     String? note,
     required String type,
-  }) {
+  }) async {
+    final rate = await _currencyRate(currencyId);
     return _db
         .into(_db.transactions)
         .insert(
@@ -118,6 +130,7 @@ class DriftTransactionRepository implements TransactionRepository {
             note: Value(note),
             type: Value(type),
             isCanceled: const Value(false),
+            rateToBase: Value(rate),
           ),
         );
   }
@@ -134,6 +147,16 @@ class DriftTransactionRepository implements TransactionRepository {
     String? note,
     required String type,
   }) async {
+    final old = await (_db.select(
+      _db.transactions,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    // Keep the frozen rate on a plain edit; only re-snapshot if the currency
+    // changed (then the old snapshot no longer applies).
+    final rate = (old != null &&
+            old.currencyId == currencyId &&
+            old.rateToBase != null)
+        ? old.rateToBase
+        : await _currencyRate(currencyId);
     await (_db.update(_db.transactions)..where((t) => t.id.equals(id))).write(
       TransactionsCompanion(
         accountId: Value(accountId),
@@ -144,6 +167,7 @@ class DriftTransactionRepository implements TransactionRepository {
         date: Value(date.toUtc().toIso8601String()),
         note: Value(note),
         type: Value(type),
+        rateToBase: Value(rate),
         updatedAt: Value(nowMs()),
       ),
     );

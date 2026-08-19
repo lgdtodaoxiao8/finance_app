@@ -1466,6 +1466,17 @@ class $TransactionsTable extends Transactions
       'CHECK ("is_canceled" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _rateToBaseMeta = const VerificationMeta(
+    'rateToBase',
+  );
+  @override
+  late final GeneratedColumn<double> rateToBase = GeneratedColumn<double>(
+    'rate_to_base',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     uuid,
@@ -1480,6 +1491,7 @@ class $TransactionsTable extends Transactions
     note,
     type,
     isCanceled,
+    rateToBase,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1565,6 +1577,15 @@ class $TransactionsTable extends Transactions
         isCanceled.isAcceptableOrUnknown(data['is_canceled']!, _isCanceledMeta),
       );
     }
+    if (data.containsKey('rate_to_base')) {
+      context.handle(
+        _rateToBaseMeta,
+        rateToBase.isAcceptableOrUnknown(
+          data['rate_to_base']!,
+          _rateToBaseMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1622,6 +1643,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.bool,
         data['${effectivePrefix}is_canceled'],
       ),
+      rateToBase: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rate_to_base'],
+      ),
     );
   }
 
@@ -1644,6 +1669,13 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
   final String? note;
   final String? type;
   final bool? isCanceled;
+
+  /// Snapshot of the transaction currency's rate-to-base AT THE TIME the
+  /// transaction was created/last edited. Base conversion (`amountInBase`) reads
+  /// THIS, not the currency's live rate, so a later exchange-rate correction
+  /// never re-values historical transactions. A base-currency CHANGE does
+  /// re-express these (they scale by the same factor) — that's a unit change.
+  final double? rateToBase;
   const TransactionRow({
     this.uuid,
     this.updatedAt,
@@ -1657,6 +1689,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     this.note,
     this.type,
     this.isCanceled,
+    this.rateToBase,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1695,6 +1728,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     if (!nullToAbsent || isCanceled != null) {
       map['is_canceled'] = Variable<bool>(isCanceled);
     }
+    if (!nullToAbsent || rateToBase != null) {
+      map['rate_to_base'] = Variable<double>(rateToBase);
+    }
     return map;
   }
 
@@ -1726,6 +1762,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       isCanceled: isCanceled == null && nullToAbsent
           ? const Value.absent()
           : Value(isCanceled),
+      rateToBase: rateToBase == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rateToBase),
     );
   }
 
@@ -1749,6 +1788,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       note: serializer.fromJson<String?>(json['note']),
       type: serializer.fromJson<String?>(json['type']),
       isCanceled: serializer.fromJson<bool?>(json['isCanceled']),
+      rateToBase: serializer.fromJson<double?>(json['rateToBase']),
     );
   }
   @override
@@ -1767,6 +1807,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       'note': serializer.toJson<String?>(note),
       'type': serializer.toJson<String?>(type),
       'isCanceled': serializer.toJson<bool?>(isCanceled),
+      'rateToBase': serializer.toJson<double?>(rateToBase),
     };
   }
 
@@ -1783,6 +1824,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     Value<String?> note = const Value.absent(),
     Value<String?> type = const Value.absent(),
     Value<bool?> isCanceled = const Value.absent(),
+    Value<double?> rateToBase = const Value.absent(),
   }) => TransactionRow(
     uuid: uuid.present ? uuid.value : this.uuid,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -1798,6 +1840,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     note: note.present ? note.value : this.note,
     type: type.present ? type.value : this.type,
     isCanceled: isCanceled.present ? isCanceled.value : this.isCanceled,
+    rateToBase: rateToBase.present ? rateToBase.value : this.rateToBase,
   );
   TransactionRow copyWithCompanion(TransactionsCompanion data) {
     return TransactionRow(
@@ -1821,6 +1864,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       isCanceled: data.isCanceled.present
           ? data.isCanceled.value
           : this.isCanceled,
+      rateToBase: data.rateToBase.present
+          ? data.rateToBase.value
+          : this.rateToBase,
     );
   }
 
@@ -1838,7 +1884,8 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           ..write('date: $date, ')
           ..write('note: $note, ')
           ..write('type: $type, ')
-          ..write('isCanceled: $isCanceled')
+          ..write('isCanceled: $isCanceled, ')
+          ..write('rateToBase: $rateToBase')
           ..write(')'))
         .toString();
   }
@@ -1857,6 +1904,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     note,
     type,
     isCanceled,
+    rateToBase,
   );
   @override
   bool operator ==(Object other) =>
@@ -1873,7 +1921,8 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           other.date == this.date &&
           other.note == this.note &&
           other.type == this.type &&
-          other.isCanceled == this.isCanceled);
+          other.isCanceled == this.isCanceled &&
+          other.rateToBase == this.rateToBase);
 }
 
 class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
@@ -1889,6 +1938,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
   final Value<String?> note;
   final Value<String?> type;
   final Value<bool?> isCanceled;
+  final Value<double?> rateToBase;
   const TransactionsCompanion({
     this.uuid = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -1902,6 +1952,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
     this.note = const Value.absent(),
     this.type = const Value.absent(),
     this.isCanceled = const Value.absent(),
+    this.rateToBase = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.uuid = const Value.absent(),
@@ -1916,6 +1967,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
     this.note = const Value.absent(),
     this.type = const Value.absent(),
     this.isCanceled = const Value.absent(),
+    this.rateToBase = const Value.absent(),
   });
   static Insertable<TransactionRow> custom({
     Expression<String>? uuid,
@@ -1930,6 +1982,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
     Expression<String>? note,
     Expression<String>? type,
     Expression<bool>? isCanceled,
+    Expression<double>? rateToBase,
   }) {
     return RawValuesInsertable({
       if (uuid != null) 'uuid': uuid,
@@ -1945,6 +1998,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
       if (note != null) 'note': note,
       if (type != null) 'type': type,
       if (isCanceled != null) 'is_canceled': isCanceled,
+      if (rateToBase != null) 'rate_to_base': rateToBase,
     });
   }
 
@@ -1961,6 +2015,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
     Value<String?>? note,
     Value<String?>? type,
     Value<bool?>? isCanceled,
+    Value<double?>? rateToBase,
   }) {
     return TransactionsCompanion(
       uuid: uuid ?? this.uuid,
@@ -1975,6 +2030,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
       note: note ?? this.note,
       type: type ?? this.type,
       isCanceled: isCanceled ?? this.isCanceled,
+      rateToBase: rateToBase ?? this.rateToBase,
     );
   }
 
@@ -2017,6 +2073,9 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
     if (isCanceled.present) {
       map['is_canceled'] = Variable<bool>(isCanceled.value);
     }
+    if (rateToBase.present) {
+      map['rate_to_base'] = Variable<double>(rateToBase.value);
+    }
     return map;
   }
 
@@ -2034,7 +2093,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionRow> {
           ..write('date: $date, ')
           ..write('note: $note, ')
           ..write('type: $type, ')
-          ..write('isCanceled: $isCanceled')
+          ..write('isCanceled: $isCanceled, ')
+          ..write('rateToBase: $rateToBase')
           ..write(')'))
         .toString();
   }
@@ -3933,6 +3993,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       Value<String?> note,
       Value<String?> type,
       Value<bool?> isCanceled,
+      Value<double?> rateToBase,
     });
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
@@ -3948,6 +4009,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<String?> note,
       Value<String?> type,
       Value<bool?> isCanceled,
+      Value<double?> rateToBase,
     });
 
 final class $$TransactionsTableReferences
@@ -4082,6 +4144,11 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<bool> get isCanceled => $composableBuilder(
     column: $table.isCanceled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get rateToBase => $composableBuilder(
+    column: $table.rateToBase,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4227,6 +4294,11 @@ class $$TransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get rateToBase => $composableBuilder(
+    column: $table.rateToBase,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$AccountsTableOrderingComposer get accountId {
     final $$AccountsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4352,6 +4424,11 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<bool> get isCanceled => $composableBuilder(
     column: $table.isCanceled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get rateToBase => $composableBuilder(
+    column: $table.rateToBase,
     builder: (column) => column,
   );
 
@@ -4493,6 +4570,7 @@ class $$TransactionsTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<String?> type = const Value.absent(),
                 Value<bool?> isCanceled = const Value.absent(),
+                Value<double?> rateToBase = const Value.absent(),
               }) => TransactionsCompanion(
                 uuid: uuid,
                 updatedAt: updatedAt,
@@ -4506,6 +4584,7 @@ class $$TransactionsTableTableManager
                 note: note,
                 type: type,
                 isCanceled: isCanceled,
+                rateToBase: rateToBase,
               ),
           createCompanionCallback:
               ({
@@ -4521,6 +4600,7 @@ class $$TransactionsTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<String?> type = const Value.absent(),
                 Value<bool?> isCanceled = const Value.absent(),
+                Value<double?> rateToBase = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 uuid: uuid,
                 updatedAt: updatedAt,
@@ -4534,6 +4614,7 @@ class $$TransactionsTableTableManager
                 note: note,
                 type: type,
                 isCanceled: isCanceled,
+                rateToBase: rateToBase,
               ),
           withReferenceMapper: (p0) => p0
               .map(

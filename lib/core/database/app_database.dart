@@ -85,6 +85,13 @@ class Transactions extends Table with SyncColumns {
   TextColumn get note => text().nullable()();
   TextColumn get type => text().nullable()();
   BoolColumn get isCanceled => boolean().named('is_canceled').nullable()();
+
+  /// Snapshot of the transaction currency's rate-to-base AT THE TIME the
+  /// transaction was created/last edited. Base conversion (`amountInBase`) reads
+  /// THIS, not the currency's live rate, so a later exchange-rate correction
+  /// never re-values historical transactions. A base-currency CHANGE does
+  /// re-express these (they scale by the same factor) — that's a unit change.
+  RealColumn get rateToBase => real().named('rate_to_base').nullable()();
 }
 
 /// Records local deletions of syncable rows so the deletion can be pushed to
@@ -129,7 +136,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -167,6 +174,19 @@ class AppDatabase extends _$AppDatabase {
           "  HAVING SUM(CASE WHEN type = 'income' THEN 1 ELSE 0 END) >"
           "         SUM(CASE WHEN type = 'expense' THEN 1 ELSE 0 END)"
           ')',
+        );
+      }
+      if (from < 5) {
+        // Freeze each transaction's base-conversion rate: snapshot the
+        // currency's CURRENT rate onto the transaction so a future rate
+        // correction can't rewrite history. (No historical rates exist, so the
+        // current rate is the best backfill.)
+        await m.addColumn(transactions, transactions.rateToBase);
+        await customStatement(
+          'UPDATE transactions SET rate_to_base = ('
+          '  SELECT c.rate_to_base FROM currencies c '
+          '  WHERE c.id = transactions.currency_id'
+          ') WHERE rate_to_base IS NULL',
         );
       }
     },

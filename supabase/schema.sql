@@ -54,10 +54,15 @@ create table if not exists public.transactions (
   note                     text,
   type                     text,
   is_canceled              boolean not null default false,
+  -- Frozen exchange rate to base at the time of the transaction (snapshot), so
+  -- later rate corrections don't re-value history. Null for legacy rows.
+  rate_to_base             double precision,
   updated_at               bigint  not null default 0,
   deleted                  boolean not null default false,
   primary key (user_id, uuid)
 );
+-- Idempotent for deployments created before the rate snapshot was added.
+alter table public.transactions add column if not exists rate_to_base double precision;
 
 -- ============================================================== settings ====
 -- App preferences (theme, language, week start, privacy, base currency, …) as
