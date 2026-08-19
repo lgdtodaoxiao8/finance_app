@@ -265,11 +265,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statActiveDays => 'активных дней';
 
   @override
-  String get weeklyDigestTitle => 'Ваш AI-дайджест недели';
+  String get weeklyDigestTitle => 'Ваш AI-дайджест за месяц';
 
   @override
   String get weeklyDigestSubtitle =>
-      'Куда ушли деньги, что изменить и ваш финансовый балл — простым языком.';
+      'Куда ушли деньги за месяц, что изменить и ваш финансовый балл — простым языком.';
 
   @override
   String get add => 'Добавить';

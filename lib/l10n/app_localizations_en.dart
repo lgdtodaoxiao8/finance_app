@@ -263,11 +263,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statActiveDays => 'active days';
 
   @override
-  String get weeklyDigestTitle => 'Your weekly AI digest';
+  String get weeklyDigestTitle => 'Your monthly AI digest';
 
   @override
   String get weeklyDigestSubtitle =>
-      'Where your money went, what to change, and your health score — in plain language.';
+      'Where this month\'s money went, what to change, and your health score — in plain language.';
 
   @override
   String get add => 'Add';

@@ -40,8 +40,12 @@ class _AiInsightsScreenState extends State<AiInsightsScreen> {
   /// Builds a compact base-currency spending summary for the model. Read the
   /// locale before the await — the coach answers in the user's language, and
   /// touching context after an async gap is unsafe.
-  Future<Map<String, dynamic>> _buildSummary() =>
-      buildSpendingSummary(language: Localizations.localeOf(context).languageCode);
+  Future<Map<String, dynamic>> _buildSummary() => buildSpendingSummary(
+    language: Localizations.localeOf(context).languageCode,
+    // The digest is a MONTHLY snapshot (the Home card promises it), so scope the
+    // primary figures to the last 30 days — not all-time.
+    monthlyDigest: true,
+  );
 
   /// AiService has no BuildContext, so it reports a [AiFailureKind] and we turn
   /// it into a message in the user's language here.

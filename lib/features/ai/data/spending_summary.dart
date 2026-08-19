@@ -8,15 +8,19 @@ import 'package:finance_app/data/repositories/transaction_repository.dart';
 /// and for free; the AI only narrates it.
 ///
 /// Top-level `income`/`expense`/`balance`/`byCategory` are ALL-TIME totals over
-/// every recorded transaction — kept stable because the insights coach (and its
-/// cache signature) reads them. `dataFrom`/`dataTo`/`transactionCount` tell the
-/// model exactly what it does and doesn't cover, and `periods` holds
-/// date-ranged buckets — so period questions get the right window and questions
-/// outside the data can be refused instead of hallucinated. [language] is the
-/// BCP-47 code the AI answers in; [recentCount] caps the recent list.
+/// every recorded transaction (what the "Ask your money" chat + the cache
+/// signature read) — UNLESS [monthlyDigest] is set, in which case they cover the
+/// last 30 days and `period`/`netWorth` are added: the insights coach is a
+/// MONTHLY digest, so it must not narrate all-time figures as if they were the
+/// period. `dataFrom`/`dataTo`/`transactionCount` tell the model what it does
+/// and doesn't cover, and `periods` holds date-ranged buckets — so period
+/// questions get the right window and questions outside the data can be refused
+/// instead of hallucinated. [language] is the BCP-47 code the AI answers in;
+/// [recentCount] caps the recent list.
 Future<Map<String, dynamic>> buildSpendingSummary({
   required String language,
   int recentCount = 15,
+  bool monthlyDigest = false,
 }) async {
   final txns = await getIt<TransactionRepository>().getAllWithDetails();
   final base = await getIt<CurrencyRepository>().getBase();
@@ -25,6 +29,10 @@ Future<Map<String, dynamic>> buildSpendingSummary({
   final today = DateTime(now.year, now.month, now.day);
   final last7Start = today.subtract(const Duration(days: 6));
   final last30Start = today.subtract(const Duration(days: 29));
+  // The app's canonical rolling "Month" window (a month ago → today) — the SAME
+  // one the Home tiles/stat strip/dashboard use, so the digest never disagrees
+  // with them (last-30-days can miss a boundary payday and read negative).
+  final rollingMonthStart = DateTime(now.year, now.month - 1, now.day);
   final thisMonthStart = DateTime(now.year, now.month);
   final lastMonthStart = DateTime(now.year, now.month - 1);
   final lastMonthEnd = thisMonthStart.subtract(const Duration(days: 1));
@@ -33,6 +41,7 @@ Future<Map<String, dynamic>> buildSpendingSummary({
   final all = _Bucket();
   final last7 = _Bucket();
   final last30 = _Bucket();
+  final rollingMonth = _Bucket();
   final thisMonth = _Bucket();
   final lastMonth = _Bucket();
   final thisYear = _Bucket();
@@ -45,6 +54,7 @@ Future<Map<String, dynamic>> buildSpendingSummary({
     if (latest == null || d.isAfter(latest)) latest = d;
     if (!d.isBefore(last7Start)) last7.add(t);
     if (!d.isBefore(last30Start)) last30.add(t);
+    if (!d.isBefore(rollingMonthStart)) rollingMonth.add(t);
     if (!d.isBefore(thisMonthStart)) thisMonth.add(t);
     if (!d.isBefore(lastMonthStart) && d.isBefore(thisMonthStart)) {
       lastMonth.add(t);
@@ -64,22 +74,31 @@ Future<Map<String, dynamic>> buildSpendingSummary({
       )
       .toList();
 
-  return {
+  final primary = monthlyDigest ? rollingMonth : all;
+  final map = <String, dynamic>{
     'language': language,
     'baseCurrency': base?.currencyCode ?? '',
     'today': _ymd(today),
-    // Coverage: what the data does and doesn't include, so periods outside it
-    // can be refused rather than invented.
-    'transactionCount': txns.length,
-    'dataFrom': earliest == null ? null : _ymd(earliest),
-    'dataTo': latest == null ? null : _ymd(latest),
-    // All-time totals (what the insights coach + cache signature read).
-    'income': _round(all.income),
-    'expense': _round(all.expense),
-    'balance': _round(all.income - all.expense),
-    'byCategory': all.categoryList(),
-    // Date-ranged buckets so period questions get the right window.
-    'periods': {
+    'income': _round(primary.income),
+    'expense': _round(primary.expense),
+    'balance': _round(primary.income - primary.expense),
+    'byCategory': primary.categoryList(),
+    'recent': recent,
+  };
+
+  if (monthlyDigest) {
+    // A focused monthly picture: the figures above are the last 30 days, plus
+    // the overall net worth. Deliberately NO year-spanning periods/coverage —
+    // the digest must not slip into narrating all-time numbers.
+    map['period'] = {'from': _ymd(rollingMonthStart), 'to': _ymd(today)};
+    map['netWorth'] = _round(all.income - all.expense);
+  } else {
+    // Chat: all-time primary + coverage + date-ranged buckets, so period
+    // questions land on the right window and out-of-range ones are refused.
+    map['transactionCount'] = txns.length;
+    map['dataFrom'] = earliest == null ? null : _ymd(earliest);
+    map['dataTo'] = latest == null ? null : _ymd(latest);
+    map['periods'] = {
       'last7Days': last7.toJson(
         from: _ymd(last7Start),
         to: _ymd(today),
@@ -105,9 +124,9 @@ Future<Map<String, dynamic>> buildSpendingSummary({
         to: _ymd(today),
         withCategories: false,
       ),
-    },
-    'recent': recent,
-  };
+    };
+  }
+  return map;
 }
 
 /// Accumulates income / expense / per-category expense for one time window.

@@ -605,13 +605,13 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyDigestTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your weekly AI digest'**
+  /// **'Your monthly AI digest'**
   String get weeklyDigestTitle;
 
   /// No description provided for @weeklyDigestSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Where your money went, what to change, and your health score — in plain language.'**
+  /// **'Where this month\'s money went, what to change, and your health score — in plain language.'**
   String get weeklyDigestSubtitle;
 
   /// No description provided for @add.
