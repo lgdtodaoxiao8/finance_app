@@ -165,6 +165,17 @@
     }
   },
   "rateHint": "напр. 1,25 или 0,73",
+  "exchangeRates": "Курсы валют",
+  "editRate": "Изменить курс",
+  "ratePerUnit": "1 {code} = {rate} {base}",
+  "@ratePerUnit": {
+    "placeholders": {
+      "code": { "type": "String" },
+      "rate": { "type": "String" },
+      "base": { "type": "String" }
+    }
+  },
+  "editRateNote": "Новый курс — только для новых транзакций; старые остаются по курсу на момент записи.",
   "setBaseCurrencyTitle": "Базовая валюта",
   "haveNoItems": "Пока пусто",
   "addOne": "Добавить",

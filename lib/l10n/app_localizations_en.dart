@@ -425,6 +425,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rateHint => 'e.g. 1.25 or 0.73';
 
   @override
+  String get exchangeRates => 'Exchange rates';
+
+  @override
+  String get editRate => 'Edit rate';
+
+  @override
+  String ratePerUnit(String code, String rate, String base) {
+    return '1 $code = $rate $base';
+  }
+
+  @override
+  String get editRateNote =>
+      'Only new transactions use the new rate — past ones keep the rate they were logged at.';
+
+  @override
   String get setBaseCurrencyTitle => 'Set Base Currency';
 
   @override

@@ -908,6 +908,30 @@ abstract class AppLocalizations {
   /// **'e.g. 1.25 or 0.73'**
   String get rateHint;
 
+  /// No description provided for @exchangeRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rates'**
+  String get exchangeRates;
+
+  /// No description provided for @editRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit rate'**
+  String get editRate;
+
+  /// No description provided for @ratePerUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'1 {code} = {rate} {base}'**
+  String ratePerUnit(String code, String rate, String base);
+
+  /// No description provided for @editRateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Only new transactions use the new rate — past ones keep the rate they were logged at.'**
+  String get editRateNote;
+
   /// No description provided for @setBaseCurrencyTitle.
   ///
   /// In en, this message translates to:

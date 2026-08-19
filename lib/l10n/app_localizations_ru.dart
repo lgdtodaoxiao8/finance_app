@@ -427,6 +427,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get rateHint => 'напр. 1,25 или 0,73';
 
   @override
+  String get exchangeRates => 'Курсы валют';
+
+  @override
+  String get editRate => 'Изменить курс';
+
+  @override
+  String ratePerUnit(String code, String rate, String base) {
+    return '1 $code = $rate $base';
+  }
+
+  @override
+  String get editRateNote =>
+      'Новый курс — только для новых транзакций; старые остаются по курсу на момент записи.';
+
+  @override
   String get setBaseCurrencyTitle => 'Базовая валюта';
 
   @override

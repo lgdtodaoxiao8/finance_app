@@ -165,6 +165,17 @@
     }
   },
   "rateHint": "e.g. 1.25 or 0.73",
+  "exchangeRates": "Exchange rates",
+  "editRate": "Edit rate",
+  "ratePerUnit": "1 {code} = {rate} {base}",
+  "@ratePerUnit": {
+    "placeholders": {
+      "code": { "type": "String" },
+      "rate": { "type": "String" },
+      "base": { "type": "String" }
+    }
+  },
+  "editRateNote": "Only new transactions use the new rate — past ones keep the rate they were logged at.",
   "setBaseCurrencyTitle": "Set Base Currency",
   "haveNoItems": "Have no items",
   "addOne": "Add one",

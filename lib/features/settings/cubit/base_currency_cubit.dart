@@ -66,6 +66,24 @@ class BaseCurrencyCubit extends Cubit<BaseCurrencyState> {
 
   void setRate(double? rate) => emit(state.copyWith(rateToBase: rate ?? 0));
 
+  /// Corrects the exchange rate of a NON-base currency. [rateToBase] is the
+  /// value of 1 unit of that currency in the base currency ("1 EUR = 1.08 USD"
+  /// → 1.08). Historical transactions keep their FROZEN rate (setRate doesn't
+  /// touch them); only new transactions use the corrected rate.
+  Future<void> editRate(int id, double rateToBase) async {
+    if (rateToBase <= 0) return;
+    try {
+      await _repository.setRate(id, rateToBase);
+      if (getIt.isRegistered<SettingsService>()) {
+        await getIt<SettingsService>().recordCurrencyConfig();
+      }
+      await load();
+    } catch (e, st) {
+      debugPrint('BaseCurrencyCubit.editRate error: $e\n$st');
+      emit(state.copyWith(error: '$e'));
+    }
+  }
+
   Future<void> submit() async {
     final id = state.selectedId;
     if (id == null || state.sending) return;
