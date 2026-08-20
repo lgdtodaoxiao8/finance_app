@@ -938,6 +938,42 @@ abstract class AppLocalizations {
   /// **'Only new transactions use the new rate — past ones keep the rate they were logged at.'**
   String get editRateNote;
 
+  /// No description provided for @addCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Add currency'**
+  String get addCurrency;
+
+  /// No description provided for @baseTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Base'**
+  String get baseTag;
+
+  /// No description provided for @addFirstCurrencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to add your first currency — it becomes the base.'**
+  String get addFirstCurrencyHint;
+
+  /// No description provided for @searchCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Search currency'**
+  String get searchCurrency;
+
+  /// No description provided for @collapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
+
+  /// No description provided for @showAllCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all ({count})'**
+  String showAllCount(int count);
+
   /// No description provided for @setBaseCurrencyTitle.
   ///
   /// In en, this message translates to:

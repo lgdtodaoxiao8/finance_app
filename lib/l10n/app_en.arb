@@ -177,6 +177,17 @@
     }
   },
   "editRateNote": "Only new transactions use the new rate — past ones keep the rate they were logged at.",
+  "addCurrency": "Add currency",
+  "baseTag": "Base",
+  "addFirstCurrencyHint": "Tap + to add your first currency — it becomes the base.",
+  "searchCurrency": "Search currency",
+  "collapse": "Collapse",
+  "showAllCount": "Show all ({count})",
+  "@showAllCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "setBaseCurrencyTitle": "Set Base Currency",
   "haveNoItems": "Have no items",
   "addOne": "Add one",

@@ -445,6 +445,27 @@ class AppLocalizationsRu extends AppLocalizations {
       'Новый курс — только для новых транзакций; старые остаются по курсу на момент записи.';
 
   @override
+  String get addCurrency => 'Добавить валюту';
+
+  @override
+  String get baseTag => 'База';
+
+  @override
+  String get addFirstCurrencyHint =>
+      'Нажмите +, чтобы добавить первую валюту — она станет базовой.';
+
+  @override
+  String get searchCurrency => 'Поиск валюты';
+
+  @override
+  String get collapse => 'Свернуть';
+
+  @override
+  String showAllCount(int count) {
+    return 'Показать все ($count)';
+  }
+
+  @override
   String get setBaseCurrencyTitle => 'Базовая валюта';
 
   @override

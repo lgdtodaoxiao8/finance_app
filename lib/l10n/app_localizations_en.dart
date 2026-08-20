@@ -443,6 +443,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only new transactions use the new rate — past ones keep the rate they were logged at.';
 
   @override
+  String get addCurrency => 'Add currency';
+
+  @override
+  String get baseTag => 'Base';
+
+  @override
+  String get addFirstCurrencyHint =>
+      'Tap + to add your first currency — it becomes the base.';
+
+  @override
+  String get searchCurrency => 'Search currency';
+
+  @override
+  String get collapse => 'Collapse';
+
+  @override
+  String showAllCount(int count) {
+    return 'Show all ($count)';
+  }
+
+  @override
   String get setBaseCurrencyTitle => 'Set Base Currency';
 
   @override

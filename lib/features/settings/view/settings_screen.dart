@@ -37,7 +37,8 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _Card(
-            title: l.baseCurrency,
+            // SetBaseCurrency draws its own header (title + "+"), so the card
+            // supplies no title of its own.
             child: BlocProvider(
               create: (_) => BaseCurrencyCubit(getIt<CurrencyRepository>()),
               child: const SetBaseCurrency(),
@@ -115,10 +116,10 @@ class _NavCard extends StatelessWidget {
   }
 }
 
+/// A plain rounded settings card. Its child renders its own header/content.
 class _Card extends StatelessWidget {
-  const _Card({required this.title, required this.child});
+  const _Card({required this.child});
 
-  final String title;
   final Widget child;
 
   @override
@@ -130,20 +131,7 @@ class _Card extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: kCardShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: kTextStyle.copyWith(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
+      child: child,
     );
   }
 }

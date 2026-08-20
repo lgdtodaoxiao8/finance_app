@@ -177,6 +177,12 @@
     }
   },
   "editRateNote": "Новый курс — только для новых транзакций; старые остаются по курсу на момент записи.",
+  "addCurrency": "Добавить валюту",
+  "baseTag": "База",
+  "addFirstCurrencyHint": "Нажмите +, чтобы добавить первую валюту — она станет базовой.",
+  "searchCurrency": "Поиск валюты",
+  "collapse": "Свернуть",
+  "showAllCount": "Показать все ({count})",
   "setBaseCurrencyTitle": "Базовая валюта",
   "haveNoItems": "Пока пусто",
   "addOne": "Добавить",
