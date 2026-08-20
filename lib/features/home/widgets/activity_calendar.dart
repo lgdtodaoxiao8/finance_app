@@ -119,7 +119,7 @@ class _Dot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = future
-        ? AppColors.field
+        ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
         : active
         ? AppColors.primary
         : AppColors.primary.withValues(alpha: 0.15);

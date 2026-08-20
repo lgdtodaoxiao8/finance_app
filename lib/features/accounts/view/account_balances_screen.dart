@@ -203,7 +203,12 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
             borderRadius: BorderRadius.circular(4),
             child: Stack(
               children: [
-                Container(height: 6, color: AppColors.field),
+                Container(
+                  height: 6,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.08),
+                ),
                 FractionallySizedBox(
                   widthFactor: maxAbs == 0
                       ? 0

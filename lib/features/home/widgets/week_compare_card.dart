@@ -126,6 +126,7 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
           ),
           const SizedBox(height: 16),
           _bar(
+            context,
             AppLocalizations.of(context).thisWeek,
             _thisWeek,
             max,
@@ -133,6 +134,7 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
           ),
           const SizedBox(height: 10),
           _bar(
+            context,
             AppLocalizations.of(context).lastWeek,
             _lastWeek,
             max,
@@ -143,7 +145,13 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
     );
   }
 
-  Widget _bar(String label, double value, double max, Color color) {
+  Widget _bar(
+    BuildContext context,
+    String label,
+    double value,
+    double max,
+    Color color,
+  ) {
     return Row(
       children: [
         SizedBox(
@@ -161,7 +169,12 @@ class _WeekCompareCardState extends State<WeekCompareCard> {
             borderRadius: BorderRadius.circular(5),
             child: Stack(
               children: [
-                Container(height: 20, color: AppColors.field),
+                Container(
+                  height: 20,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.08),
+                ),
                 FractionallySizedBox(
                   widthFactor: max == 0 ? 0 : (value / max).clamp(0.02, 1.0),
                   child: Container(height: 20, color: color),

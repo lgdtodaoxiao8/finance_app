@@ -121,7 +121,11 @@ class _BiggestExpensesState extends State<BiggestExpenses> {
                           borderRadius: BorderRadius.circular(3),
                           child: Stack(
                             children: [
-                              Container(height: 5, color: AppColors.field),
+                              Container(
+                                height: 5,
+                                color: Theme.of(context).colorScheme.onSurface
+                                    .withValues(alpha: 0.08),
+                              ),
                               FractionallySizedBox(
                                 widthFactor: max == 0
                                     ? 0

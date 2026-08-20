@@ -705,7 +705,9 @@ class _ScoreRing extends StatelessWidget {
               value: score < 0 ? 0.75 : score / 100,
               strokeWidth: 5,
               strokeCap: StrokeCap.round,
-              backgroundColor: AppColors.field,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.08),
               valueColor: AlwaysStoppedAnimation(_color),
             ),
           ),
@@ -734,7 +736,12 @@ class _ProgressBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       child: Stack(
         children: [
-          Container(height: 7, color: AppColors.field),
+          Container(
+            height: 7,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.08),
+          ),
           FractionallySizedBox(
             widthFactor: value.clamp(0.0, 1.0),
             child: Container(height: 7, color: color),
