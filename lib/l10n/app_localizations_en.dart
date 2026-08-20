@@ -251,6 +251,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statSaved => 'saved';
 
   @override
+  String get statInRed => 'in the red';
+
+  @override
   String get statPerDay => 'per day';
 
   @override

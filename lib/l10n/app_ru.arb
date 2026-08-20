@@ -91,6 +91,7 @@
   "weekdayShortSun": "Вс",
 
   "statSaved": "накоплено",
+  "statInRed": "в минусе",
   "statPerDay": "в день",
   "statBiggest": "максимум",
   "statThisMonth": "в этом месяце",

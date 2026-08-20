@@ -578,6 +578,12 @@ abstract class AppLocalizations {
   /// **'saved'**
   String get statSaved;
 
+  /// No description provided for @statInRed.
+  ///
+  /// In en, this message translates to:
+  /// **'in the red'**
+  String get statInRed;
+
   /// No description provided for @statPerDay.
   ///
   /// In en, this message translates to:

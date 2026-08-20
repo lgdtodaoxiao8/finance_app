@@ -253,6 +253,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statSaved => 'накоплено';
 
   @override
+  String get statInRed => 'в минусе';
+
+  @override
   String get statPerDay => 'в день';
 
   @override

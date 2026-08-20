@@ -92,21 +92,35 @@ class _StatStripState extends State<StatStrip> {
       }
     }
     final net = income - expense;
-    final savingsRate = income > 0 ? (net / income * 100).round() : null;
     final days = range.end.difference(range.start).inDays + 1;
     final avgPerDay = expense / (days < 1 ? 1 : days);
+
+    // "Saved" only makes sense when the period is in the black. A net loss as a
+    // percentage of a tiny income explodes into nonsense (e.g. -21028%), so when
+    // net is negative we show the shortfall AS MONEY under an "in the red" label
+    // instead; a non-negative net shows the savings rate (0% when no income).
+    final _Stat savedOrRed;
+    if (net < 0) {
+      savedOrRed = _Stat(
+        Icons.trending_down_rounded,
+        AmountText.maskString(compactMoney(net.abs(), _symbol)),
+        _StatKind.inRed,
+        AppColors.negative,
+      );
+    } else {
+      final savingsRate = income > 0 ? (net / income * 100).round() : 0;
+      savedOrRed = _Stat(
+        Icons.savings_rounded,
+        '$savingsRate%',
+        _StatKind.saved,
+        AppColors.positive,
+      );
+    }
 
     if (!mounted) return;
     setState(() {
       _stats = [
-        _Stat(
-          Icons.savings_rounded,
-          savingsRate == null ? '—' : '$savingsRate%',
-          _StatKind.saved,
-          savingsRate != null && savingsRate >= 0
-              ? AppColors.positive
-              : AppColors.negative,
-        ),
+        savedOrRed,
         _Stat(
           Icons.today_rounded,
           AmountText.maskString(compactMoney(avgPerDay, _symbol)),
@@ -161,7 +175,7 @@ class _StatStripState extends State<StatStrip> {
 
 /// Which stat a chip shows — the label is resolved at build time so it follows
 /// the app language (the values are computed off-context in the stream).
-enum _StatKind { saved, perDay, biggest, thisMonth, activeDays }
+enum _StatKind { saved, inRed, perDay, biggest, thisMonth, activeDays }
 
 class _Stat {
   const _Stat(this.icon, this.value, this.kind, this.color);
@@ -179,6 +193,7 @@ class _Chip extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return switch (kind) {
       _StatKind.saved => l.statSaved,
+      _StatKind.inRed => l.statInRed,
       _StatKind.perDay => l.statPerDay,
       _StatKind.biggest => l.statBiggest,
       _StatKind.thisMonth => l.statThisMonth,

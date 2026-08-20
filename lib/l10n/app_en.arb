@@ -91,6 +91,7 @@
   "weekdayShortSun": "S",
 
   "statSaved": "saved",
+  "statInRed": "in the red",
   "statPerDay": "per day",
   "statBiggest": "biggest",
   "statThisMonth": "this month",
