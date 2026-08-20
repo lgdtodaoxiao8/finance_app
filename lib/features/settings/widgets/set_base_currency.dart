@@ -369,93 +369,88 @@ class _AddCurrencySheetState extends State<_AddCurrencySheet> {
               )
               .toList();
 
-    return Padding(
-      // Keep the field above the keyboard.
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.7,
-        maxChildSize: 0.92,
-        minChildSize: 0.4,
-        builder: (context, scrollController) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.addCurrency,
-                      style: kTextStyle.copyWith(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _controller,
-                      autofocus: true,
-                      onChanged: (v) => setState(() => _query = v),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                        hintText: l.searchCurrency,
-                        filled: true,
-                        fillColor: cs.onSurface.withValues(alpha: 0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(kRadiusSm),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ],
+    final keyboard = MediaQuery.of(context).viewInsets.bottom;
+    // A plain fixed-height sheet (NOT a DraggableScrollableSheet — its drag
+    // gesture steals taps from the search field so the keyboard never opens).
+    // The search stays pinned at the top; the list reserves the keyboard's
+    // height at its bottom so every row can scroll clear of the keyboard.
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.8,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.addCurrency,
+                  style: kTextStyle.copyWith(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.only(bottom: 16),
-                  itemCount: items.length,
-                  itemBuilder: (context, i) {
-                    final c = items[i];
-                    final code = c.currencyCode.isNotEmpty
-                        ? c.currencyCode
-                        : c.currencySymbol;
-                    return ListTile(
-                      leading: ItemAvatar(
-                        color: cs.primary,
-                        label: c.currencySymbol.isNotEmpty
-                            ? c.currencySymbol
-                            : code,
-                        diameter: 38,
-                      ),
-                      title: Text(
-                        code,
-                        style: kTextStyle.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      subtitle: c.currencyName.isNotEmpty
-                          ? Text(
-                              c.currencyName,
-                              style: kTextStyle.copyWith(
-                                fontSize: 12.5,
-                                color: cs.onSurfaceVariant,
-                              ),
-                            )
-                          : null,
-                      onTap: () => Navigator.pop(context, c),
-                    );
-                  },
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  onChanged: (v) => setState(() => _query = v),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    hintText: l.searchCurrency,
+                    filled: true,
+                    fillColor: cs.onSurface.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(kRadiusSm),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              keyboardDismissBehavior:
+                  ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.only(bottom: keyboard + 16),
+              itemCount: items.length,
+              itemBuilder: (context, i) {
+                final c = items[i];
+                final code = c.currencyCode.isNotEmpty
+                    ? c.currencyCode
+                    : c.currencySymbol;
+                return ListTile(
+                  leading: ItemAvatar(
+                    color: cs.primary,
+                    label: c.currencySymbol.isNotEmpty
+                        ? c.currencySymbol
+                        : code,
+                    diameter: 38,
+                  ),
+                  title: Text(
+                    code,
+                    style: kTextStyle.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: c.currencyName.isNotEmpty
+                      ? Text(
+                          c.currencyName,
+                          style: kTextStyle.copyWith(
+                            fontSize: 12.5,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        )
+                      : null,
+                  onTap: () => Navigator.pop(context, c),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
