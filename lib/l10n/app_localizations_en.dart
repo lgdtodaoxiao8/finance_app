@@ -408,6 +408,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountCurrency => 'Account currency';
 
   @override
+  String get accountType => 'Account type';
+
+  @override
+  String get accountKindGeneral => 'Spending';
+
+  @override
+  String get accountKindSavings => 'Savings';
+
+  @override
+  String get accountKindInvestment => 'Investment';
+
+  @override
+  String get interestRateField => 'Rate, % per year';
+
+  @override
+  String get maturityField => 'Matures on';
+
+  @override
+  String get maturityNotSet => 'Not set';
+
+  @override
+  String get currentValueField => 'Current value now';
+
+  @override
+  String get optionalLabel => 'optional';
+
+  @override
+  String get sectionSpending => 'Spending';
+
+  @override
+  String get sectionSavings => 'Savings';
+
+  @override
+  String get sectionInvestments => 'Investments';
+
+  @override
+  String savingsYield(String amount) {
+    return '≈ $amount/yr';
+  }
+
+  @override
+  String maturesUntil(String date) {
+    return 'until $date';
+  }
+
+  @override
+  String get matured => 'term ended';
+
+  @override
+  String get logInterest => 'Add interest';
+
+  @override
+  String get updateValue => 'Update value';
+
+  @override
+  String get investedLabel => 'Invested';
+
+  @override
+  String get returnLabel => 'Return';
+
+  @override
+  String get updateValueTitle => 'Current value';
+
+  @override
+  String get logInterestTitle => 'Add interest';
+
+  @override
+  String get interestAmountField => 'Interest amount';
+
+  @override
+  String get logInterestNote =>
+      'Logged as income in the \"Interest\" category.';
+
+  @override
+  String get interestCategoryName => 'Interest';
+
+  @override
   String get allCurrencies => 'All currencies';
 
   @override

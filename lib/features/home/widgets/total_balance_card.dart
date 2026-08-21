@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/data/models/transaction_details.dart';
+import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
+import 'package:finance_app/features/accounts/account_math.dart';
 import 'package:finance_app/features/accounts/view/account_balances_screen.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
+import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -21,23 +24,31 @@ class TotalBalanceCard extends StatefulWidget {
 
 class _TotalBalanceCardState extends State<TotalBalanceCard> {
   StreamSubscription<List<TransactionDetails>>? _sub;
+  StreamSubscription<List<Account>>? _accountsSub;
   StreamSubscription<List<dynamic>>? _currencySub;
   String? _symbol;
   double _total = 0;
+  List<TransactionDetails> _txns = const [];
+  List<Account> _accounts = const [];
 
   @override
   void initState() {
     super.initState();
     _watchBaseSymbol();
     _sub = getIt<TransactionRepository>().watchAllWithDetails().listen((txns) {
-      // Net worth = all-time income − expense (transfers net to zero).
-      var total = 0.0;
-      for (final t in txns) {
-        if (t.isIncome) total += t.amountInBase;
-        if (t.isExpense) total -= t.amountInBase;
-      }
-      if (mounted) setState(() => _total = total);
+      _txns = txns;
+      _recompute();
     });
+    // Net worth counts investment accounts by their current value, so it must
+    // react to account edits (a value update) too, not just transactions.
+    _accountsSub = getIt<AccountRepository>().watchAll().listen((accounts) {
+      _accounts = accounts;
+      _recompute();
+    });
+  }
+
+  void _recompute() {
+    if (mounted) setState(() => _total = netWorth(_accounts, _txns));
   }
 
   // Reactive base-currency symbol: updates live when the user changes their
@@ -58,6 +69,7 @@ class _TotalBalanceCardState extends State<TotalBalanceCard> {
   @override
   void dispose() {
     _sub?.cancel();
+    _accountsSub?.cancel();
     _currencySub?.cancel();
     super.dispose();
   }

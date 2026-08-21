@@ -36,10 +36,20 @@ create table if not exists public.accounts (
   name            text,
   currency_code   text,
   icon_code_point bigint,
+  -- Account purpose + savings/investment extras.
+  kind            text    not null default 'general',
+  interest_rate   double precision,
+  maturity_date   text,
+  current_value   double precision,
   updated_at      bigint  not null default 0,
   deleted         boolean not null default false,
   primary key (user_id, uuid)
 );
+-- Idempotent for deployments created before account kinds were added.
+alter table public.accounts add column if not exists kind text not null default 'general';
+alter table public.accounts add column if not exists interest_rate double precision;
+alter table public.accounts add column if not exists maturity_date text;
+alter table public.accounts add column if not exists current_value double precision;
 
 -- ========================================================== transactions ====
 create table if not exists public.transactions (

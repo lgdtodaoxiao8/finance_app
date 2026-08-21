@@ -116,12 +116,32 @@ class Account implements RootData {
   final int currencyId;
   final IconData accountIcon;
 
+  /// 'general' (spending), 'savings' (savings/deposit) or 'investment'.
+  final String accountKind;
+
+  /// Annual interest rate (%) for a savings/deposit account.
+  final double? interestRate;
+
+  /// Deposit term end date, for a fixed-term deposit.
+  final DateTime? maturityDate;
+
+  /// Manually-tracked current market value of an investment account.
+  final double? currentValue;
+
   Account({
     required this.accountId,
     required this.accountName,
     required this.currencyId,
     required this.accountIcon,
+    this.accountKind = 'general',
+    this.interestRate,
+    this.maturityDate,
+    this.currentValue,
   });
+
+  bool get isGeneral => accountKind == 'general';
+  bool get isSavings => accountKind == 'savings';
+  bool get isInvestment => accountKind == 'investment';
 
   @override
   String get displayName => accountName;
@@ -170,12 +190,20 @@ class Account implements RootData {
     'name': accountName,
     'currency_id': currencyId,
     'icon_code_point': accountIcon.codePoint,
+    'kind': accountKind,
+    'interest_rate': interestRate,
+    'maturity_date': maturityDate?.toIso8601String(),
+    'current_value': currentValue,
   };
 
   Map<String, dynamic> toMapSaving() => {
     'name': accountName,
     'currency_id': currencyId,
     'icon_code_point': accountIcon.codePoint,
+    'kind': accountKind,
+    'interest_rate': interestRate,
+    'maturity_date': maturityDate?.toIso8601String(),
+    'current_value': currentValue,
   };
 
   factory Account.fromMap(Map<String, dynamic> map) => Account(
@@ -183,6 +211,12 @@ class Account implements RootData {
     accountName: map['name'],
     currencyId: map['currency_id'],
     accountIcon: appIconData(map['icon_code_point']),
+    accountKind: map['kind'] as String? ?? 'general',
+    interestRate: (map['interest_rate'] as num?)?.toDouble(),
+    maturityDate: map['maturity_date'] == null
+        ? null
+        : DateTime.tryParse(map['maturity_date'] as String),
+    currentValue: (map['current_value'] as num?)?.toDouble(),
   );
 }
 

@@ -45,6 +45,8 @@ class _AddAccountViewState extends State<_AddAccountView> {
   late final _name = TextEditingController(
     text: widget.initial?.accountName ?? '',
   );
+  late final _rate = TextEditingController(text: _numText(widget.initial?.interestRate));
+  late final _value = TextEditingController(text: _numText(widget.initial?.currentValue));
 
   @override
   void initState() {
@@ -55,6 +57,8 @@ class _AddAccountViewState extends State<_AddAccountView> {
   @override
   void dispose() {
     _name.dispose();
+    _rate.dispose();
+    _value.dispose();
     super.dispose();
   }
 
@@ -62,6 +66,20 @@ class _AddAccountViewState extends State<_AddAccountView> {
     final name = _name.text.trim();
     return name.isNotEmpty && name.length <= 30;
   }
+
+  static String _numText(double? v) => v == null
+      ? ''
+      : (v % 1 == 0 ? v.toInt().toString() : v.toString());
+
+  double? _parse(String text) {
+    final t = text.trim();
+    if (t.isEmpty) return null;
+    return double.tryParse(t.replaceAll(',', '.'));
+  }
+
+  static String _fmtDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}.'
+      '${d.month.toString().padLeft(2, '0')}.${d.year}';
 
   Future<int> _addNewCurrency() async {
     final cubit = context.read<AddAccountCubit>();
@@ -72,6 +90,174 @@ class _AddAccountViewState extends State<_AddAccountView> {
       return result;
     }
     return -1;
+  }
+
+  /// Account-type chips + the fields that belong to the chosen type (savings:
+  /// rate + maturity; investment: current value).
+  Widget _kindSection(
+    AddAccountState state,
+    AddAccountCubit cubit,
+    AppLocalizations l,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.accountType,
+          style: kTextStyle.copyWith(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _kindChip(state, cubit, 'general', l.accountKindGeneral,
+                Icons.account_balance_wallet_rounded),
+            _kindChip(state, cubit, 'savings', l.accountKindSavings,
+                Icons.savings_rounded),
+            _kindChip(state, cubit, 'investment', l.accountKindInvestment,
+                Icons.trending_up_rounded),
+          ],
+        ),
+        if (state.isSavings) ...[
+          const SizedBox(height: 16),
+          _numField(
+            controller: _rate,
+            label: l.interestRateField,
+            suffix: '%',
+            onChanged: (v) => cubit.setInterestRate(_parse(v)),
+          ),
+          const SizedBox(height: 12),
+          _maturityRow(state, cubit, l),
+        ],
+        if (state.isInvestment) ...[
+          const SizedBox(height: 16),
+          _numField(
+            controller: _value,
+            label: l.currentValueField,
+            onChanged: (v) => cubit.setCurrentValue(_parse(v)),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _kindChip(
+    AddAccountState state,
+    AddAccountCubit cubit,
+    String value,
+    String label,
+    IconData icon,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final selected = state.kind == value;
+    return ChoiceChip(
+      selected: selected,
+      showCheckmark: false,
+      avatar: Icon(
+        icon,
+        size: 18,
+        color: selected ? cs.primary : cs.onSurfaceVariant,
+      ),
+      label: Text(label),
+      onSelected: (_) {
+        cubit.setKind(value);
+        // Re-apply the field's current text so switching back to this kind
+        // keeps whatever the user had typed.
+        if (value == 'savings') cubit.setInterestRate(_parse(_rate.text));
+        if (value == 'investment') cubit.setCurrentValue(_parse(_value.text));
+      },
+    );
+  }
+
+  Widget _numField({
+    required TextEditingController controller,
+    required String label,
+    String? suffix,
+    required ValueChanged<String> onChanged,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return TextField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: suffix,
+        filled: true,
+        fillColor: cs.onSurface.withValues(alpha: 0.05),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(kRadiusSm),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _maturityRow(
+    AddAccountState state,
+    AddAccountCubit cubit,
+    AppLocalizations l,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final date = state.maturityDate;
+    return InkWell(
+      borderRadius: BorderRadius.circular(kRadiusSm),
+      onTap: () async {
+        final now = DateTime.now();
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date ?? now.add(const Duration(days: 365)),
+          firstDate: DateTime(now.year - 1),
+          lastDate: DateTime(now.year + 30),
+        );
+        if (picked != null) cubit.setMaturityDate(picked);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: cs.onSurface.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(kRadiusSm),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.event_rounded, size: 20, color: cs.onSurfaceVariant),
+            const SizedBox(width: 10),
+            Text(
+              l.maturityField,
+              style: kTextStyle.copyWith(
+                fontSize: 14,
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              date == null ? l.maturityNotSet : _fmtDate(date),
+              style: kTextStyle.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (date != null) ...[
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () => cubit.setMaturityDate(null),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -168,6 +354,8 @@ class _AddAccountViewState extends State<_AddAccountView> {
                               ],
                               label: l.accountCurrency,
                             ),
+                            const SizedBox(height: 20),
+                            _kindSection(state, cubit, l),
                             const SizedBox(height: 20),
                             IconPicker(
                               onSelectIcon: cubit.setIcon,

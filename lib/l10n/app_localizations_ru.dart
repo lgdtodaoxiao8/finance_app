@@ -410,6 +410,82 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountCurrency => 'Валюта счёта';
 
   @override
+  String get accountType => 'Тип счёта';
+
+  @override
+  String get accountKindGeneral => 'Обычный';
+
+  @override
+  String get accountKindSavings => 'Накопительный';
+
+  @override
+  String get accountKindInvestment => 'Инвестиции';
+
+  @override
+  String get interestRateField => 'Ставка, % годовых';
+
+  @override
+  String get maturityField => 'Срок вклада до';
+
+  @override
+  String get maturityNotSet => 'Не задано';
+
+  @override
+  String get currentValueField => 'Текущая стоимость';
+
+  @override
+  String get optionalLabel => 'необязательно';
+
+  @override
+  String get sectionSpending => 'Траты';
+
+  @override
+  String get sectionSavings => 'Накопления';
+
+  @override
+  String get sectionInvestments => 'Инвестиции';
+
+  @override
+  String savingsYield(String amount) {
+    return '≈ $amount/год';
+  }
+
+  @override
+  String maturesUntil(String date) {
+    return 'до $date';
+  }
+
+  @override
+  String get matured => 'срок истёк';
+
+  @override
+  String get logInterest => 'Начислить %';
+
+  @override
+  String get updateValue => 'Обновить стоимость';
+
+  @override
+  String get investedLabel => 'Вложено';
+
+  @override
+  String get returnLabel => 'Доход';
+
+  @override
+  String get updateValueTitle => 'Текущая стоимость';
+
+  @override
+  String get logInterestTitle => 'Начислить проценты';
+
+  @override
+  String get interestAmountField => 'Сумма процентов';
+
+  @override
+  String get logInterestNote => 'Запишется как доход в категории «Проценты».';
+
+  @override
+  String get interestCategoryName => 'Проценты';
+
+  @override
   String get allCurrencies => 'Все валюты';
 
   @override

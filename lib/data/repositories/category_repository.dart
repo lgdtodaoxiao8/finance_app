@@ -33,6 +33,16 @@ abstract class CategoryRepository {
   Future<void> delete(int id);
 
   Stream<List<Category>> watchAll();
+
+  /// Returns the id of a category with [name] and [kind], creating it if none
+  /// exists. Used by system-generated transactions (e.g. logging deposit
+  /// interest as income) that must reference a real category.
+  Future<int> ensureCategory({
+    required String name,
+    required String kind,
+    required int color,
+    required int iconCodePoint,
+  });
 }
 
 class DriftCategoryRepository implements CategoryRepository {
@@ -131,5 +141,27 @@ class DriftCategoryRepository implements CategoryRepository {
         .map(
           (rows) => rows.map(_toDomain).toList(),
         );
+  }
+
+  @override
+  Future<int> ensureCategory({
+    required String name,
+    required String kind,
+    required int color,
+    required int iconCodePoint,
+  }) async {
+    final existing =
+        await (_db.select(_db.categories)..where(
+              (c) => c.name.equals(name) & c.kind.equals(kind),
+            ))
+            .get();
+    if (existing.isNotEmpty) return existing.first.id;
+    return add(
+      name: name,
+      color: color,
+      iconColor: color,
+      iconCodePoint: iconCodePoint,
+      kind: kind,
+    );
   }
 }

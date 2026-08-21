@@ -19,6 +19,10 @@ class AddAccountCubit extends Cubit<AddAccountState> {
              : AddAccountState(
                  icon: initial.accountIcon,
                  selectedCurrencyId: initial.currencyId,
+                 kind: initial.accountKind,
+                 interestRate: initial.interestRate,
+                 maturityDate: initial.maturityDate,
+                 currentValue: initial.currentValue,
                ),
        ) {
     loadCurrencies();
@@ -51,10 +55,39 @@ class AddAccountCubit extends Cubit<AddAccountState> {
   void setCurrency(int id) => emit(state.copyWith(selectedCurrencyId: id));
   void setIcon(IconData icon) => emit(state.copyWith(icon: icon));
 
+  /// Switches the account kind, clearing the fields that don't apply to it so
+  /// e.g. a rate left over from "savings" isn't saved onto an "investment".
+  void setKind(String kind) => emit(
+    state.copyWith(
+      kind: kind,
+      clearInterestRate: kind != 'savings',
+      clearMaturityDate: kind != 'savings',
+      clearCurrentValue: kind != 'investment',
+    ),
+  );
+
+  void setInterestRate(double? rate) => rate == null
+      ? emit(state.copyWith(clearInterestRate: true))
+      : emit(state.copyWith(interestRate: rate));
+
+  void setMaturityDate(DateTime? date) => date == null
+      ? emit(state.copyWith(clearMaturityDate: true))
+      : emit(state.copyWith(maturityDate: date));
+
+  void setCurrentValue(double? value) => value == null
+      ? emit(state.copyWith(clearCurrentValue: true))
+      : emit(state.copyWith(currentValue: value));
+
   Future<void> save(String name) async {
     final currencyId = state.selectedCurrencyId;
     final icon = state.icon;
     if (currencyId == null || icon == null) return;
+
+    // Only persist the extras that belong to the chosen kind.
+    final kind = state.kind;
+    final interestRate = kind == 'savings' ? state.interestRate : null;
+    final maturityDate = kind == 'savings' ? state.maturityDate : null;
+    final currentValue = kind == 'investment' ? state.currentValue : null;
 
     emit(state.copyWith(sending: true));
     try {
@@ -65,6 +98,10 @@ class AddAccountCubit extends Cubit<AddAccountState> {
           name: name,
           currencyId: currencyId,
           iconCodePoint: icon.codePoint,
+          kind: kind,
+          interestRate: interestRate,
+          maturityDate: maturityDate,
+          currentValue: currentValue,
         );
         id = editingId;
       } else {
@@ -72,6 +109,10 @@ class AddAccountCubit extends Cubit<AddAccountState> {
           name: name,
           currencyId: currencyId,
           iconCodePoint: icon.codePoint,
+          kind: kind,
+          interestRate: interestRate,
+          maturityDate: maturityDate,
+          currentValue: currentValue,
         );
       }
       emit(state.copyWith(sending: false, savedId: id));

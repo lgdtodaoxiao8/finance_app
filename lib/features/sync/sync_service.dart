@@ -77,6 +77,10 @@ class SyncService {
             'name': a.name,
             'currency_code': currencyCodeById[a.currencyId],
             'icon_code_point': a.iconCodePoint,
+            'kind': a.kind,
+            'interest_rate': a.interestRate,
+            'maturity_date': a.maturityDate,
+            'current_value': a.currentValue,
             'updated_at': a.updatedAt,
             'deleted': false,
           },
@@ -235,6 +239,10 @@ class SyncService {
         name: Value(r['name'] as String?),
         currencyId: Value(currencyIdByCode[r['currency_code'] as String?]),
         iconCodePoint: Value((r['icon_code_point'] as num?)?.toInt()),
+        kind: Value((r['kind'] as String?) ?? 'general'),
+        interestRate: Value((r['interest_rate'] as num?)?.toDouble()),
+        maturityDate: Value(r['maturity_date'] as String?),
+        currentValue: Value((r['current_value'] as num?)?.toDouble()),
         updatedAt: Value(remoteUpdated),
       );
       if (existing == null) {

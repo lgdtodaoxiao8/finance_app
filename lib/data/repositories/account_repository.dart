@@ -8,21 +8,35 @@ import 'package:finance_app/core/app_icons.dart';
 abstract class AccountRepository {
   Future<List<Account>> getAll();
 
+  Future<Account?> getById(int id);
+
   Future<int> add({
     required String name,
     required int currencyId,
     required int iconCodePoint,
+    String kind,
+    double? interestRate,
+    DateTime? maturityDate,
+    double? currentValue,
   });
 
-  /// Number of transactions referencing this account (as source or
-  /// destination) — used to block deletion of an account still in use.
   Future<void> update({
     required int id,
     required String name,
     required int currencyId,
     required int iconCodePoint,
+    String kind,
+    double? interestRate,
+    DateTime? maturityDate,
+    double? currentValue,
   });
 
+  /// Sets an investment account's current market value (the "update value"
+  /// action). Stamps updated_at so the change syncs.
+  Future<void> setCurrentValue(int id, double value);
+
+  /// Number of transactions referencing this account (as source or
+  /// destination) — used to block deletion of an account still in use.
   Future<int> transactionCount(int accountId);
 
   Future<void> delete(int id);
@@ -42,6 +56,12 @@ class DriftAccountRepository implements AccountRepository {
     accountIcon: appIconData(
       row.iconCodePoint ?? SolarIconsBold.wallet.codePoint,
     ),
+    accountKind: row.kind,
+    interestRate: row.interestRate,
+    maturityDate: row.maturityDate == null
+        ? null
+        : DateTime.tryParse(row.maturityDate!),
+    currentValue: row.currentValue,
   );
 
   @override
@@ -51,10 +71,22 @@ class DriftAccountRepository implements AccountRepository {
   }
 
   @override
+  Future<Account?> getById(int id) async {
+    final row = await (_db.select(
+      _db.accounts,
+    )..where((a) => a.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _toDomain(row);
+  }
+
+  @override
   Future<int> add({
     required String name,
     required int currencyId,
     required int iconCodePoint,
+    String kind = 'general',
+    double? interestRate,
+    DateTime? maturityDate,
+    double? currentValue,
   }) {
     return _db
         .into(_db.accounts)
@@ -63,6 +95,10 @@ class DriftAccountRepository implements AccountRepository {
             name: Value(name),
             currencyId: Value(currencyId),
             iconCodePoint: Value(iconCodePoint),
+            kind: Value(kind),
+            interestRate: Value(interestRate),
+            maturityDate: Value(maturityDate?.toIso8601String()),
+            currentValue: Value(currentValue),
           ),
         );
   }
@@ -73,13 +109,31 @@ class DriftAccountRepository implements AccountRepository {
     required String name,
     required int currencyId,
     required int iconCodePoint,
+    String kind = 'general',
+    double? interestRate,
+    DateTime? maturityDate,
+    double? currentValue,
   }) async {
     await (_db.update(_db.accounts)..where((a) => a.id.equals(id))).write(
       AccountsCompanion(
         name: Value(name),
         currencyId: Value(currencyId),
         iconCodePoint: Value(iconCodePoint),
+        kind: Value(kind),
+        interestRate: Value(interestRate),
+        maturityDate: Value(maturityDate?.toIso8601String()),
+        currentValue: Value(currentValue),
         // Stamped so cloud sync (LWW on updated_at) picks the edit up.
+        updatedAt: Value(nowMs()),
+      ),
+    );
+  }
+
+  @override
+  Future<void> setCurrentValue(int id, double value) async {
+    await (_db.update(_db.accounts)..where((a) => a.id.equals(id))).write(
+      AccountsCompanion(
+        currentValue: Value(value),
         updatedAt: Value(nowMs()),
       ),
     );

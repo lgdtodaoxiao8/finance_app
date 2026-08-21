@@ -878,6 +878,150 @@ abstract class AppLocalizations {
   /// **'Account currency'**
   String get accountCurrency;
 
+  /// No description provided for @accountType.
+  ///
+  /// In en, this message translates to:
+  /// **'Account type'**
+  String get accountType;
+
+  /// No description provided for @accountKindGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending'**
+  String get accountKindGeneral;
+
+  /// No description provided for @accountKindSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get accountKindSavings;
+
+  /// No description provided for @accountKindInvestment.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment'**
+  String get accountKindInvestment;
+
+  /// No description provided for @interestRateField.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate, % per year'**
+  String get interestRateField;
+
+  /// No description provided for @maturityField.
+  ///
+  /// In en, this message translates to:
+  /// **'Matures on'**
+  String get maturityField;
+
+  /// No description provided for @maturityNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get maturityNotSet;
+
+  /// No description provided for @currentValueField.
+  ///
+  /// In en, this message translates to:
+  /// **'Current value now'**
+  String get currentValueField;
+
+  /// No description provided for @optionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'optional'**
+  String get optionalLabel;
+
+  /// No description provided for @sectionSpending.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending'**
+  String get sectionSpending;
+
+  /// No description provided for @sectionSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get sectionSavings;
+
+  /// No description provided for @sectionInvestments.
+  ///
+  /// In en, this message translates to:
+  /// **'Investments'**
+  String get sectionInvestments;
+
+  /// No description provided for @savingsYield.
+  ///
+  /// In en, this message translates to:
+  /// **'≈ {amount}/yr'**
+  String savingsYield(String amount);
+
+  /// No description provided for @maturesUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'until {date}'**
+  String maturesUntil(String date);
+
+  /// No description provided for @matured.
+  ///
+  /// In en, this message translates to:
+  /// **'term ended'**
+  String get matured;
+
+  /// No description provided for @logInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Add interest'**
+  String get logInterest;
+
+  /// No description provided for @updateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Update value'**
+  String get updateValue;
+
+  /// No description provided for @investedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invested'**
+  String get investedLabel;
+
+  /// No description provided for @returnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Return'**
+  String get returnLabel;
+
+  /// No description provided for @updateValueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current value'**
+  String get updateValueTitle;
+
+  /// No description provided for @logInterestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add interest'**
+  String get logInterestTitle;
+
+  /// No description provided for @interestAmountField.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest amount'**
+  String get interestAmountField;
+
+  /// No description provided for @logInterestNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged as income in the \"Interest\" category.'**
+  String get logInterestNote;
+
+  /// No description provided for @interestCategoryName.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get interestCategoryName;
+
   /// No description provided for @allCurrencies.
   ///
   /// In en, this message translates to:

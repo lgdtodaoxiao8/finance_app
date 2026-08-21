@@ -41,6 +41,22 @@ class Accounts extends Table with SyncColumns {
       integer().named('currency_id').nullable().references(Currencies, #id)();
   IntColumn get iconCodePoint =>
       integer().named('icon_code_point').nullable()();
+
+  /// Account purpose: 'general' (spending — cash/bank/card), 'savings' (savings
+  /// or deposit, may earn interest) or 'investment' (brokerage/crypto/funds,
+  /// value tracked manually). Defaults to general for existing rows.
+  TextColumn get kind => text().withDefault(const Constant('general'))();
+
+  /// Annual interest rate in percent for a savings/deposit account (e.g. 3.5).
+  RealColumn get interestRate => real().named('interest_rate').nullable()();
+
+  /// Deposit term end date (ISO-8601 date) for a fixed-term deposit.
+  TextColumn get maturityDate => text().named('maturity_date').nullable()();
+
+  /// Manually-tracked current market value of an investment account. Net worth
+  /// uses THIS instead of the contribution balance; the gap is the return.
+  /// Market moves stay out of income/expense analytics — they aren't earnings.
+  RealColumn get currentValue => real().named('current_value').nullable()();
 }
 
 /// Spending / income categories with their own color + icon. Each category is
@@ -136,7 +152,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -188,6 +204,14 @@ class AppDatabase extends _$AppDatabase {
           '  WHERE c.id = transactions.currency_id'
           ') WHERE rate_to_base IS NULL',
         );
+      }
+      if (from < 6) {
+        // Account kinds + savings/investment fields. Existing accounts default
+        // to 'general' (spending); the rest are null until the user sets them.
+        await m.addColumn(accounts, accounts.kind);
+        await m.addColumn(accounts, accounts.interestRate);
+        await m.addColumn(accounts, accounts.maturityDate);
+        await m.addColumn(accounts, accounts.currentValue);
       }
     },
   );

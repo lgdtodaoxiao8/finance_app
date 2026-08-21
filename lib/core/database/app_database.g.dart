@@ -476,6 +476,49 @@ class $AccountsTable extends Accounts
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('general'),
+  );
+  static const VerificationMeta _interestRateMeta = const VerificationMeta(
+    'interestRate',
+  );
+  @override
+  late final GeneratedColumn<double> interestRate = GeneratedColumn<double>(
+    'interest_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _maturityDateMeta = const VerificationMeta(
+    'maturityDate',
+  );
+  @override
+  late final GeneratedColumn<String> maturityDate = GeneratedColumn<String>(
+    'maturity_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currentValueMeta = const VerificationMeta(
+    'currentValue',
+  );
+  @override
+  late final GeneratedColumn<double> currentValue = GeneratedColumn<double>(
+    'current_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     uuid,
@@ -484,6 +527,10 @@ class $AccountsTable extends Accounts
     name,
     currencyId,
     iconCodePoint,
+    kind,
+    interestRate,
+    maturityDate,
+    currentValue,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -533,6 +580,39 @@ class $AccountsTable extends Accounts
         ),
       );
     }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('interest_rate')) {
+      context.handle(
+        _interestRateMeta,
+        interestRate.isAcceptableOrUnknown(
+          data['interest_rate']!,
+          _interestRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('maturity_date')) {
+      context.handle(
+        _maturityDateMeta,
+        maturityDate.isAcceptableOrUnknown(
+          data['maturity_date']!,
+          _maturityDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_value')) {
+      context.handle(
+        _currentValueMeta,
+        currentValue.isAcceptableOrUnknown(
+          data['current_value']!,
+          _currentValueMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -566,6 +646,22 @@ class $AccountsTable extends Accounts
         DriftSqlType.int,
         data['${effectivePrefix}icon_code_point'],
       ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      interestRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}interest_rate'],
+      ),
+      maturityDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}maturity_date'],
+      ),
+      currentValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}current_value'],
+      ),
     );
   }
 
@@ -582,6 +678,22 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
   final String? name;
   final int? currencyId;
   final int? iconCodePoint;
+
+  /// Account purpose: 'general' (spending — cash/bank/card), 'savings' (savings
+  /// or deposit, may earn interest) or 'investment' (brokerage/crypto/funds,
+  /// value tracked manually). Defaults to general for existing rows.
+  final String kind;
+
+  /// Annual interest rate in percent for a savings/deposit account (e.g. 3.5).
+  final double? interestRate;
+
+  /// Deposit term end date (ISO-8601 date) for a fixed-term deposit.
+  final String? maturityDate;
+
+  /// Manually-tracked current market value of an investment account. Net worth
+  /// uses THIS instead of the contribution balance; the gap is the return.
+  /// Market moves stay out of income/expense analytics — they aren't earnings.
+  final double? currentValue;
   const AccountRow({
     this.uuid,
     this.updatedAt,
@@ -589,6 +701,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     this.name,
     this.currencyId,
     this.iconCodePoint,
+    required this.kind,
+    this.interestRate,
+    this.maturityDate,
+    this.currentValue,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -609,6 +725,16 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     if (!nullToAbsent || iconCodePoint != null) {
       map['icon_code_point'] = Variable<int>(iconCodePoint);
     }
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || interestRate != null) {
+      map['interest_rate'] = Variable<double>(interestRate);
+    }
+    if (!nullToAbsent || maturityDate != null) {
+      map['maturity_date'] = Variable<String>(maturityDate);
+    }
+    if (!nullToAbsent || currentValue != null) {
+      map['current_value'] = Variable<double>(currentValue);
+    }
     return map;
   }
 
@@ -626,6 +752,16 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       iconCodePoint: iconCodePoint == null && nullToAbsent
           ? const Value.absent()
           : Value(iconCodePoint),
+      kind: Value(kind),
+      interestRate: interestRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(interestRate),
+      maturityDate: maturityDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maturityDate),
+      currentValue: currentValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentValue),
     );
   }
 
@@ -641,6 +777,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       name: serializer.fromJson<String?>(json['name']),
       currencyId: serializer.fromJson<int?>(json['currencyId']),
       iconCodePoint: serializer.fromJson<int?>(json['iconCodePoint']),
+      kind: serializer.fromJson<String>(json['kind']),
+      interestRate: serializer.fromJson<double?>(json['interestRate']),
+      maturityDate: serializer.fromJson<String?>(json['maturityDate']),
+      currentValue: serializer.fromJson<double?>(json['currentValue']),
     );
   }
   @override
@@ -653,6 +793,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       'name': serializer.toJson<String?>(name),
       'currencyId': serializer.toJson<int?>(currencyId),
       'iconCodePoint': serializer.toJson<int?>(iconCodePoint),
+      'kind': serializer.toJson<String>(kind),
+      'interestRate': serializer.toJson<double?>(interestRate),
+      'maturityDate': serializer.toJson<String?>(maturityDate),
+      'currentValue': serializer.toJson<double?>(currentValue),
     };
   }
 
@@ -663,6 +807,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     Value<String?> name = const Value.absent(),
     Value<int?> currencyId = const Value.absent(),
     Value<int?> iconCodePoint = const Value.absent(),
+    String? kind,
+    Value<double?> interestRate = const Value.absent(),
+    Value<String?> maturityDate = const Value.absent(),
+    Value<double?> currentValue = const Value.absent(),
   }) => AccountRow(
     uuid: uuid.present ? uuid.value : this.uuid,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -672,6 +820,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     iconCodePoint: iconCodePoint.present
         ? iconCodePoint.value
         : this.iconCodePoint,
+    kind: kind ?? this.kind,
+    interestRate: interestRate.present ? interestRate.value : this.interestRate,
+    maturityDate: maturityDate.present ? maturityDate.value : this.maturityDate,
+    currentValue: currentValue.present ? currentValue.value : this.currentValue,
   );
   AccountRow copyWithCompanion(AccountsCompanion data) {
     return AccountRow(
@@ -685,6 +837,16 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       iconCodePoint: data.iconCodePoint.present
           ? data.iconCodePoint.value
           : this.iconCodePoint,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      interestRate: data.interestRate.present
+          ? data.interestRate.value
+          : this.interestRate,
+      maturityDate: data.maturityDate.present
+          ? data.maturityDate.value
+          : this.maturityDate,
+      currentValue: data.currentValue.present
+          ? data.currentValue.value
+          : this.currentValue,
     );
   }
 
@@ -696,14 +858,28 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('currencyId: $currencyId, ')
-          ..write('iconCodePoint: $iconCodePoint')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('kind: $kind, ')
+          ..write('interestRate: $interestRate, ')
+          ..write('maturityDate: $maturityDate, ')
+          ..write('currentValue: $currentValue')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(uuid, updatedAt, id, name, currencyId, iconCodePoint);
+  int get hashCode => Object.hash(
+    uuid,
+    updatedAt,
+    id,
+    name,
+    currencyId,
+    iconCodePoint,
+    kind,
+    interestRate,
+    maturityDate,
+    currentValue,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -713,7 +889,11 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           other.id == this.id &&
           other.name == this.name &&
           other.currencyId == this.currencyId &&
-          other.iconCodePoint == this.iconCodePoint);
+          other.iconCodePoint == this.iconCodePoint &&
+          other.kind == this.kind &&
+          other.interestRate == this.interestRate &&
+          other.maturityDate == this.maturityDate &&
+          other.currentValue == this.currentValue);
 }
 
 class AccountsCompanion extends UpdateCompanion<AccountRow> {
@@ -723,6 +903,10 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
   final Value<String?> name;
   final Value<int?> currencyId;
   final Value<int?> iconCodePoint;
+  final Value<String> kind;
+  final Value<double?> interestRate;
+  final Value<String?> maturityDate;
+  final Value<double?> currentValue;
   const AccountsCompanion({
     this.uuid = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -730,6 +914,10 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     this.name = const Value.absent(),
     this.currencyId = const Value.absent(),
     this.iconCodePoint = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.interestRate = const Value.absent(),
+    this.maturityDate = const Value.absent(),
+    this.currentValue = const Value.absent(),
   });
   AccountsCompanion.insert({
     this.uuid = const Value.absent(),
@@ -738,6 +926,10 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     this.name = const Value.absent(),
     this.currencyId = const Value.absent(),
     this.iconCodePoint = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.interestRate = const Value.absent(),
+    this.maturityDate = const Value.absent(),
+    this.currentValue = const Value.absent(),
   });
   static Insertable<AccountRow> custom({
     Expression<String>? uuid,
@@ -746,6 +938,10 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     Expression<String>? name,
     Expression<int>? currencyId,
     Expression<int>? iconCodePoint,
+    Expression<String>? kind,
+    Expression<double>? interestRate,
+    Expression<String>? maturityDate,
+    Expression<double>? currentValue,
   }) {
     return RawValuesInsertable({
       if (uuid != null) 'uuid': uuid,
@@ -754,6 +950,10 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
       if (name != null) 'name': name,
       if (currencyId != null) 'currency_id': currencyId,
       if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
+      if (kind != null) 'kind': kind,
+      if (interestRate != null) 'interest_rate': interestRate,
+      if (maturityDate != null) 'maturity_date': maturityDate,
+      if (currentValue != null) 'current_value': currentValue,
     });
   }
 
@@ -764,6 +964,10 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     Value<String?>? name,
     Value<int?>? currencyId,
     Value<int?>? iconCodePoint,
+    Value<String>? kind,
+    Value<double?>? interestRate,
+    Value<String?>? maturityDate,
+    Value<double?>? currentValue,
   }) {
     return AccountsCompanion(
       uuid: uuid ?? this.uuid,
@@ -772,6 +976,10 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
       name: name ?? this.name,
       currencyId: currencyId ?? this.currencyId,
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      kind: kind ?? this.kind,
+      interestRate: interestRate ?? this.interestRate,
+      maturityDate: maturityDate ?? this.maturityDate,
+      currentValue: currentValue ?? this.currentValue,
     );
   }
 
@@ -796,6 +1004,18 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     if (iconCodePoint.present) {
       map['icon_code_point'] = Variable<int>(iconCodePoint.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (interestRate.present) {
+      map['interest_rate'] = Variable<double>(interestRate.value);
+    }
+    if (maturityDate.present) {
+      map['maturity_date'] = Variable<String>(maturityDate.value);
+    }
+    if (currentValue.present) {
+      map['current_value'] = Variable<double>(currentValue.value);
+    }
     return map;
   }
 
@@ -807,7 +1027,11 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('currencyId: $currencyId, ')
-          ..write('iconCodePoint: $iconCodePoint')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('kind: $kind, ')
+          ..write('interestRate: $interestRate, ')
+          ..write('maturityDate: $maturityDate, ')
+          ..write('currentValue: $currentValue')
           ..write(')'))
         .toString();
   }
@@ -3095,6 +3319,10 @@ typedef $$AccountsTableCreateCompanionBuilder =
       Value<String?> name,
       Value<int?> currencyId,
       Value<int?> iconCodePoint,
+      Value<String> kind,
+      Value<double?> interestRate,
+      Value<String?> maturityDate,
+      Value<double?> currentValue,
     });
 typedef $$AccountsTableUpdateCompanionBuilder =
     AccountsCompanion Function({
@@ -3104,6 +3332,10 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<String?> name,
       Value<int?> currencyId,
       Value<int?> iconCodePoint,
+      Value<String> kind,
+      Value<double?> interestRate,
+      Value<String?> maturityDate,
+      Value<double?> currentValue,
     });
 
 final class $$AccountsTableReferences
@@ -3203,6 +3435,26 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get iconCodePoint => $composableBuilder(
     column: $table.iconCodePoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get interestRate => $composableBuilder(
+    column: $table.interestRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get maturityDate => $composableBuilder(
+    column: $table.maturityDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get currentValue => $composableBuilder(
+    column: $table.currentValue,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3314,6 +3566,26 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get interestRate => $composableBuilder(
+    column: $table.interestRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get maturityDate => $composableBuilder(
+    column: $table.maturityDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get currentValue => $composableBuilder(
+    column: $table.currentValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CurrenciesTableOrderingComposer get currencyId {
     final $$CurrenciesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3361,6 +3633,24 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<int> get iconCodePoint => $composableBuilder(
     column: $table.iconCodePoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<double> get interestRate => $composableBuilder(
+    column: $table.interestRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get maturityDate => $composableBuilder(
+    column: $table.maturityDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get currentValue => $composableBuilder(
+    column: $table.currentValue,
     builder: (column) => column,
   );
 
@@ -3476,6 +3766,10 @@ class $$AccountsTableTableManager
                 Value<String?> name = const Value.absent(),
                 Value<int?> currencyId = const Value.absent(),
                 Value<int?> iconCodePoint = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double?> interestRate = const Value.absent(),
+                Value<String?> maturityDate = const Value.absent(),
+                Value<double?> currentValue = const Value.absent(),
               }) => AccountsCompanion(
                 uuid: uuid,
                 updatedAt: updatedAt,
@@ -3483,6 +3777,10 @@ class $$AccountsTableTableManager
                 name: name,
                 currencyId: currencyId,
                 iconCodePoint: iconCodePoint,
+                kind: kind,
+                interestRate: interestRate,
+                maturityDate: maturityDate,
+                currentValue: currentValue,
               ),
           createCompanionCallback:
               ({
@@ -3492,6 +3790,10 @@ class $$AccountsTableTableManager
                 Value<String?> name = const Value.absent(),
                 Value<int?> currencyId = const Value.absent(),
                 Value<int?> iconCodePoint = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double?> interestRate = const Value.absent(),
+                Value<String?> maturityDate = const Value.absent(),
+                Value<double?> currentValue = const Value.absent(),
               }) => AccountsCompanion.insert(
                 uuid: uuid,
                 updatedAt: updatedAt,
@@ -3499,6 +3801,10 @@ class $$AccountsTableTableManager
                 name: name,
                 currencyId: currencyId,
                 iconCodePoint: iconCodePoint,
+                kind: kind,
+                interestRate: interestRate,
+                maturityDate: maturityDate,
+                currentValue: currentValue,
               ),
           withReferenceMapper: (p0) => p0
               .map(
