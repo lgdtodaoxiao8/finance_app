@@ -61,7 +61,12 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
       return;
     }
     // Adding a non-base currency: capture its rate to the current base.
-    final rate = await _showRateDialog(context, picked, current: null);
+    final rate = await _showRateDialog(
+      context,
+      picked,
+      current: null,
+      baseSymbol: state.baseSymbol ?? '',
+    );
     if (rate != null && mounted) cubit.editRate(picked.currencyId, rate);
   }
 
@@ -148,6 +153,7 @@ class _SetBaseCurrencyState extends State<SetBaseCurrency> {
                       context,
                       c,
                       current: c.currencyRateToBase,
+                      baseSymbol: state.baseSymbol ?? '',
                     );
                     if (rate != null) cubit.editRate(c.currencyId, rate);
                   },
@@ -222,10 +228,6 @@ class _CurrencyRow extends StatelessWidget {
   final VoidCallback onMakeBase;
   final VoidCallback onEdit;
 
-  static String _fmt(double r) => r % 1 == 0
-      ? r.toInt().toString()
-      : r.toStringAsFixed(r < 1 ? 4 : 2);
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -276,7 +278,7 @@ class _CurrencyRow extends StatelessWidget {
                       ),
                       if (!isBase)
                         Text(
-                          l.ratePerUnit(code, _fmt(rate), baseSymbol),
+                          l.ratePerUnit(code, _fmtRate(rate), baseSymbol),
                           style: kTextStyle.copyWith(
                             fontSize: 12.5,
                             color: cs.onSurfaceVariant,
@@ -456,17 +458,28 @@ class _AddCurrencySheetState extends State<_AddCurrencySheet> {
   }
 }
 
+/// Formats a rate for display: whole numbers stay whole, small rates keep more
+/// decimals so tiny values (e.g. 0.0020) don't collapse to "0.00".
+String _fmtRate(double r) =>
+    r % 1 == 0 ? r.toInt().toString() : r.toStringAsFixed(r < 1 ? 4 : 2);
+
 /// Prompts for a currency's rate ("1 [code] = X [base]"). Returns the entered
 /// rate, or null on cancel. Used both to correct an existing rate and to set the
-/// rate of a newly added currency.
+/// rate of a newly added currency. [baseSymbol] drives the live "1 CODE = X base"
+/// preview so the direction is unambiguous while typing.
 Future<double?> _showRateDialog(
   BuildContext context,
   Currency currency, {
   required double? current,
+  required String baseSymbol,
 }) {
   return showDialog<double>(
     context: context,
-    builder: (_) => _EditRateDialog(currency: currency, current: current),
+    builder: (_) => _EditRateDialog(
+      currency: currency,
+      current: current,
+      baseSymbol: baseSymbol,
+    ),
   );
 }
 
@@ -475,10 +488,15 @@ Future<double?> _showRateDialog(
 /// (Disposing a controller right after `await showDialog` throws "used after
 /// being disposed" because the field still rebuilds during the close.)
 class _EditRateDialog extends StatefulWidget {
-  const _EditRateDialog({required this.currency, required this.current});
+  const _EditRateDialog({
+    required this.currency,
+    required this.current,
+    required this.baseSymbol,
+  });
 
   final Currency currency;
   final double? current;
+  final String baseSymbol;
 
   @override
   State<_EditRateDialog> createState() => _EditRateDialogState();
@@ -499,10 +517,20 @@ class _EditRateDialogState extends State<_EditRateDialog> {
     super.dispose();
   }
 
+  double? get _rate => double.tryParse(_controller.text.replaceAll(',', '.'));
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
     final adding = widget.current == null;
+    final code = widget.currency.currencyCode.isNotEmpty
+        ? widget.currency.currencyCode
+        : widget.currency.currencySymbol;
+    final rate = _rate;
+    final base = widget.baseSymbol.isNotEmpty ? widget.baseSymbol : '?';
+    // Live "1 CODE = X base" preview so it's obvious which way the rate goes.
+    final preview = '1 $code = ${rate != null && rate > 0 ? _fmtRate(rate) : '—'} $base';
     return AlertDialog(
       title: Text(
         '${adding ? l.addCurrency : l.editRate} · ${widget.currency.currencyCode}',
@@ -515,9 +543,27 @@ class _EditRateDialogState extends State<_EditRateDialog> {
             controller: _controller,
             autofocus: true,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               labelText: l.rateToBase,
               hintText: l.rateHint,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(kRadiusSm),
+            ),
+            child: Text(
+              preview,
+              style: kTextStyle.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: cs.primary,
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -525,7 +571,7 @@ class _EditRateDialogState extends State<_EditRateDialog> {
             l.editRateNote,
             style: TextStyle(
               fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: cs.onSurfaceVariant,
             ),
           ),
         ],
