@@ -21,9 +21,11 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
     TransactionDetails? existing,
     String? presetType,
     int? presetCategoryId,
+    int? presetAccountId,
   }) : _existing = existing,
        _presetType = presetType,
        _presetCategoryId = presetCategoryId,
+       _presetAccountId = presetAccountId,
        super(const AddTransactionState()) {
     load();
   }
@@ -40,6 +42,7 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
   /// flow's type ('expense'/'income') and a pre-selected category.
   final String? _presetType;
   final int? _presetCategoryId;
+  final int? _presetAccountId;
 
   Future<void> load() async {
     try {
@@ -82,7 +85,11 @@ class AddTransactionCubit extends Cubit<AddTransactionState> {
             currencies: currencies,
             type: type,
             typeIndex: _typeIndex[type] ?? 0,
-            accountId: accounts.isNotEmpty ? accounts.first.id : null,
+            accountId:
+                (_presetAccountId != null &&
+                    accounts.any((a) => a.id == _presetAccountId))
+                ? _presetAccountId
+                : (accounts.isNotEmpty ? accounts.first.id : null),
             accountDestinationId: accounts.length > 1 ? accounts[1].id : null,
             categoryId: _pickCategory(
               type,

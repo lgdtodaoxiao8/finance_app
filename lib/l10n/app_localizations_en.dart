@@ -111,6 +111,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionsTitle => 'Transactions';
 
   @override
+  String get periodAll => 'All';
+
+  @override
   String get periodDay => 'Day';
 
   @override
@@ -493,6 +496,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String cantDeleteAccountInUse(int count) {
     return 'Can\'t delete: $count transaction(s) use this account';
+  }
+
+  @override
+  String get expenses => 'Expenses';
+
+  @override
+  String get categoriesCardSubtitle => 'Breakdown, analytics and management';
+
+  @override
+  String nOperations(int count) {
+    return '$count operations';
+  }
+
+  @override
+  String cantDeleteCategoryInUse(int count) {
+    return 'Can\'t delete: $count transaction(s) use this category';
   }
 
   @override

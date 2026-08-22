@@ -38,6 +38,7 @@
   "analyticsTitle": "Analytics",
   "transactionsTitle": "Transactions",
 
+  "periodAll": "All",
   "periodDay": "Day",
   "periodWeek": "Week",
   "periodMonth": "Month",
@@ -187,6 +188,16 @@
   "accountNoTransactions": "No transactions on this account yet",
   "cantDeleteAccountInUse": "Can't delete: {count} transaction(s) use this account",
   "@cantDeleteAccountInUse": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "expenses": "Expenses",
+  "categoriesCardSubtitle": "Breakdown, analytics and management",
+  "nOperations": "{count} operations",
+  "@nOperations": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "cantDeleteCategoryInUse": "Can't delete: {count} transaction(s) use this category",
+  "@cantDeleteCategoryInUse": {
     "placeholders": { "count": { "type": "int" } }
   },
   "allCurrencies": "All currencies",

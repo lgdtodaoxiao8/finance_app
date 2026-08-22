@@ -1,6 +1,7 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/accounts/view/account_balances_screen.dart';
+import 'package:finance_app/features/categories/view/categories_screen.dart';
 import 'package:finance_app/features/settings/cubit/base_currency_cubit.dart';
 import 'package:finance_app/features/settings/widgets/widgets.dart';
 import 'package:finance_app/features/auth/widgets/account_section.dart';
@@ -42,6 +43,17 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _NavCard(
+            icon: Icons.category_outlined,
+            title: l.categories,
+            subtitle: l.categoriesCardSubtitle,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const CategoriesScreen(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _NavCard(
             icon: Icons.widgets_outlined,
             title: l.widgetsTitle,
             subtitle: l.widgetsSubtitle,
@@ -56,8 +68,6 @@ class SettingsScreen extends StatelessWidget {
               child: const SetBaseCurrency(),
             ),
           ),
-          const SizedBox(height: 16),
-          const CategoriesSection(),
         ],
       ),
     );

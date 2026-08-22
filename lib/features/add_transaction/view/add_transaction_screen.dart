@@ -17,7 +17,7 @@ import 'package:intl/intl.dart';
 /// home-screen widget quick-add). Distinct from a [TransactionDetails] argument,
 /// which opens the screen in edit mode.
 class AddTxArgs {
-  const AddTxArgs({this.categoryId, this.amount, this.type});
+  const AddTxArgs({this.categoryId, this.amount, this.type, this.accountId});
 
   /// Pre-selected category.
   final int? categoryId;
@@ -27,6 +27,9 @@ class AddTxArgs {
 
   /// 'expense' | 'income' — the widget flow this was logged from.
   final String? type;
+
+  /// Pre-selected account (e.g. adding from an account's own screen).
+  final int? accountId;
 }
 
 class AddTransaction extends StatelessWidget {
@@ -49,6 +52,7 @@ class AddTransaction extends StatelessWidget {
         existing: existing,
         presetType: prefill?.type,
         presetCategoryId: prefill?.categoryId,
+        presetAccountId: prefill?.accountId,
       ),
       child: _AddTransactionView(
         isEditing: existing != null,

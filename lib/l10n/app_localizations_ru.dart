@@ -113,6 +113,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transactionsTitle => 'Операции';
 
   @override
+  String get periodAll => 'Все';
+
+  @override
   String get periodDay => 'День';
 
   @override
@@ -494,6 +497,22 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String cantDeleteAccountInUse(int count) {
     return 'Нельзя удалить: счёт используют $count операц.';
+  }
+
+  @override
+  String get expenses => 'Расходы';
+
+  @override
+  String get categoriesCardSubtitle => 'Разбивка, аналитика и управление';
+
+  @override
+  String nOperations(int count) {
+    return '$count операций';
+  }
+
+  @override
+  String cantDeleteCategoryInUse(int count) {
+    return 'Нельзя удалить: категорию используют $count операц.';
   }
 
   @override

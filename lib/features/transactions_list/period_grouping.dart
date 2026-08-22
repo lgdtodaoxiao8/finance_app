@@ -79,6 +79,23 @@ String formatAuto(
       '${preset != PeriodPreset.day ? '$start - ' : ''}$end';
 }
 
+/// Groups [txns] by calendar day (newest day first, newest transaction first
+/// within each day). Used by the per-account / per-category history screens.
+List<MapEntry<DateTime, List<TransactionDetails>>> groupByDay(
+  List<TransactionDetails> txns,
+) {
+  final map = <DateTime, List<TransactionDetails>>{};
+  for (final t in txns) {
+    final day = DateTime(t.date.year, t.date.month, t.date.day);
+    (map[day] ??= <TransactionDetails>[]).add(t);
+  }
+  final entries = map.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+  for (final e in entries) {
+    e.value.sort((a, b) => b.date.compareTo(a.date));
+  }
+  return entries;
+}
+
 DateTimeRange computeRange(PeriodPreset preset, {DateTimeRange? customRange}) {
   final now = DateTime.now();
   final todayStart = startOfDay(now);

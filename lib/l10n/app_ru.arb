@@ -38,6 +38,7 @@
   "analyticsTitle": "Аналитика",
   "transactionsTitle": "Операции",
 
+  "periodAll": "Все",
   "periodDay": "День",
   "periodWeek": "Неделя",
   "periodMonth": "Месяц",
@@ -180,6 +181,10 @@
   "accountsCardSubtitle": "Балансы, вклады и инвестиции",
   "accountNoTransactions": "По этому счёту пока нет операций",
   "cantDeleteAccountInUse": "Нельзя удалить: счёт используют {count} операц.",
+  "expenses": "Расходы",
+  "categoriesCardSubtitle": "Разбивка, аналитика и управление",
+  "nOperations": "{count} операций",
+  "cantDeleteCategoryInUse": "Нельзя удалить: категорию используют {count} операц.",
   "allCurrencies": "Все валюты",
   "chooseBaseCurrency": "Выберите базовую валюту",
   "rateToBase": "Курс к базовой",

@@ -10,8 +10,11 @@ import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/accounts/account_math.dart';
+import 'package:finance_app/features/add_transaction/view/add_transaction_screen.dart';
 import 'package:finance_app/features/settings/widgets/manage_section.dart';
-import 'package:finance_app/features/transactions_list/widgets/transaction_tile.dart';
+import 'package:finance_app/features/transactions_list/period_grouping.dart';
+import 'package:finance_app/features/transactions_list/widgets/day_transactions_card.dart';
+import 'package:finance_app/features/transactions_list/widgets/period_filter_chips.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
@@ -41,6 +44,10 @@ class _AccountTransactionsScreenState
   List<TransactionDetails> _txns = const [];
   String? _symbol;
   double _balance = 0;
+
+  /// Selected history period; null = all time.
+  PeriodPreset? _preset;
+  DateTimeRange? _customRange;
 
   @override
   void initState() {
@@ -127,16 +134,44 @@ class _AccountTransactionsScreenState
     );
   }
 
-  // Groups the account's transactions by calendar day, newest first.
-  List<MapEntry<DateTime, List<TransactionDetails>>> get _byDay {
-    final map = <DateTime, List<TransactionDetails>>{};
-    for (final t in _txns) {
-      final day = DateTime(t.date.year, t.date.month, t.date.day);
-      (map[day] ??= <TransactionDetails>[]).add(t);
+  /// The account's transactions restricted to the selected period (all time
+  /// when [_preset] is null). The balance header always reflects all time.
+  List<TransactionDetails> get _filtered {
+    if (_preset == null) return _txns;
+    final range = computeRange(_preset!, customRange: _customRange);
+    return filterByRange(_txns, range.start, range.end);
+  }
+
+  List<MapEntry<DateTime, List<TransactionDetails>>> get _byDay =>
+      groupByDay(_filtered);
+
+  Future<void> _pickCustomRange() async {
+    final today = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(today.year - 5),
+      lastDate: DateTime(today.year + 1),
+      initialDateRange:
+          _customRange ??
+          DateTimeRange(
+            start: today.subtract(const Duration(days: 30)),
+            end: today,
+          ),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _preset = PeriodPreset.custom;
+        _customRange = picked;
+      });
     }
-    final entries = map.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
-    return entries;
+  }
+
+  Future<void> _addTransaction() async {
+    await Navigator.of(context).pushNamed(
+      '/add-transaction',
+      arguments: AddTxArgs(accountId: _account.accountId),
+    );
+    // The transaction stream refreshes the list on its own.
   }
 
   @override
@@ -158,22 +193,36 @@ class _AccountTransactionsScreenState
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addTransaction,
+        icon: const Icon(Icons.add_rounded),
+        label: Text(l.add),
+      ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
         children: [
           _header(l),
-          const SizedBox(height: 18),
-          if (_txns.isEmpty)
+          const SizedBox(height: 16),
+          PeriodFilterChips(
+            selected: _preset,
+            onSelect: (p) => setState(() => _preset = p),
+            onPickCustom: _pickCustomRange,
+          ),
+          const SizedBox(height: 12),
+          if (_filtered.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 40),
               child: AppEmptyState(
                 icon: Icons.receipt_long_rounded,
                 title: l.noTransactions,
-                subtitle: l.accountNoTransactions,
+                subtitle: _preset == null
+                    ? l.accountNoTransactions
+                    : l.nothingInPeriod,
               ),
             )
           else
-            for (final entry in _byDay) _dayCard(entry.key, entry.value),
+            for (final entry in _byDay)
+              DayTransactionsCard(day: entry.key, items: entry.value),
         ],
       ),
     );
@@ -306,36 +355,6 @@ class _AccountTransactionsScreenState
       : _account.isInvestment
       ? l.accountKindInvestment
       : l.accountKindGeneral;
-
-  Widget _dayCard(DateTime day, List<TransactionDetails> items) {
-    final locale = Localizations.localeOf(context).toString();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(kRadiusLg),
-        boxShadow: kCardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 6, bottom: 2, left: 2),
-            child: Text(
-              DateFormat.yMMMMd(locale).format(day),
-              style: kTextStyle.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          ...items.map((t) => TransactionTile(transaction: t)),
-        ],
-      ),
-    );
-  }
 
   static String _fmtNum(double v) =>
       v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(v.abs() < 1 ? 2 : 1);

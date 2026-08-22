@@ -302,6 +302,12 @@ abstract class AppLocalizations {
   /// **'Transactions'**
   String get transactionsTitle;
 
+  /// No description provided for @periodAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get periodAll;
+
   /// No description provided for @periodDay.
   ///
   /// In en, this message translates to:
@@ -1039,6 +1045,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can\'t delete: {count} transaction(s) use this account'**
   String cantDeleteAccountInUse(int count);
+
+  /// No description provided for @expenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get expenses;
+
+  /// No description provided for @categoriesCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakdown, analytics and management'**
+  String get categoriesCardSubtitle;
+
+  /// No description provided for @nOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} operations'**
+  String nOperations(int count);
+
+  /// No description provided for @cantDeleteCategoryInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t delete: {count} transaction(s) use this category'**
+  String cantDeleteCategoryInUse(int count);
 
   /// No description provided for @allCurrencies.
   ///
