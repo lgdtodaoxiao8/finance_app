@@ -7,6 +7,7 @@ import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/accounts/account_math.dart';
+import 'package:finance_app/features/accounts/view/account_transactions_screen.dart';
 import 'package:finance_app/models/main_model.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
@@ -83,6 +84,20 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
     await _load();
   }
 
+  Future<void> _addAccount() async {
+    await Navigator.of(context).pushNamed('/add-account');
+    await _load();
+  }
+
+  Future<void> _openAccount(Account account) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AccountTransactionsScreen(account: account),
+      ),
+    );
+    await _load();
+  }
+
   Future<void> _logInterest(_AccountRow r) async {
     final l = AppLocalizations.of(context);
     final rate = r.account.interestRate ?? 0;
@@ -123,7 +138,16 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l.accounts)),
+      appBar: AppBar(
+        title: Text(l.accounts),
+        actions: [
+          IconButton(
+            tooltip: l.add,
+            onPressed: _addAccount,
+            icon: const Icon(Icons.add_circle_outline_rounded),
+          ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _count == 0
@@ -234,16 +258,25 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
     );
   }
 
-  Widget _card({required Widget child}) => Container(
-    margin: const EdgeInsets.symmetric(vertical: 6),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(kRadiusLg),
-      boxShadow: kCardShadow,
-    ),
-    child: child,
-  );
+  Widget _card({required Widget child, VoidCallback? onTap}) {
+    final decorated = Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(kRadiusLg),
+        boxShadow: kCardShadow,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(padding: const EdgeInsets.all(16), child: child),
+        ),
+      ),
+    );
+    return decorated;
+  }
 
   Widget _avatar(IconData icon, Color color) => Container(
     width: 42,
@@ -293,6 +326,7 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
     final negative = r.balance < 0;
     final color = negative ? AppColors.negative : AppColors.primary;
     return _card(
+      onTap: () => _openAccount(r.account),
       child: Column(
         children: [
           _titleRow(r, r.balance),
@@ -329,6 +363,7 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
     final maturity = r.account.maturityDate;
     final matured = maturity != null && maturity.isBefore(DateTime.now());
     return _card(
+      onTap: () => _openAccount(r.account),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -400,6 +435,7 @@ class _AccountBalancesScreenState extends State<AccountBalancesScreen> {
         ? (ret / r.balance.abs() * 100)
         : null;
     return _card(
+      onTap: () => _openAccount(r.account),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

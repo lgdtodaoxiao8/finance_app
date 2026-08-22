@@ -486,6 +486,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get interestCategoryName => 'Проценты';
 
   @override
+  String get accountsCardSubtitle => 'Балансы, вклады и инвестиции';
+
+  @override
+  String get accountNoTransactions => 'По этому счёту пока нет операций';
+
+  @override
+  String cantDeleteAccountInUse(int count) {
+    return 'Нельзя удалить: счёт используют $count операц.';
+  }
+
+  @override
   String get allCurrencies => 'Все валюты';
 
   @override

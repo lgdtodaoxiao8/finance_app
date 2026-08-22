@@ -1,12 +1,11 @@
 import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/core/widgets/amount_text.dart';
 import 'package:finance_app/core/widgets/empty_state.dart';
-import 'package:finance_app/core/widgets/item_avatar.dart';
-import 'package:finance_app/data/models/transaction_details.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/transactions_list/cubit/transactions_list_cubit.dart';
 import 'package:finance_app/features/transactions_list/period_grouping.dart';
+import 'package:finance_app/features/transactions_list/widgets/transaction_tile.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -261,101 +260,7 @@ class _GroupCard extends StatelessWidget {
                   ),
                 ),
               ),
-            ...group.items.map((t) => _TransactionTile(transaction: t)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.transaction});
-
-  final TransactionDetails transaction;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = transaction;
-    final code = t.currencyCode ?? '';
-
-    final primary = t.isTransfer
-        ? (t.accountDestinationName ?? '')
-        : (t.categoryName ?? '');
-    final secondary = t.accountName ?? '';
-
-    final Color amountColor = t.isExpense
-        ? AppColors.negative
-        : t.isIncome
-        ? AppColors.positive
-        : Theme.of(context).colorScheme.onSurface;
-    final time =
-        '${t.date.hour.toString().padLeft(2, '0')}:'
-        '${t.date.minute.toString().padLeft(2, '0')}';
-
-    return InkWell(
-      onTap: () => Navigator.of(
-        context,
-      ).pushNamed('/add-transaction', arguments: t),
-      borderRadius: BorderRadius.circular(kRadiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
-        child: Row(
-          children: [
-            ItemAvatar(
-              color: t.categoryColor,
-              icon: t.categoryIcon,
-              diameter: 44,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    primary,
-                    style: kTextStyle.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    secondary,
-                    style: kTextStyle.copyWith(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                AmountText(
-                  t.isExpense ? -t.amount : t.amount,
-                  symbol: code,
-                  signed: !t.isTransfer,
-                  style: kTextStyle.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: amountColor,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  time,
-                  style: kTextStyle.copyWith(
-                    fontSize: 12,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ],
-            ),
+            ...group.items.map((t) => TransactionTile(transaction: t)),
           ],
         ),
       ),

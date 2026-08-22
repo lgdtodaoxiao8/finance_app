@@ -485,6 +485,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get interestCategoryName => 'Interest';
 
   @override
+  String get accountsCardSubtitle => 'Balances, deposits and investments';
+
+  @override
+  String get accountNoTransactions => 'No transactions on this account yet';
+
+  @override
+  String cantDeleteAccountInUse(int count) {
+    return 'Can\'t delete: $count transaction(s) use this account';
+  }
+
+  @override
   String get allCurrencies => 'All currencies';
 
   @override

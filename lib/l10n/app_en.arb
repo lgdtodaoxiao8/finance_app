@@ -183,6 +183,12 @@
   "interestAmountField": "Interest amount",
   "logInterestNote": "Logged as income in the \"Interest\" category.",
   "interestCategoryName": "Interest",
+  "accountsCardSubtitle": "Balances, deposits and investments",
+  "accountNoTransactions": "No transactions on this account yet",
+  "cantDeleteAccountInUse": "Can't delete: {count} transaction(s) use this account",
+  "@cantDeleteAccountInUse": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "allCurrencies": "All currencies",
   "chooseBaseCurrency": "Choose the base currency",
   "rateToBase": "Rate to base",

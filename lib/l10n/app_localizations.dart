@@ -1022,6 +1022,24 @@ abstract class AppLocalizations {
   /// **'Interest'**
   String get interestCategoryName;
 
+  /// No description provided for @accountsCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances, deposits and investments'**
+  String get accountsCardSubtitle;
+
+  /// No description provided for @accountNoTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions on this account yet'**
+  String get accountNoTransactions;
+
+  /// No description provided for @cantDeleteAccountInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t delete: {count} transaction(s) use this account'**
+  String cantDeleteAccountInUse(int count);
+
   /// No description provided for @allCurrencies.
   ///
   /// In en, this message translates to:
