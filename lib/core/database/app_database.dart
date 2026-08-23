@@ -121,6 +121,21 @@ class Budgets extends Table with SyncColumns {
   RealColumn get amount => real().nullable()();
 }
 
+/// A savings goal / jar ("под подушкой") — money the user has set aside toward
+/// a target. Standalone real money (not an account): [savedAmount] counts toward
+/// net worth. [targetAmount]/[deadline] are optional aspirations.
+@DataClassName('GoalRow')
+class Goals extends Table with SyncColumns {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().nullable()();
+  RealColumn get targetAmount => real().named('target_amount').nullable()();
+  RealColumn get savedAmount =>
+      real().named('saved_amount').withDefault(const Constant(0))();
+  IntColumn get color => integer().nullable()();
+  IntColumn get iconCodePoint => integer().named('icon_code_point').nullable()();
+  TextColumn get deadline => text().nullable()();
+}
+
 /// Records local deletions of syncable rows so the deletion can be pushed to
 /// the backend (and thus propagated to other devices). Cleared once pushed.
 class Tombstones extends Table {
@@ -153,6 +168,7 @@ class Settings extends Table {
     Categories,
     Transactions,
     Budgets,
+    Goals,
     Tombstones,
     Settings,
   ],
@@ -164,7 +180,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -228,6 +244,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 7) {
         // Monthly budgets (overall + per-category).
         await m.createTable(budgets);
+      }
+      if (from < 8) {
+        // Savings goals / jars.
+        await m.createTable(goals);
       }
     },
   );

@@ -1,4 +1,5 @@
 import 'package:finance_app/features/budget/view/budget_section.dart';
+import 'package:finance_app/features/goals/view/goals_section.dart';
 import 'package:finance_app/l10n/app_localizations.dart';
 import 'package:finance_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,8 @@ class PlansScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: const [
           BudgetSection(),
+          SizedBox(height: 24),
+          GoalsSection(),
         ],
       ),
     );

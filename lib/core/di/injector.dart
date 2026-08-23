@@ -7,6 +7,7 @@ import 'package:finance_app/data/repositories/account_repository.dart';
 import 'package:finance_app/data/repositories/budget_repository.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
+import 'package:finance_app/data/repositories/goal_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
 import 'package:finance_app/features/subscription/entitlement_service.dart';
 import 'package:finance_app/features/subscription/subscription_service.dart';
@@ -92,6 +93,12 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<BudgetRepository>()) {
     getIt.registerLazySingleton<BudgetRepository>(
       () => DriftBudgetRepository(getIt<AppDatabase>()),
+    );
+  }
+
+  if (!getIt.isRegistered<GoalRepository>()) {
+    getIt.registerLazySingleton<GoalRepository>(
+      () => DriftGoalRepository(getIt<AppDatabase>()),
     );
   }
 

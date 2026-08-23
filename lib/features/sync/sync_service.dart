@@ -125,6 +125,25 @@ class SyncService {
       ], onConflict: 'user_id,uuid');
     }
 
+    final goalRows = await _db.select(_db.goals).get();
+    if (goalRows.isNotEmpty) {
+      await _client.from('goals').upsert([
+        for (final g in goalRows)
+          {
+            'user_id': _userId,
+            'uuid': g.uuid,
+            'name': g.name,
+            'target_amount': g.targetAmount,
+            'saved_amount': g.savedAmount,
+            'color': g.color,
+            'icon_code_point': g.iconCodePoint,
+            'deadline': g.deadline,
+            'updated_at': g.updatedAt,
+            'deleted': false,
+          },
+      ], onConflict: 'user_id,uuid');
+    }
+
     await _pushTombstones();
     await _pushSettings();
   }
@@ -169,7 +188,43 @@ class SyncService {
     await _pullAccounts();
     await _pullTransactions();
     await _pullBudgets();
+    await _pullGoals();
     await _pullSettings();
+  }
+
+  Future<void> _pullGoals() async {
+    final rows = await _client.from('goals').select();
+    for (final r in rows) {
+      final uuid = r['uuid'] as String;
+      if (r['deleted'] == true) {
+        await (_db.delete(_db.goals)..where((g) => g.uuid.equals(uuid))).go();
+        continue;
+      }
+      final remoteUpdated = (r['updated_at'] as num?)?.toInt() ?? 0;
+      final existing = await (_db.select(
+        _db.goals,
+      )..where((g) => g.uuid.equals(uuid))).getSingleOrNull();
+      if (existing != null && (existing.updatedAt ?? 0) >= remoteUpdated) {
+        continue;
+      }
+      final companion = GoalsCompanion(
+        uuid: Value(uuid),
+        name: Value(r['name'] as String?),
+        targetAmount: Value((r['target_amount'] as num?)?.toDouble()),
+        savedAmount: Value((r['saved_amount'] as num?)?.toDouble() ?? 0),
+        color: Value((r['color'] as num?)?.toInt()),
+        iconCodePoint: Value((r['icon_code_point'] as num?)?.toInt()),
+        deadline: Value(r['deadline'] as String?),
+        updatedAt: Value(remoteUpdated),
+      );
+      if (existing == null) {
+        await _db.into(_db.goals).insert(companion);
+      } else {
+        await (_db.update(
+          _db.goals,
+        )..where((g) => g.id.equals(existing.id))).write(companion);
+      }
+    }
   }
 
   Future<void> _pullBudgets() async {

@@ -86,6 +86,22 @@ create table if not exists public.budgets (
   primary key (user_id, uuid)
 );
 
+-- ================================================================= goals ====
+-- Savings goals / jars: money set aside toward a target.
+create table if not exists public.goals (
+  user_id         uuid    not null default auth.uid() references auth.users (id) on delete cascade,
+  uuid            text    not null,
+  name            text,
+  target_amount   double precision,
+  saved_amount    double precision not null default 0,
+  color           bigint,
+  icon_code_point bigint,
+  deadline        text,
+  updated_at      bigint  not null default 0,
+  deleted         boolean not null default false,
+  primary key (user_id, uuid)
+);
+
 -- ============================================================== settings ====
 -- App preferences (theme, language, week start, privacy, base currency, …) as
 -- a per-user key/value store. Keyed by (user_id, key); LWW on updated_at.
@@ -134,12 +150,13 @@ alter table public.categories   enable row level security;
 alter table public.accounts     enable row level security;
 alter table public.transactions enable row level security;
 alter table public.budgets      enable row level security;
+alter table public.goals        enable row level security;
 alter table public.settings     enable row level security;
 
 do $$
 declare t text;
 begin
-  foreach t in array array['categories', 'accounts', 'transactions', 'budgets', 'settings'] loop
+  foreach t in array array['categories', 'accounts', 'transactions', 'budgets', 'goals', 'settings'] loop
     execute format($f$
       drop policy if exists "own rows" on public.%1$I;
       create policy "own rows" on public.%1$I

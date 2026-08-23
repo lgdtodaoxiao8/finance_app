@@ -549,6 +549,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get goalsTitle => 'Goals';
+
+  @override
+  String get addGoal => 'Add a goal';
+
+  @override
+  String get newGoalTitle => 'Goal';
+
+  @override
+  String get targetAmountField => 'Target amount';
+
+  @override
+  String get topUp => 'Add';
+
+  @override
+  String get withdraw => 'Withdraw';
+
+  @override
+  String get goalReached => 'Goal reached';
+
+  @override
+  String get setAside => 'Set aside';
+
+  @override
   String get allCurrencies => 'All currencies';
 
   @override

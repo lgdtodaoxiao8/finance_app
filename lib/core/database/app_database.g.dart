@@ -2681,6 +2681,570 @@ class BudgetsCompanion extends UpdateCompanion<BudgetRow> {
   }
 }
 
+class $GoalsTable extends Goals with TableInfo<$GoalsTable, GoalRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GoalsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: newUuid,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    clientDefault: nowMs,
+  );
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetAmountMeta = const VerificationMeta(
+    'targetAmount',
+  );
+  @override
+  late final GeneratedColumn<double> targetAmount = GeneratedColumn<double>(
+    'target_amount',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _savedAmountMeta = const VerificationMeta(
+    'savedAmount',
+  );
+  @override
+  late final GeneratedColumn<double> savedAmount = GeneratedColumn<double>(
+    'saved_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _iconCodePointMeta = const VerificationMeta(
+    'iconCodePoint',
+  );
+  @override
+  late final GeneratedColumn<int> iconCodePoint = GeneratedColumn<int>(
+    'icon_code_point',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deadlineMeta = const VerificationMeta(
+    'deadline',
+  );
+  @override
+  late final GeneratedColumn<String> deadline = GeneratedColumn<String>(
+    'deadline',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    uuid,
+    updatedAt,
+    id,
+    name,
+    targetAmount,
+    savedAmount,
+    color,
+    iconCodePoint,
+    deadline,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'goals';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GoalRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('target_amount')) {
+      context.handle(
+        _targetAmountMeta,
+        targetAmount.isAcceptableOrUnknown(
+          data['target_amount']!,
+          _targetAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('saved_amount')) {
+      context.handle(
+        _savedAmountMeta,
+        savedAmount.isAcceptableOrUnknown(
+          data['saved_amount']!,
+          _savedAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    }
+    if (data.containsKey('icon_code_point')) {
+      context.handle(
+        _iconCodePointMeta,
+        iconCodePoint.isAcceptableOrUnknown(
+          data['icon_code_point']!,
+          _iconCodePointMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deadline')) {
+      context.handle(
+        _deadlineMeta,
+        deadline.isAcceptableOrUnknown(data['deadline']!, _deadlineMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GoalRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GoalRow(
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      ),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      targetAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_amount'],
+      ),
+      savedAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}saved_amount'],
+      )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      ),
+      iconCodePoint: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}icon_code_point'],
+      ),
+      deadline: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deadline'],
+      ),
+    );
+  }
+
+  @override
+  $GoalsTable createAlias(String alias) {
+    return $GoalsTable(attachedDatabase, alias);
+  }
+}
+
+class GoalRow extends DataClass implements Insertable<GoalRow> {
+  final String? uuid;
+  final int? updatedAt;
+  final int id;
+  final String? name;
+  final double? targetAmount;
+  final double savedAmount;
+  final int? color;
+  final int? iconCodePoint;
+  final String? deadline;
+  const GoalRow({
+    this.uuid,
+    this.updatedAt,
+    required this.id,
+    this.name,
+    this.targetAmount,
+    required this.savedAmount,
+    this.color,
+    this.iconCodePoint,
+    this.deadline,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (!nullToAbsent || uuid != null) {
+      map['uuid'] = Variable<String>(uuid);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<int>(updatedAt);
+    }
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    if (!nullToAbsent || targetAmount != null) {
+      map['target_amount'] = Variable<double>(targetAmount);
+    }
+    map['saved_amount'] = Variable<double>(savedAmount);
+    if (!nullToAbsent || color != null) {
+      map['color'] = Variable<int>(color);
+    }
+    if (!nullToAbsent || iconCodePoint != null) {
+      map['icon_code_point'] = Variable<int>(iconCodePoint);
+    }
+    if (!nullToAbsent || deadline != null) {
+      map['deadline'] = Variable<String>(deadline);
+    }
+    return map;
+  }
+
+  GoalsCompanion toCompanion(bool nullToAbsent) {
+    return GoalsCompanion(
+      uuid: uuid == null && nullToAbsent ? const Value.absent() : Value(uuid),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      id: Value(id),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      targetAmount: targetAmount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetAmount),
+      savedAmount: Value(savedAmount),
+      color: color == null && nullToAbsent
+          ? const Value.absent()
+          : Value(color),
+      iconCodePoint: iconCodePoint == null && nullToAbsent
+          ? const Value.absent()
+          : Value(iconCodePoint),
+      deadline: deadline == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deadline),
+    );
+  }
+
+  factory GoalRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GoalRow(
+      uuid: serializer.fromJson<String?>(json['uuid']),
+      updatedAt: serializer.fromJson<int?>(json['updatedAt']),
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String?>(json['name']),
+      targetAmount: serializer.fromJson<double?>(json['targetAmount']),
+      savedAmount: serializer.fromJson<double>(json['savedAmount']),
+      color: serializer.fromJson<int?>(json['color']),
+      iconCodePoint: serializer.fromJson<int?>(json['iconCodePoint']),
+      deadline: serializer.fromJson<String?>(json['deadline']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String?>(uuid),
+      'updatedAt': serializer.toJson<int?>(updatedAt),
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String?>(name),
+      'targetAmount': serializer.toJson<double?>(targetAmount),
+      'savedAmount': serializer.toJson<double>(savedAmount),
+      'color': serializer.toJson<int?>(color),
+      'iconCodePoint': serializer.toJson<int?>(iconCodePoint),
+      'deadline': serializer.toJson<String?>(deadline),
+    };
+  }
+
+  GoalRow copyWith({
+    Value<String?> uuid = const Value.absent(),
+    Value<int?> updatedAt = const Value.absent(),
+    int? id,
+    Value<String?> name = const Value.absent(),
+    Value<double?> targetAmount = const Value.absent(),
+    double? savedAmount,
+    Value<int?> color = const Value.absent(),
+    Value<int?> iconCodePoint = const Value.absent(),
+    Value<String?> deadline = const Value.absent(),
+  }) => GoalRow(
+    uuid: uuid.present ? uuid.value : this.uuid,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    id: id ?? this.id,
+    name: name.present ? name.value : this.name,
+    targetAmount: targetAmount.present ? targetAmount.value : this.targetAmount,
+    savedAmount: savedAmount ?? this.savedAmount,
+    color: color.present ? color.value : this.color,
+    iconCodePoint: iconCodePoint.present
+        ? iconCodePoint.value
+        : this.iconCodePoint,
+    deadline: deadline.present ? deadline.value : this.deadline,
+  );
+  GoalRow copyWithCompanion(GoalsCompanion data) {
+    return GoalRow(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      targetAmount: data.targetAmount.present
+          ? data.targetAmount.value
+          : this.targetAmount,
+      savedAmount: data.savedAmount.present
+          ? data.savedAmount.value
+          : this.savedAmount,
+      color: data.color.present ? data.color.value : this.color,
+      iconCodePoint: data.iconCodePoint.present
+          ? data.iconCodePoint.value
+          : this.iconCodePoint,
+      deadline: data.deadline.present ? data.deadline.value : this.deadline,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GoalRow(')
+          ..write('uuid: $uuid, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('savedAmount: $savedAmount, ')
+          ..write('color: $color, ')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('deadline: $deadline')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    uuid,
+    updatedAt,
+    id,
+    name,
+    targetAmount,
+    savedAmount,
+    color,
+    iconCodePoint,
+    deadline,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GoalRow &&
+          other.uuid == this.uuid &&
+          other.updatedAt == this.updatedAt &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.targetAmount == this.targetAmount &&
+          other.savedAmount == this.savedAmount &&
+          other.color == this.color &&
+          other.iconCodePoint == this.iconCodePoint &&
+          other.deadline == this.deadline);
+}
+
+class GoalsCompanion extends UpdateCompanion<GoalRow> {
+  final Value<String?> uuid;
+  final Value<int?> updatedAt;
+  final Value<int> id;
+  final Value<String?> name;
+  final Value<double?> targetAmount;
+  final Value<double> savedAmount;
+  final Value<int?> color;
+  final Value<int?> iconCodePoint;
+  final Value<String?> deadline;
+  const GoalsCompanion({
+    this.uuid = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.targetAmount = const Value.absent(),
+    this.savedAmount = const Value.absent(),
+    this.color = const Value.absent(),
+    this.iconCodePoint = const Value.absent(),
+    this.deadline = const Value.absent(),
+  });
+  GoalsCompanion.insert({
+    this.uuid = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.targetAmount = const Value.absent(),
+    this.savedAmount = const Value.absent(),
+    this.color = const Value.absent(),
+    this.iconCodePoint = const Value.absent(),
+    this.deadline = const Value.absent(),
+  });
+  static Insertable<GoalRow> custom({
+    Expression<String>? uuid,
+    Expression<int>? updatedAt,
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<double>? targetAmount,
+    Expression<double>? savedAmount,
+    Expression<int>? color,
+    Expression<int>? iconCodePoint,
+    Expression<String>? deadline,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (targetAmount != null) 'target_amount': targetAmount,
+      if (savedAmount != null) 'saved_amount': savedAmount,
+      if (color != null) 'color': color,
+      if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
+      if (deadline != null) 'deadline': deadline,
+    });
+  }
+
+  GoalsCompanion copyWith({
+    Value<String?>? uuid,
+    Value<int?>? updatedAt,
+    Value<int>? id,
+    Value<String?>? name,
+    Value<double?>? targetAmount,
+    Value<double>? savedAmount,
+    Value<int?>? color,
+    Value<int?>? iconCodePoint,
+    Value<String?>? deadline,
+  }) {
+    return GoalsCompanion(
+      uuid: uuid ?? this.uuid,
+      updatedAt: updatedAt ?? this.updatedAt,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      targetAmount: targetAmount ?? this.targetAmount,
+      savedAmount: savedAmount ?? this.savedAmount,
+      color: color ?? this.color,
+      iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      deadline: deadline ?? this.deadline,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (targetAmount.present) {
+      map['target_amount'] = Variable<double>(targetAmount.value);
+    }
+    if (savedAmount.present) {
+      map['saved_amount'] = Variable<double>(savedAmount.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    if (iconCodePoint.present) {
+      map['icon_code_point'] = Variable<int>(iconCodePoint.value);
+    }
+    if (deadline.present) {
+      map['deadline'] = Variable<String>(deadline.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GoalsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('savedAmount: $savedAmount, ')
+          ..write('color: $color, ')
+          ..write('iconCodePoint: $iconCodePoint, ')
+          ..write('deadline: $deadline')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $TombstonesTable extends Tombstones
     with TableInfo<$TombstonesTable, Tombstone> {
   @override
@@ -3239,6 +3803,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
   late final $BudgetsTable budgets = $BudgetsTable(this);
+  late final $GoalsTable goals = $GoalsTable(this);
   late final $TombstonesTable tombstones = $TombstonesTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
   @override
@@ -3251,6 +3816,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     categories,
     transactions,
     budgets,
+    goals,
     tombstones,
     settings,
   ];
@@ -5815,6 +6381,275 @@ typedef $$BudgetsTableProcessedTableManager =
       BudgetRow,
       PrefetchHooks Function({bool categoryId})
     >;
+typedef $$GoalsTableCreateCompanionBuilder =
+    GoalsCompanion Function({
+      Value<String?> uuid,
+      Value<int?> updatedAt,
+      Value<int> id,
+      Value<String?> name,
+      Value<double?> targetAmount,
+      Value<double> savedAmount,
+      Value<int?> color,
+      Value<int?> iconCodePoint,
+      Value<String?> deadline,
+    });
+typedef $$GoalsTableUpdateCompanionBuilder =
+    GoalsCompanion Function({
+      Value<String?> uuid,
+      Value<int?> updatedAt,
+      Value<int> id,
+      Value<String?> name,
+      Value<double?> targetAmount,
+      Value<double> savedAmount,
+      Value<int?> color,
+      Value<int?> iconCodePoint,
+      Value<String?> deadline,
+    });
+
+class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
+  $$GoalsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deadline => $composableBuilder(
+    column: $table.deadline,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GoalsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GoalsTable> {
+  $$GoalsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deadline => $composableBuilder(
+    column: $table.deadline,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GoalsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GoalsTable> {
+  $$GoalsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<int> get iconCodePoint => $composableBuilder(
+    column: $table.iconCodePoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deadline =>
+      $composableBuilder(column: $table.deadline, builder: (column) => column);
+}
+
+class $$GoalsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GoalsTable,
+          GoalRow,
+          $$GoalsTableFilterComposer,
+          $$GoalsTableOrderingComposer,
+          $$GoalsTableAnnotationComposer,
+          $$GoalsTableCreateCompanionBuilder,
+          $$GoalsTableUpdateCompanionBuilder,
+          (GoalRow, BaseReferences<_$AppDatabase, $GoalsTable, GoalRow>),
+          GoalRow,
+          PrefetchHooks Function()
+        > {
+  $$GoalsTableTableManager(_$AppDatabase db, $GoalsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GoalsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GoalsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GoalsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String?> uuid = const Value.absent(),
+                Value<int?> updatedAt = const Value.absent(),
+                Value<int> id = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<double?> targetAmount = const Value.absent(),
+                Value<double> savedAmount = const Value.absent(),
+                Value<int?> color = const Value.absent(),
+                Value<int?> iconCodePoint = const Value.absent(),
+                Value<String?> deadline = const Value.absent(),
+              }) => GoalsCompanion(
+                uuid: uuid,
+                updatedAt: updatedAt,
+                id: id,
+                name: name,
+                targetAmount: targetAmount,
+                savedAmount: savedAmount,
+                color: color,
+                iconCodePoint: iconCodePoint,
+                deadline: deadline,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String?> uuid = const Value.absent(),
+                Value<int?> updatedAt = const Value.absent(),
+                Value<int> id = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<double?> targetAmount = const Value.absent(),
+                Value<double> savedAmount = const Value.absent(),
+                Value<int?> color = const Value.absent(),
+                Value<int?> iconCodePoint = const Value.absent(),
+                Value<String?> deadline = const Value.absent(),
+              }) => GoalsCompanion.insert(
+                uuid: uuid,
+                updatedAt: updatedAt,
+                id: id,
+                name: name,
+                targetAmount: targetAmount,
+                savedAmount: savedAmount,
+                color: color,
+                iconCodePoint: iconCodePoint,
+                deadline: deadline,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GoalsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GoalsTable,
+      GoalRow,
+      $$GoalsTableFilterComposer,
+      $$GoalsTableOrderingComposer,
+      $$GoalsTableAnnotationComposer,
+      $$GoalsTableCreateCompanionBuilder,
+      $$GoalsTableUpdateCompanionBuilder,
+      (GoalRow, BaseReferences<_$AppDatabase, $GoalsTable, GoalRow>),
+      GoalRow,
+      PrefetchHooks Function()
+    >;
 typedef $$TombstonesTableCreateCompanionBuilder =
     TombstonesCompanion Function({
       Value<int> id,
@@ -6160,6 +6995,8 @@ class $AppDatabaseManager {
       $$TransactionsTableTableManager(_db, _db.transactions);
   $$BudgetsTableTableManager get budgets =>
       $$BudgetsTableTableManager(_db, _db.budgets);
+  $$GoalsTableTableManager get goals =>
+      $$GoalsTableTableManager(_db, _db.goals);
   $$TombstonesTableTableManager get tombstones =>
       $$TombstonesTableTableManager(_db, _db.tombstones);
   $$SettingsTableTableManager get settings =>

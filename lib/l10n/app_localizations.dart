@@ -1130,6 +1130,54 @@ abstract class AppLocalizations {
   /// **'over by {amount}'**
   String overBy(String amount);
 
+  /// No description provided for @goalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get goalsTitle;
+
+  /// No description provided for @addGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a goal'**
+  String get addGoal;
+
+  /// No description provided for @newGoalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get newGoalTitle;
+
+  /// No description provided for @targetAmountField.
+  ///
+  /// In en, this message translates to:
+  /// **'Target amount'**
+  String get targetAmountField;
+
+  /// No description provided for @topUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get topUp;
+
+  /// No description provided for @withdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw'**
+  String get withdraw;
+
+  /// No description provided for @goalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reached'**
+  String get goalReached;
+
+  /// No description provided for @setAside.
+  ///
+  /// In en, this message translates to:
+  /// **'Set aside'**
+  String get setAside;
+
   /// No description provided for @allCurrencies.
   ///
   /// In en, this message translates to:

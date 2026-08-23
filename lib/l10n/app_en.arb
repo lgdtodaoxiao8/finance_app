@@ -216,6 +216,14 @@
   "@overBy": {
     "placeholders": { "amount": { "type": "String" } }
   },
+  "goalsTitle": "Goals",
+  "addGoal": "Add a goal",
+  "newGoalTitle": "Goal",
+  "targetAmountField": "Target amount",
+  "topUp": "Add",
+  "withdraw": "Withdraw",
+  "goalReached": "Goal reached",
+  "setAside": "Set aside",
   "allCurrencies": "All currencies",
   "chooseBaseCurrency": "Choose the base currency",
   "rateToBase": "Rate to base",

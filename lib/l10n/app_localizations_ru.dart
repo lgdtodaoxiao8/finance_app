@@ -550,6 +550,30 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get goalsTitle => 'Копилки';
+
+  @override
+  String get addGoal => 'Добавить копилку';
+
+  @override
+  String get newGoalTitle => 'Копилка';
+
+  @override
+  String get targetAmountField => 'Цель, сумма';
+
+  @override
+  String get topUp => 'Пополнить';
+
+  @override
+  String get withdraw => 'Забрать';
+
+  @override
+  String get goalReached => 'Цель достигнута';
+
+  @override
+  String get setAside => 'Отложено';
+
+  @override
   String get allCurrencies => 'Все валюты';
 
   @override
