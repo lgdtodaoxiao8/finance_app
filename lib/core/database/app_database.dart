@@ -110,6 +110,17 @@ class Transactions extends Table with SyncColumns {
   RealColumn get rateToBase => real().named('rate_to_base').nullable()();
 }
 
+/// A monthly spending limit. [categoryId] null means the OVERALL budget (a cap
+/// on total spending); otherwise it's a per-category limit. [amount] is in the
+/// base currency.
+@DataClassName('BudgetRow')
+class Budgets extends Table with SyncColumns {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get categoryId =>
+      integer().named('category_id').nullable().references(Categories, #id)();
+  RealColumn get amount => real().nullable()();
+}
+
 /// Records local deletions of syncable rows so the deletion can be pushed to
 /// the backend (and thus propagated to other devices). Cleared once pushed.
 class Tombstones extends Table {
@@ -141,6 +152,7 @@ class Settings extends Table {
     Accounts,
     Categories,
     Transactions,
+    Budgets,
     Tombstones,
     Settings,
   ],
@@ -152,7 +164,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -212,6 +224,10 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(accounts, accounts.interestRate);
         await m.addColumn(accounts, accounts.maturityDate);
         await m.addColumn(accounts, accounts.currentValue);
+      }
+      if (from < 7) {
+        // Monthly budgets (overall + per-category).
+        await m.createTable(budgets);
       }
     },
   );

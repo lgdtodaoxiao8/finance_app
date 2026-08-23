@@ -515,6 +515,40 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get plansTitle => 'Plans';
+
+  @override
+  String get plansCardSubtitle => 'Budget, goals, payments and debts';
+
+  @override
+  String get budgetTitle => 'Budget';
+
+  @override
+  String get overallBudget => 'Overall budget';
+
+  @override
+  String get monthlyLimit => 'Monthly limit';
+
+  @override
+  String get noBudgetsYet => 'No budgets yet';
+
+  @override
+  String get setOverallBudget => 'Set an overall budget';
+
+  @override
+  String get addCategoryLimit => 'Add a category limit';
+
+  @override
+  String leftAmount(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String overBy(String amount) {
+    return 'over by $amount';
+  }
+
+  @override
   String get allCurrencies => 'All currencies';
 
   @override

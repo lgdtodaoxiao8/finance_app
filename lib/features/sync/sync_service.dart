@@ -110,6 +110,21 @@ class SyncService {
       ], onConflict: 'user_id,uuid');
     }
 
+    final budgets = await _db.select(_db.budgets).get();
+    if (budgets.isNotEmpty) {
+      await _client.from('budgets').upsert([
+        for (final b in budgets)
+          {
+            'user_id': _userId,
+            'uuid': b.uuid,
+            'category_uuid': categoryUuidById[b.categoryId],
+            'amount': b.amount,
+            'updated_at': b.updatedAt,
+            'deleted': false,
+          },
+      ], onConflict: 'user_id,uuid');
+    }
+
     await _pushTombstones();
     await _pushSettings();
   }
@@ -153,7 +168,42 @@ class SyncService {
     await _pullCategories();
     await _pullAccounts();
     await _pullTransactions();
+    await _pullBudgets();
     await _pullSettings();
+  }
+
+  Future<void> _pullBudgets() async {
+    final categoryIdByUuid = await _categoryIdByUuid();
+    final rows = await _client.from('budgets').select();
+    for (final r in rows) {
+      final uuid = r['uuid'] as String;
+      if (r['deleted'] == true) {
+        await (_db.delete(
+          _db.budgets,
+        )..where((b) => b.uuid.equals(uuid))).go();
+        continue;
+      }
+      final remoteUpdated = (r['updated_at'] as num?)?.toInt() ?? 0;
+      final existing = await (_db.select(
+        _db.budgets,
+      )..where((b) => b.uuid.equals(uuid))).getSingleOrNull();
+      if (existing != null && (existing.updatedAt ?? 0) >= remoteUpdated) {
+        continue;
+      }
+      final companion = BudgetsCompanion(
+        uuid: Value(uuid),
+        categoryId: Value(categoryIdByUuid[r['category_uuid'] as String?]),
+        amount: Value((r['amount'] as num?)?.toDouble()),
+        updatedAt: Value(remoteUpdated),
+      );
+      if (existing == null) {
+        await _db.into(_db.budgets).insert(companion);
+      } else {
+        await (_db.update(
+          _db.budgets,
+        )..where((b) => b.id.equals(existing.id))).write(companion);
+      }
+    }
   }
 
   /// Pulls app preferences, last-write-wins on `updated_at`. Writing them back

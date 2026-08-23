@@ -9,6 +9,7 @@ import 'package:finance_app/features/home/widgets/activity_calendar.dart';
 import 'package:finance_app/features/home/widgets/biggest_expenses.dart';
 import 'package:finance_app/features/home/widgets/daily_spend_chart.dart';
 import 'package:finance_app/features/home/widgets/monthly_trend_chart.dart';
+import 'package:finance_app/features/home/widgets/plans_card.dart';
 import 'package:finance_app/features/home/widgets/recent_activity.dart';
 import 'package:finance_app/features/home/widgets/stat_strip.dart';
 import 'package:finance_app/features/home/widgets/total_balance_card.dart';
@@ -98,6 +99,8 @@ class _AnalyticsView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               StatStrip(range: state.range),
+              const SizedBox(height: 16),
+              const PlansCard(),
               const SizedBox(height: 16),
               const WeeklyDigestTeaser(),
               const SizedBox(height: 20),

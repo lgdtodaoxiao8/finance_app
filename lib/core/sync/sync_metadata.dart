@@ -17,4 +17,5 @@ class SyncEntity {
   static const accounts = 'accounts';
   static const categories = 'categories';
   static const transactions = 'transactions';
+  static const budgets = 'budgets';
 }

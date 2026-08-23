@@ -1070,6 +1070,66 @@ abstract class AppLocalizations {
   /// **'Can\'t delete: {count} transaction(s) use this category'**
   String cantDeleteCategoryInUse(int count);
 
+  /// No description provided for @plansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plans'**
+  String get plansTitle;
+
+  /// No description provided for @plansCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget, goals, payments and debts'**
+  String get plansCardSubtitle;
+
+  /// No description provided for @budgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget'**
+  String get budgetTitle;
+
+  /// No description provided for @overallBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall budget'**
+  String get overallBudget;
+
+  /// No description provided for @monthlyLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly limit'**
+  String get monthlyLimit;
+
+  /// No description provided for @noBudgetsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No budgets yet'**
+  String get noBudgetsYet;
+
+  /// No description provided for @setOverallBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set an overall budget'**
+  String get setOverallBudget;
+
+  /// No description provided for @addCategoryLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a category limit'**
+  String get addCategoryLimit;
+
+  /// No description provided for @leftAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left'**
+  String leftAmount(String amount);
+
+  /// No description provided for @overBy.
+  ///
+  /// In en, this message translates to:
+  /// **'over by {amount}'**
+  String overBy(String amount);
+
   /// No description provided for @allCurrencies.
   ///
   /// In en, this message translates to:

@@ -2,6 +2,7 @@ import 'package:finance_app/core/di/injector.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/features/accounts/view/account_balances_screen.dart';
 import 'package:finance_app/features/categories/view/categories_screen.dart';
+import 'package:finance_app/features/plans/view/plans_screen.dart';
 import 'package:finance_app/features/settings/cubit/base_currency_cubit.dart';
 import 'package:finance_app/features/settings/widgets/widgets.dart';
 import 'package:finance_app/features/auth/widgets/account_section.dart';
@@ -30,6 +31,15 @@ class SettingsScreen extends StatelessWidget {
           const AccountSection(),
           const SizedBox(height: 16),
           const PreferencesSection(),
+          const SizedBox(height: 16),
+          _NavCard(
+            icon: Icons.savings_outlined,
+            title: l.plansTitle,
+            subtitle: l.plansCardSubtitle,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const PlansScreen()),
+            ),
+          ),
           const SizedBox(height: 16),
           _NavCard(
             icon: Icons.account_balance_wallet_outlined,

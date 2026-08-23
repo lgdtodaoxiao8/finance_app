@@ -516,6 +516,40 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get plansTitle => 'Планы';
+
+  @override
+  String get plansCardSubtitle => 'Бюджет, цели, платежи и долги';
+
+  @override
+  String get budgetTitle => 'Бюджет';
+
+  @override
+  String get overallBudget => 'Общий бюджет';
+
+  @override
+  String get monthlyLimit => 'Лимит на месяц';
+
+  @override
+  String get noBudgetsYet => 'Бюджетов пока нет';
+
+  @override
+  String get setOverallBudget => 'Задать общий бюджет';
+
+  @override
+  String get addCategoryLimit => 'Добавить лимит категории';
+
+  @override
+  String leftAmount(String amount) {
+    return 'осталось $amount';
+  }
+
+  @override
+  String overBy(String amount) {
+    return 'перерасход $amount';
+  }
+
+  @override
   String get allCurrencies => 'Все валюты';
 
   @override

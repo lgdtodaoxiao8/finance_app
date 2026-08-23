@@ -200,6 +200,22 @@
   "@cantDeleteCategoryInUse": {
     "placeholders": { "count": { "type": "int" } }
   },
+  "plansTitle": "Plans",
+  "plansCardSubtitle": "Budget, goals, payments and debts",
+  "budgetTitle": "Budget",
+  "overallBudget": "Overall budget",
+  "monthlyLimit": "Monthly limit",
+  "noBudgetsYet": "No budgets yet",
+  "setOverallBudget": "Set an overall budget",
+  "addCategoryLimit": "Add a category limit",
+  "leftAmount": "{amount} left",
+  "@leftAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "overBy": "over by {amount}",
+  "@overBy": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
   "allCurrencies": "All currencies",
   "chooseBaseCurrency": "Choose the base currency",
   "rateToBase": "Rate to base",

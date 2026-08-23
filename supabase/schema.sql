@@ -74,6 +74,18 @@ create table if not exists public.transactions (
 -- Idempotent for deployments created before the rate snapshot was added.
 alter table public.transactions add column if not exists rate_to_base double precision;
 
+-- =============================================================== budgets ====
+-- Monthly spending limits: category_uuid null = the overall budget.
+create table if not exists public.budgets (
+  user_id       uuid    not null default auth.uid() references auth.users (id) on delete cascade,
+  uuid          text    not null,
+  category_uuid text,
+  amount        double precision,
+  updated_at    bigint  not null default 0,
+  deleted       boolean not null default false,
+  primary key (user_id, uuid)
+);
+
 -- ============================================================== settings ====
 -- App preferences (theme, language, week start, privacy, base currency, …) as
 -- a per-user key/value store. Keyed by (user_id, key); LWW on updated_at.
@@ -121,12 +133,13 @@ create table if not exists public.ai_usage (
 alter table public.categories   enable row level security;
 alter table public.accounts     enable row level security;
 alter table public.transactions enable row level security;
+alter table public.budgets      enable row level security;
 alter table public.settings     enable row level security;
 
 do $$
 declare t text;
 begin
-  foreach t in array array['categories', 'accounts', 'transactions', 'settings'] loop
+  foreach t in array array['categories', 'accounts', 'transactions', 'budgets', 'settings'] loop
     execute format($f$
       drop policy if exists "own rows" on public.%1$I;
       create policy "own rows" on public.%1$I

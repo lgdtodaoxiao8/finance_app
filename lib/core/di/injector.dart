@@ -4,6 +4,7 @@ import 'package:finance_app/core/settings/settings_service.dart';
 import 'package:finance_app/features/ai/ai_service.dart';
 import 'package:finance_app/features/auth/auth_service.dart';
 import 'package:finance_app/data/repositories/account_repository.dart';
+import 'package:finance_app/data/repositories/budget_repository.dart';
 import 'package:finance_app/data/repositories/category_repository.dart';
 import 'package:finance_app/data/repositories/currency_repository.dart';
 import 'package:finance_app/data/repositories/transaction_repository.dart';
@@ -85,6 +86,12 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<CategoryRepository>()) {
     getIt.registerLazySingleton<CategoryRepository>(
       () => DriftCategoryRepository(getIt<AppDatabase>()),
+    );
+  }
+
+  if (!getIt.isRegistered<BudgetRepository>()) {
+    getIt.registerLazySingleton<BudgetRepository>(
+      () => DriftBudgetRepository(getIt<AppDatabase>()),
     );
   }
 
